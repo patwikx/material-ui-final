@@ -1,0 +1,58 @@
+import { Testimonial } from '../types';
+
+export const testimonials: Testimonial[] = [
+  {
+    id: '1',
+    name: 'Sarah Johnson',
+    location: 'New York, USA',
+    rating: 5,
+    comment: 'The Dolores Tropicana Resort exceeded all my expectations. The staff was incredibly attentive, the facilities were pristine, and the beachfront location was absolutely stunning. I can\'t wait to return!',
+    avatar: 'https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=200',
+    property: 'Dolores Tropicana Resort',
+  },
+  {
+    id: '2',
+    name: 'Michael Chen',
+    location: 'Singapore',
+    rating: 5,
+    comment: 'Anchor Hotel provided the perfect business trip accommodation. The location was ideal, the business center was well-equipped, and the rooftop pool offered a great way to unwind after meetings.',
+    avatar: 'https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=200',
+    property: 'Anchor Hotel',
+  },
+  {
+    id: '3',
+    name: 'Emma Rodriguez',
+    location: 'Madrid, Spain',
+    rating: 5,
+    comment: 'Our family vacation at Dolores Farm Resort was magical. The kids loved the farm tours and horse riding, while we adults enjoyed the spa and farm-to-table dining. Highly recommended!',
+    avatar: 'https://images.pexels.com/photos/1130626/pexels-photo-1130626.jpeg?auto=compress&cs=tinysrgb&w=200',
+    property: 'Dolores Farm Resort',
+  },
+  {
+    id: '4',
+    name: 'David Thompson',
+    location: 'London, UK',
+    rating: 5,
+    comment: 'Dolores Lake Resort was the perfect romantic getaway. The sunset dining by the lake, coupled with the luxurious spa treatments, made our anniversary truly unforgettable.',
+    avatar: 'https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&w=200',
+    property: 'Dolores Lake Resort',
+  },
+  {
+    id: '5',
+    name: 'Lisa Park',
+    location: 'Seoul, South Korea',
+    rating: 5,
+    comment: 'The attention to detail and level of service at Tropicana properties is unmatched. Every staff member went above and beyond to ensure our comfort. Truly a five-star experience!',
+    avatar: 'https://images.pexels.com/photos/1181519/pexels-photo-1181519.jpeg?auto=compress&cs=tinysrgb&w=200',
+    property: 'Anchor Hotel',
+  },
+  {
+    id: '6',
+    name: 'Robert Wilson',
+    location: 'Toronto, Canada',
+    rating: 5,
+    comment: 'Cafe Rodrigo at the resort serves some of the best cuisine I\'ve ever tasted. The local ingredients and masterful preparation made every meal a culinary adventure.',
+    avatar: 'https://images.pexels.com/photos/1043471/pexels-photo-1043471.jpeg?auto=compress&cs=tinysrgb&w=200',
+    property: 'Dolores Tropicana Resort',
+  },
+];

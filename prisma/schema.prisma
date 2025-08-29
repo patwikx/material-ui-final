@@ -1,0 +1,3330 @@
+// Enhanced Hotel Management & Global CMS Schema for Tropicana Worldwide Corporation
+// Updated with comprehensive PayMongo integration, enhanced payment-room linking, and dedicated Image model
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// =============================================================================
+// ENUMS
+// =============================================================================
+
+// User & Access Management
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+  PENDING_ACTIVATION
+}
+
+enum PermissionScope {
+  GLOBAL
+  BUSINESS_UNIT
+  DEPARTMENT
+}
+
+// Property & Room Management
+enum PropertyType {
+  HOTEL
+  RESORT
+  VILLA_COMPLEX
+  APARTMENT_HOTEL
+  BOUTIQUE_HOTEL
+}
+
+enum RoomType {
+  STANDARD
+  DELUXE
+  SUITE
+  VILLA
+  PENTHOUSE
+  FAMILY
+  ACCESSIBLE
+}
+
+enum RoomStatus {
+  AVAILABLE
+  OCCUPIED
+  OUT_OF_ORDER
+  MAINTENANCE
+  CLEANING
+  RESERVED
+  BLOCKED
+}
+
+enum HousekeepingStatus {
+  CLEAN
+  DIRTY
+  INSPECTED
+  OUT_OF_ORDER
+  MAINTENANCE_REQUIRED
+  IN_PROGRESS
+}
+
+// Booking & Reservation Management
+enum ReservationStatus {
+  INQUIRY
+  PROVISIONAL
+  CONFIRMED
+  CHECKED_IN
+  CHECKED_OUT
+  CANCELLED
+  NO_SHOW
+  WALKED_IN
+  PENDING
+}
+
+enum ReservationSource {
+  DIRECT
+  WALK_IN
+  PHONE
+  EMAIL
+  WEBSITE
+  OTA_BOOKING
+  OTA_EXPEDIA
+  OTA_AGODA
+  TRAVEL_AGENT
+  CORPORATE
+  GROUP_BOOKING
+  ONLINE
+  AGENT
+}
+
+// Enhanced Payment Enums
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  AWAITING_PAYMENT_METHOD
+  AWAITING_NEXT_ACTION
+  SUCCEEDED
+  PAID
+  PARTIAL
+  FAILED
+  CANCELLED
+  REFUNDED
+  PARTIALLY_REFUNDED
+  DISPUTED
+  CHARGEBACK
+  EXPIRED
+}
+
+enum PaymentMethod {
+  CASH
+  CARD
+  BANK_TRANSFER
+  E_WALLET
+  QR_CODE
+  CRYPTO
+}
+
+enum PaymentProvider {
+  PAYMONGO
+  STRIPE
+  PAYPAL
+  CASH_COUNTER
+}
+
+enum PaymongoPaymentType {
+  CARD
+  GCASH
+  GRABPAY
+  PAYMAYA
+  MAYA
+  BPI_ONLINE
+  UBP_ONLINE
+  BANK_TRANSFER
+  PAYMONGO_WALLET
+}
+
+// Service & Operations
+enum ServiceCategory {
+  HOUSEKEEPING
+  MAINTENANCE
+  CONCIERGE
+  ROOM_SERVICE
+  SPA
+  LAUNDRY
+  TRANSPORTATION
+  SPECIAL_REQUEST
+}
+
+enum ServiceStatus {
+  REQUESTED
+  ASSIGNED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  ON_HOLD
+}
+
+enum TaskPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+  CRITICAL
+}
+
+// Content Management
+enum ContentType {
+  TEXT
+  HTML
+  MARKDOWN
+  IMAGE
+  VIDEO
+  JSON
+  FILE
+}
+
+enum PublishStatus {
+  DRAFT
+  PENDING_REVIEW
+  PUBLISHED
+  ARCHIVED
+  SCHEDULED
+}
+
+enum PageTemplate {
+  DEFAULT
+  HOME
+  PROPERTY_DETAIL
+  PROPERTIES_LIST
+  ABOUT
+  CONTACT
+  BLOG_POST
+  BLOG_LIST
+  GALLERY
+  CUSTOM
+}
+
+enum ContentScope {
+  GLOBAL
+  PROPERTY
+  REGIONAL
+}
+
+enum MediaCategory {
+  HERO_IMAGES
+  PROPERTY_PHOTOS
+  ROOM_PHOTOS
+  AMENITY_PHOTOS
+  RESTAURANT_PHOTOS
+  EVENT_PHOTOS
+  GALLERY
+  BLOG_IMAGES
+  ICONS
+  DOCUMENTS
+  OTHER
+}
+
+// Image-specific enums
+enum ImageCategory {
+  PROPERTY_HERO
+  PROPERTY_GALLERY
+  ROOM_TYPE
+  ROOM_SPECIFIC
+  AMENITY
+  RESTAURANT
+  EVENT
+  SPECIAL_OFFER
+  BLOG
+  AVATAR
+  LOGO
+  OTHER
+}
+
+enum ImageQuality {
+  THUMBNAIL
+  SMALL
+  MEDIUM
+  LARGE
+  ORIGINAL
+}
+
+// Special Offers & Packages
+enum OfferType {
+  EARLY_BIRD
+  LAST_MINUTE
+  SEASONAL
+  PACKAGE
+  ROOM_UPGRADE
+  DINING
+  SPA
+  ACTIVITY
+  LOYALTY
+  PROMO_CODE
+  GROUP // Add this
+  CORPORATE // Add this
+}
+
+enum OfferStatus {
+  DRAFT
+  ACTIVE
+  EXPIRED
+  PAUSED
+  SCHEDULED
+  INACTIVE
+}
+
+enum RestaurantType {
+  FINE_DINING
+  CASUAL_DINING
+  CAFE
+  BAR
+  POOLSIDE
+  ROOM_SERVICE
+  BUFFET
+  SPECIALTY
+}
+
+enum PromoType {
+  PERCENTAGE_DISCOUNT
+  FIXED_AMOUNT_DISCOUNT
+  FREE_NIGHTS
+  ROOM_UPGRADE
+  COMPLIMENTARY_SERVICE
+  PACKAGE_DEAL
+}
+
+enum PromoStatus {
+  DRAFT
+  ACTIVE
+  EXPIRED
+  PAUSED
+  USED_UP
+}
+
+enum VoucherStatus {
+  ACTIVE
+  USED
+  EXPIRED
+  CANCELLED
+}
+
+enum EventType {
+  WEDDING
+  CONFERENCE
+  MEETING
+  WORKSHOP
+  CELEBRATION
+  CULTURAL
+  SEASONAL
+  ENTERTAINMENT
+  CORPORATE
+  PRIVATE
+}
+
+enum EventStatus {
+  PLANNING
+  CONFIRMED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  POSTPONED
+}
+
+// Feedback Enums
+enum FeedbackCategory {
+  BUG_REPORT
+  FEATURE_REQUEST
+  USABILITY_ISSUE
+  GENERAL_INQUIRY
+  COMPLIMENT
+}
+
+enum FeedbackSentiment {
+  POSITIVE
+  NEUTRAL
+  NEGATIVE
+}
+
+enum FeedbackStatus {
+  NEW
+  IN_REVIEW
+  PLANNED
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+  DUPLICATE
+}
+
+enum FeedbackPriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum GuestType {
+  INDIVIDUAL
+  CORPORATE
+  GROUP
+  VIP
+  WALK_IN
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHERS
+}
+
+enum GuestStatus {
+  ACTIVE
+  INACTIVE
+  BLACKLISTED
+  VIP
+}
+
+// =============================================================================
+// IMAGE MANAGEMENT MODELS
+// =============================================================================
+
+model Image {
+  id String @id @default(uuid())
+
+  // File Information
+  filename     String
+  originalName String
+  mimeType     String
+  size         Int
+  width        Int?
+  height       Int?
+
+  // Storage URLs for different sizes
+  originalUrl  String
+  thumbnailUrl String?
+  smallUrl     String?
+  mediumUrl    String?
+  largeUrl     String?
+
+  // Image Metadata
+  title       String?
+  description String?
+  altText     String?
+  caption     String?
+
+  // Categorization
+  category ImageCategory @default(OTHER)
+  tags     String[]
+
+  // Technical Details
+  quality     ImageQuality @default(ORIGINAL)
+  isProcessed Boolean      @default(false)
+
+  // SEO
+  seoFilename String?
+
+  // Usage tracking
+  usageCount Int       @default(0)
+  lastUsedAt DateTime?
+
+  // Status
+  isActive Boolean @default(true)
+
+  // Upload information
+  uploaderId String
+  uploader   User   @relation("ImageUploader", fields: [uploaderId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationships - Junction tables for different entities
+  businessUnits BusinessUnitImage[]
+  roomTypes     RoomTypeImage[]
+  specialOffers SpecialOfferImage[]
+  restaurants   RestaurantImage[]
+  events        EventImage[]
+  menuItems     MenuItemImage[]
+
+  @@index([category, isActive])
+  @@index([tags])
+  @@index([uploaderId])
+  @@index([usageCount])
+  @@map("images")
+}
+
+// Junction Tables for Image relationships
+model BusinessUnitImage {
+  id             String @id @default(uuid())
+  businessUnitId String
+  imageId        String
+
+  // Context for the image
+  context   String? // 'hero', 'gallery', 'logo', etc.
+  sortOrder Int     @default(0)
+  isPrimary Boolean @default(false)
+
+  businessUnit BusinessUnit @relation(fields: [businessUnitId], references: [id], onDelete: Cascade)
+  image        Image        @relation(fields: [imageId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([businessUnitId, imageId, context])
+  @@index([businessUnitId, context, sortOrder])
+  @@map("business_unit_images")
+}
+
+model RoomTypeImage {
+  id         String @id @default(uuid())
+  roomTypeId String
+  imageId    String
+
+  context   String? // 'primary', 'gallery', 'floor_plan', etc.
+  sortOrder Int     @default(0)
+  isPrimary Boolean @default(false)
+
+  roomType RoomType_Model @relation(fields: [roomTypeId], references: [id], onDelete: Cascade)
+  image    Image          @relation(fields: [imageId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([roomTypeId, imageId, context])
+  @@index([roomTypeId, context, sortOrder])
+  @@map("room_type_images")
+}
+
+model SpecialOfferImage {
+  id      String @id @default(uuid())
+  offerId String
+  imageId String
+
+  context   String? // 'featured', 'gallery', etc.
+  sortOrder Int     @default(0)
+  isPrimary Boolean @default(false)
+
+  offer SpecialOffer @relation(fields: [offerId], references: [id], onDelete: Cascade)
+  image Image        @relation(fields: [imageId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([offerId, imageId, context])
+  @@index([offerId, context, sortOrder])
+  @@map("special_offer_images")
+}
+
+model RestaurantImage {
+  id           String @id @default(uuid())
+  restaurantId String
+  imageId      String
+
+  context   String? // 'featured', 'gallery', 'menu', etc.
+  sortOrder Int     @default(0)
+  isPrimary Boolean @default(false)
+
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  image      Image      @relation(fields: [imageId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([restaurantId, imageId, context])
+  @@index([restaurantId, context, sortOrder])
+  @@map("restaurant_images")
+}
+
+model EventImage {
+  id      String @id @default(uuid())
+  eventId String
+  imageId String
+
+  context   String? // 'featured', 'gallery', etc.
+  sortOrder Int     @default(0)
+  isPrimary Boolean @default(false)
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  image Image @relation(fields: [imageId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([eventId, imageId, context])
+  @@index([eventId, context, sortOrder])
+  @@map("event_images")
+}
+
+model MenuItemImage {
+  id         String @id @default(uuid())
+  menuItemId String
+  imageId    String
+
+  context   String? // 'primary', 'gallery', etc.
+  sortOrder Int     @default(0)
+  isPrimary Boolean @default(false)
+
+  menuItem MenuItem @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
+  image    Image    @relation(fields: [imageId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([menuItemId, imageId, context])
+  @@index([menuItemId, context, sortOrder])
+  @@map("menu_item_images")
+}
+
+// =============================================================================
+// USER & AUTH MODELS
+// =============================================================================
+
+model User {
+  id               String     @id @default(uuid())
+  email            String     @unique
+  username         String?    @unique
+  passwordHash     String
+  firstName        String
+  lastName         String
+  phone            String?
+  avatar           String?
+  status           UserStatus @default(PENDING_ACTIVATION)
+  emailVerifiedAt  DateTime?
+  lastLoginAt      DateTime?
+  timezone         String     @default("Asia/Manila")
+  locale           String     @default("en")
+  twoFactorEnabled Boolean    @default(false)
+  twoFactorSecret  String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdBy String?
+
+  // Relationships
+  assignments   UserBusinessUnitRole[]
+  permissions   UserPermission[]
+  createdByUser User?                  @relation("UserCreatedBy", fields: [createdBy], references: [id])
+  usersCreated  User[]                 @relation("UserCreatedBy")
+  sessions      UserSession[]
+  auditLogs     AuditLog[]
+
+  // Hotel Operations
+  assignedTasks     Task[]             @relation("TaskAssignee")
+  createdTasks      Task[]             @relation("TaskCreator")
+  serviceRequests   ServiceRequest[]   @relation("ServiceRequestHandler")
+  guestInteractions GuestInteraction[]
+
+  // Content Management
+  createdContent ContentItem[] @relation("ContentAuthor")
+  updatedContent ContentItem[] @relation("ContentEditor")
+  uploadedMedia  MediaItem[]   @relation("MediaUploader")
+  uploadedImages Image[]       @relation("ImageUploader")
+
+  // Payment & Billing
+  incidentalChargesAdded IncidentalCharge[] @relation("IncidentalChargesAdded")
+
+  notifications Notification[] @relation("UserNotifications")
+
+  @@index([email])
+  @@index([status])
+  @@index([createdAt])
+  @@map("users")
+}
+
+model Role {
+  id          String  @id @default(uuid())
+  name        String  @unique
+  displayName String
+  description String?
+  isSystem    Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  assignments UserBusinessUnitRole[]
+  permissions RolePermission[]
+
+  @@map("roles")
+}
+
+model Permission {
+  id          String          @id @default(uuid())
+  name        String          @unique
+  displayName String
+  description String?
+  scope       PermissionScope @default(BUSINESS_UNIT)
+  module      String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  rolePermissions RolePermission[]
+  userPermissions UserPermission[]
+
+  @@index([module, scope])
+  @@map("permissions")
+}
+
+model RolePermission {
+  roleId       String
+  permissionId String
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@id([roleId, permissionId])
+  @@map("role_permissions")
+}
+
+model UserPermission {
+  userId       String
+  permissionId String
+
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  createdBy String?
+
+  @@id([userId, permissionId])
+  @@map("user_permissions")
+}
+
+model BusinessUnit {
+  id           String       @id @default(uuid())
+  name         String
+  displayName  String
+  description  String?
+  propertyType PropertyType
+
+  // Location & Contact
+  address    String?
+  city       String
+  state      String?
+  country    String  @default("Philippines")
+  postalCode String?
+  phone      String?
+  email      String?
+  website    String?
+
+  // Coordinates for mapping
+  latitude  Float?
+  longitude Float?
+
+  // Business Settings
+  primaryCurrency   String  @default("PHP")
+  secondaryCurrency String?
+  timezone          String  @default("Asia/Manila")
+  locale            String  @default("en")
+  taxRate           Float?
+  serviceFeeRate    Float?
+
+  // Branding & Media - using dedicated Image model
+  logo           String?
+  favicon        String?
+  primaryColor   String?
+  secondaryColor String?
+
+  // Operational Settings
+  checkInTime       String @default("15:00")
+  checkOutTime      String @default("12:00")
+  cancellationHours Int    @default(24)
+  maxAdvanceBooking Int    @default(365)
+
+  // Website/CMS Settings
+  slug             String  @unique
+  shortDescription String?
+  longDescription  String?
+  isPublished      Boolean @default(true)
+  isFeatured       Boolean @default(false)
+  sortOrder        Int     @default(0)
+
+  // SEO
+  metaTitle       String?
+  metaDescription String?
+  metaKeywords    String?
+
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdBy String?
+
+  // Relationships
+  userAssignments UserBusinessUnitRole[]
+  roomTypes       RoomType_Model[]       @relation("BusinessUnitRoomTypes")
+  rooms           Room[]
+  reservations    Reservation[]
+  guests          Guest[]
+  services        Service[]
+  amenities       Amenity[]
+  departments     Department[]
+  images          BusinessUnitImage[]
+
+  // CMS relationships
+  contentItems   PropertyContent[]     @relation("PropertyContentItems")
+  mediaItems     PropertyMedia[]       @relation("PropertyMediaItems")
+  testimonials   PropertyTestimonial[] @relation("PropertyTestimonials")
+  faqs           PropertyFAQ[]         @relation("PropertyFAQs")
+  specialOffers  SpecialOffer[]        @relation("BusinessUnitOffers")
+  restaurants    Restaurant[]          @relation("BusinessUnitRestaurants")
+  events         Event[]               @relation("BusinessUnitEvents")
+  contactForms   ContactForm[]         @relation("ContactForms")
+  newsletterSubs Newsletter[]          @relation("NewsletterSubscriptions")
+
+  // Payment & Analytics
+  paymentSummaries PaymentSummary[]
+
+  @@index([isActive, propertyType])
+  @@index([city, country])
+  @@index([slug])
+  @@index([isPublished, isFeatured, sortOrder])
+  @@map("business_units")
+}
+
+model UserBusinessUnitRole {
+  userId         String
+  businessUnitId String
+  roleId         String
+
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  businessUnit BusinessUnit @relation(fields: [businessUnitId], references: [id], onDelete: Cascade)
+  role         Role         @relation(fields: [roleId], references: [id])
+
+  assignedAt DateTime @default(now())
+  assignedBy String?
+
+  @@id([userId, businessUnitId, roleId])
+  @@map("user_business_unit_roles")
+}
+
+model Department {
+  id             String  @id @default(uuid())
+  businessUnitId String
+  name           String
+  description    String?
+  managerId      String?
+  isActive       Boolean @default(true)
+
+  businessUnit BusinessUnit @relation(fields: [businessUnitId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  services Service[]
+  tasks    Task[]
+
+  @@unique([businessUnitId, name])
+  @@map("departments")
+}
+
+// =============================================================================
+// ROOM & PROPERTY MODELS
+// =============================================================================
+
+model RoomType_Model {
+  id             String   @id @default(uuid())
+  businessUnitId String
+  name           String
+  displayName    String
+  description    String?
+  type           RoomType
+
+  maxOccupancy     Int      @default(2)
+  maxAdults        Int      @default(2)
+  maxChildren      Int      @default(0)
+  maxInfants       Int      @default(0)
+  bedConfiguration String?
+  roomSize         Decimal? @db.Decimal(8, 2)
+
+  hasBalcony     Boolean @default(false)
+  hasOceanView   Boolean @default(false)
+  hasPoolView    Boolean @default(false)
+  hasKitchenette Boolean @default(false)
+  hasLivingArea  Boolean @default(false)
+  smokingAllowed Boolean @default(false)
+  petFriendly    Boolean @default(false)
+  isAccessible   Boolean @default(false)
+
+  baseRate        Decimal  @db.Decimal(10, 2)
+  extraPersonRate Decimal? @db.Decimal(10, 2)
+  extraChildRate  Decimal? @db.Decimal(10, 2)
+
+  // Removed images String[] - now using dedicated Image model
+  floorPlan String?
+
+  isActive  Boolean @default(true)
+  sortOrder Int     @default(0)
+
+  businessUnit     BusinessUnit      @relation("BusinessUnitRoomTypes", fields: [businessUnitId], references: [id])
+  reservationRooms ReservationRoom[]
+  images           RoomTypeImage[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  rooms            Room[]
+  rates            RoomRate[]
+  amenities        RoomTypeAmenity[]
+  offers           OfferRoomType[]   @relation("RoomTypeOffers")
+  paymentSummaries PaymentSummary[]
+
+  @@unique([businessUnitId, name])
+  @@index([businessUnitId, type])
+  @@index([isActive, sortOrder])
+  @@map("room_types")
+}
+
+model Room {
+  id             String  @id @default(uuid())
+  businessUnitId String
+  roomTypeId     String
+  roomNumber     String
+  floor          Int?
+  wing           String?
+
+  status       RoomStatus         @default(AVAILABLE)
+  housekeeping HousekeepingStatus @default(CLEAN)
+
+  lastCleaned     DateTime?
+  lastInspected   DateTime?
+  lastMaintenance DateTime?
+  outOfOrderUntil DateTime?
+
+  notes           String?
+  specialFeatures String[]
+
+  // Enhanced payment-relevant info
+  currentRate    Decimal?  @db.Decimal(10, 2)
+  lastRateUpdate DateTime?
+
+  // Revenue tracking
+  totalRevenue   Decimal @default(0) @db.Decimal(10, 2)
+  monthlyRevenue Decimal @default(0) @db.Decimal(10, 2)
+  yearlyRevenue  Decimal @default(0) @db.Decimal(10, 2)
+
+  // Occupancy stats
+  totalNights   Int      @default(0)
+  occupancyRate Decimal? @db.Decimal(5, 2)
+
+  isActive Boolean @default(true)
+
+  businessUnit BusinessUnit   @relation(fields: [businessUnitId], references: [id])
+  roomType     RoomType_Model @relation(fields: [roomTypeId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  reservations      ReservationRoom[]
+  tasks             Task[]
+  serviceRequests   ServiceRequest[]
+  maintenanceLogs   MaintenanceLog[]
+  incidentalCharges IncidentalCharge[]
+  paymentSummaries  PaymentSummary[]
+
+  @@unique([businessUnitId, roomNumber])
+  @@index([businessUnitId, status])
+  @@index([roomTypeId, status])
+  @@index([floor, wing])
+  @@map("rooms")
+}
+
+// =============================================================================
+// GUEST & RESERVATION MODELS
+// =============================================================================
+
+model Guest {
+  id             String @id @default(uuid())
+  businessUnitId String
+
+  title       String?
+  firstName   String
+  lastName    String
+  email       String
+  phone       String?
+  dateOfBirth DateTime?
+  nationality String?
+
+  passportNumber String?
+  passportExpiry DateTime?
+  idNumber       String?
+  idType         String?
+
+  address    String?
+  city       String?
+  state      String?
+  country    String?
+  postalCode String?
+
+  vipStatus     Boolean   @default(false)
+  loyaltyNumber String?
+  preferences   Json?
+  notes         String?
+  firstStayDate DateTime?
+  lastStayDate  DateTime?
+  blacklistedAt DateTime?
+  totalSpent    Decimal?
+
+  marketingOptIn Boolean @default(false)
+  source         String?
+
+  businessUnit BusinessUnit @relation(fields: [businessUnitId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  reservations    Reservation[]
+  interactions    GuestInteraction[]
+  stays           Stay[]
+  serviceRequests ServiceRequest[]
+
+  restaurantReservations RestaurantReservation[] @relation("GuestRestaurantReservations")
+  eventBookings          EventBooking[]          @relation("GuestEventBookings")
+
+  @@unique([businessUnitId, email])
+  @@index([businessUnitId, lastName])
+  @@index([loyaltyNumber])
+  @@map("guests")
+}
+
+model Reservation {
+  id             String @id @default(uuid())
+  businessUnitId String
+  guestId        String
+
+  confirmationNumber String            @unique
+  source             ReservationSource @default(DIRECT)
+  status             ReservationStatus @default(CONFIRMED)
+
+  checkInDate  DateTime
+  checkOutDate DateTime
+  checkInTime  String?
+  checkOutTime String?
+  nights       Int
+
+  adults   Int @default(1)
+  children Int @default(0)
+  infants  Int @default(0)
+
+  subtotal    Decimal @db.Decimal(10, 2)
+  taxes       Decimal @default(0) @db.Decimal(10, 2)
+  serviceFee  Decimal @default(0) @db.Decimal(10, 2)
+  discounts   Decimal @default(0) @db.Decimal(10, 2)
+  totalAmount Decimal @db.Decimal(10, 2)
+  currency    String  @default("PHP")
+
+  paymentStatus   PaymentStatus @default(PENDING)
+  paymentDue      DateTime?
+  depositRequired Decimal?      @db.Decimal(10, 2)
+  depositPaid     Decimal       @default(0) @db.Decimal(10, 2)
+
+  specialRequests String?
+  guestNotes      String?
+  internalNotes   String?
+
+  bookedAt        DateTime  @default(now())
+  bookedBy        String?
+  paidAt          DateTime?
+  paymentIntentId String?
+  paymentProvider String?
+
+  cancelledAt        DateTime?
+  cancellationReason String?
+  refundAmount       Decimal?  @db.Decimal(10, 2)
+
+  businessUnit BusinessUnit @relation(fields: [businessUnitId], references: [id])
+  guest        Guest        @relation(fields: [guestId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  rooms        ReservationRoom[]
+  payments     Payment[]
+  stay         Stay?
+  interactions GuestInteraction[]
+
+  offerBookings OfferBooking[] @relation("OfferReservations")
+  promoUsages   PromoUsage[]   @relation("ReservationPromos")
+
+  @@index([businessUnitId, checkInDate])
+  @@index([status, checkInDate])
+  @@index([confirmationNumber])
+  @@index([guestId])
+  @@map("reservations")
+}
+
+// Enhanced ReservationRoom with better payment breakdown
+model ReservationRoom {
+  id            String  @id @default(uuid())
+  reservationId String
+  roomId        String?
+  roomTypeId    String
+
+  // Enhanced pricing breakdown
+  baseRate        Decimal  @db.Decimal(10, 2)
+  discountedRate  Decimal? @db.Decimal(10, 2)
+  extraPersonRate Decimal  @default(0) @db.Decimal(10, 2)
+  childRate       Decimal  @default(0) @db.Decimal(10, 2)
+
+  nights   Int
+  adults   Int @default(2)
+  children Int @default(0)
+  infants  Int @default(0)
+
+  // Detailed cost breakdown
+  roomSubtotal   Decimal @db.Decimal(10, 2)
+  extrasSubtotal Decimal @default(0) @db.Decimal(10, 2)
+  addonsSubtotal Decimal @default(0) @db.Decimal(10, 2)
+  discountAmount Decimal @default(0) @db.Decimal(10, 2)
+  totalAmount    Decimal @db.Decimal(10, 2)
+
+  // Assignment tracking
+  assignedAt   DateTime?
+  assignedBy   String?
+  autoAssigned Boolean   @default(false)
+
+  // Room preferences
+  preferences     Json?
+  specialRequests String?
+
+  reservation Reservation    @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+  room        Room?          @relation(fields: [roomId], references: [id])
+  roomType    RoomType_Model @relation(fields: [roomTypeId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Payment relationships
+  paymentLineItems PaymentLineItem[]      @relation("RoomPaymentItems")
+  roomAddons       ReservationRoomAddon[] @relation("RoomAddons")
+
+  @@index([reservationId])
+  @@index([roomId])
+  @@map("reservation_rooms")
+}
+
+// NEW: Room add-ons/extras
+model ReservationRoomAddon {
+  id                String @id @default(uuid())
+  reservationRoomId String
+
+  name        String
+  description String?
+  category    String?
+
+  unitPrice   Decimal @db.Decimal(10, 2)
+  quantity    Int     @default(1)
+  totalAmount Decimal @db.Decimal(10, 2)
+
+  isOptional   Boolean @default(true)
+  isChargeable Boolean @default(true)
+
+  validFrom DateTime?
+  validTo   DateTime?
+
+  reservationRoom ReservationRoom @relation("RoomAddons", fields: [reservationRoomId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  paymentLineItems PaymentLineItem[] @relation("AddonPaymentItems")
+
+  @@index([reservationRoomId])
+  @@map("reservation_room_addons")
+}
+
+model Stay {
+  id            String @id @default(uuid())
+  reservationId String @unique
+  guestId       String
+
+  actualCheckIn  DateTime?
+  actualCheckOut DateTime?
+
+  keyCardsIssued   Int      @default(0)
+  keyCardNumbers   String[]
+  keyCardsReturned Boolean  @default(false)
+
+  roomCharges  Decimal @default(0) @db.Decimal(10, 2)
+  extraCharges Decimal @default(0) @db.Decimal(10, 2)
+  totalCharges Decimal @default(0) @db.Decimal(10, 2)
+
+  housekeepingOptOut Boolean @default(false)
+
+  // Enhanced financial tracking
+  totalPayments      Decimal @default(0) @db.Decimal(10, 2)
+  outstandingBalance Decimal @default(0) @db.Decimal(10, 2)
+
+  // Deposit handling
+  depositHeld       Decimal   @default(0) @db.Decimal(10, 2)
+  depositReleased   Decimal   @default(0) @db.Decimal(10, 2)
+  depositReleasedAt DateTime?
+
+  // Automatic charging settings
+  autoChargeEnabled Boolean @default(false)
+  autoChargeCardId  String?
+
+  // Folio/billing preferences
+  folioEmail String?
+
+  notes String?
+
+  reservation Reservation @relation(fields: [reservationId], references: [id])
+  guest       Guest       @relation(fields: [guestId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  charges           Charge[]
+  folios            Folio[]
+  interactions      GuestInteraction[]
+  incidentalCharges IncidentalCharge[]
+
+  @@index([guestId])
+  @@index([actualCheckIn, actualCheckOut])
+  @@map("stays")
+}
+
+// =============================================================================
+// ENHANCED PAYMENT MODELS
+// =============================================================================
+
+// Main Payment model with enhanced hotel integration
+model Payment {
+  id            String @id @default(uuid())
+  reservationId String
+
+  // Basic payment info
+  amount   Decimal         @db.Decimal(10, 2)
+  currency String          @default("PHP")
+  method   PaymentMethod
+  status   PaymentStatus   @default(PENDING)
+  provider PaymentProvider @default(PAYMONGO)
+
+  // Enhanced breakdown
+  roomTotal      Decimal @default(0) @db.Decimal(10, 2)
+  addonsTotal    Decimal @default(0) @db.Decimal(10, 2)
+  servicesTotal  Decimal @default(0) @db.Decimal(10, 2)
+  taxesTotal     Decimal @default(0) @db.Decimal(10, 2)
+  feesTotal      Decimal @default(0) @db.Decimal(10, 2)
+  discountsTotal Decimal @default(0) @db.Decimal(10, 2)
+
+  // Payment allocation tracking
+  depositAmount Decimal @default(0) @db.Decimal(10, 2)
+  balanceAmount Decimal @default(0) @db.Decimal(10, 2)
+
+  // Hotel-specific payment context
+  paymentContext Json?
+
+  // Guest information at time of payment
+  guestName  String?
+  guestEmail String?
+  guestPhone String?
+
+  // Check-in/out context
+  isDepositPayment    Boolean @default(false)
+  isBalancePayment    Boolean @default(false)
+  isIncidentalPayment Boolean @default(false)
+
+  // Generic provider fields
+  providerPaymentId String @unique
+  providerMetadata  Json?
+
+  // Failure details
+  failureCode    String?
+  failureMessage String?
+
+  // Refund tracking
+  refundedAmount Decimal?  @default(0) @db.Decimal(10, 2)
+  refundReason   String?
+  refundedAt     DateTime?
+
+  // Timestamps
+  transactionDate DateTime  @default(now())
+  processedAt     DateTime?
+  authorizedAt    DateTime?
+  capturedAt      DateTime?
+
+  // Audit trail
+  ipAddress String?
+  userAgent String?
+
+  // Internal notes
+  notes         String?
+  internalNotes String?
+
+  // Relationships
+  reservation    Reservation      @relation(fields: [reservationId], references: [id])
+  paymentAttempt PaymentAttempt[]
+
+  // Enhanced relationships
+  lineItems         PaymentLineItem[]
+  incidentalCharges IncidentalCharge[] @relation("IncidentalPayments")
+
+  // Provider-specific relationships
+  paymongoPayment  PaymongoPayment?
+  paymongoRefunds  PaymongoRefund[]
+  paymongoDisputes PaymongoDispute[]
+  checkoutSessions PaymongoCheckoutSession[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([reservationId])
+  @@index([status, transactionDate])
+  @@index([providerPaymentId])
+  @@map("payments")
+}
+
+// NEW: Payment line items for detailed breakdown
+model PaymentLineItem {
+  id        String @id @default(uuid())
+  paymentId String
+
+  // What this line item is for
+  itemType    String
+  itemId      String?
+  itemName    String
+  description String?
+
+  // Pricing
+  unitPrice   Decimal @db.Decimal(10, 2)
+  quantity    Int     @default(1)
+  totalAmount Decimal @db.Decimal(10, 2)
+
+  // Tax information
+  taxRate   Decimal? @db.Decimal(5, 4)
+  taxAmount Decimal  @default(0) @db.Decimal(10, 2)
+
+  // Discount information
+  discountRate   Decimal? @db.Decimal(5, 4)
+  discountAmount Decimal  @default(0) @db.Decimal(10, 2)
+
+  // Date range this applies to
+  validFrom DateTime?
+  validTo   DateTime?
+
+  payment Payment @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+
+  // Optional relationships to specific items
+  reservationRoom    ReservationRoom?      @relation("RoomPaymentItems", fields: [reservationRoomId], references: [id])
+  reservationRoomId  String?
+  reservationAddon   ReservationRoomAddon? @relation("AddonPaymentItems", fields: [reservationAddonId], references: [id])
+  reservationAddonId String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([paymentId])
+  @@index([itemType, itemId])
+  @@map("payment_line_items")
+}
+
+// NEW: Track incidental charges during stay
+model IncidentalCharge {
+  id        String  @id @default(uuid())
+  stayId    String
+  paymentId String?
+
+  // Charge details
+  description String
+  amount      Decimal @db.Decimal(10, 2)
+  category    String
+
+  // When and where
+  chargedAt        DateTime @default(now())
+  roomId           String?
+  departmentId     String?
+  serviceRequestId String?
+
+  // Staff who added the charge
+  addedBy    String
+  approvedBy String?
+  approvedAt DateTime?
+
+  // Payment status
+  isPaid Boolean   @default(false)
+  paidAt DateTime?
+
+  // Dispute handling
+  isDisputed        Boolean   @default(false)
+  disputeReason     String?
+  disputeResolvedAt DateTime?
+
+  stay        Stay     @relation(fields: [stayId], references: [id])
+  room        Room?    @relation(fields: [roomId], references: [id])
+  payment     Payment? @relation("IncidentalPayments", fields: [paymentId], references: [id])
+  addedByUser User     @relation("IncidentalChargesAdded", fields: [addedBy], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([stayId, isPaid])
+  @@index([roomId, chargedAt])
+  @@map("incidental_charges")
+}
+
+// =============================================================================
+// PAYMONGO INTEGRATION MODELS
+// =============================================================================
+
+// Separate PayMongo-specific model
+model PaymongoPayment {
+  id        String @id @default(uuid())
+  paymentId String @unique
+
+  // PayMongo Resource IDs
+  paymentIntentId   String  @unique
+  paymentMethodId   String?
+  sourceId          String?
+  checkoutSessionId String?
+
+  // PayMongo specific statuses
+  paymongoStatus String
+
+  // Payment Method Details
+  paymentMethodType PaymongoPaymentType?
+
+  // Payment Method Details
+  card         PaymongoCard?
+  ewallet      PaymongoEwallet?
+  bankTransfer PaymongoBankTransfer?
+
+  // 3D Secure / Next Actions
+  nextAction Json?
+
+  // Client details
+  clientKey String?
+
+  // Billing details
+  billingDetails Json?
+
+  // Metadata
+  metadata Json?
+
+  // Fee breakdown
+  applicationFee Decimal? @db.Decimal(10, 2)
+  processingFee  Decimal? @db.Decimal(10, 2)
+
+  // Currency conversion
+  exchangeRate     Decimal? @db.Decimal(10, 6)
+  originalAmount   Decimal? @db.Decimal(10, 2)
+  originalCurrency String?
+
+  payment Payment @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([paymentIntentId])
+  @@index([paymentMethodId])
+  @@index([paymongoStatus])
+  @@map("paymongo_payments")
+}
+
+// Card-specific details
+model PaymongoCard {
+  id                String @id @default(uuid())
+  paymongoPaymentId String @unique
+
+  brand    String
+  last4    String
+  expMonth Int
+  expYear  Int
+  country  String?
+  funding  String?
+
+  // 3D Secure info
+  threeDSecure Json?
+
+  // Card checks
+  cvcCheck     String?
+  addressCheck String?
+
+  paymongoPayment PaymongoPayment @relation(fields: [paymongoPaymentId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("paymongo_cards")
+}
+
+// E-wallet specific details
+model PaymongoEwallet {
+  id                String @id @default(uuid())
+  paymongoPaymentId String @unique
+
+  type        String
+  redirectUrl String?
+
+  // E-wallet specific data
+  accountName   String?
+  accountNumber String?
+  reference     String?
+
+  paymongoPayment PaymongoPayment @relation(fields: [paymongoPaymentId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("paymongo_ewallets")
+}
+
+// Bank transfer details
+model PaymongoBankTransfer {
+  id                String @id @default(uuid())
+  paymongoPaymentId String @unique
+
+  bankCode      String
+  bankName      String?
+  accountName   String?
+  accountNumber String?
+  reference     String?
+  instructions  String?
+
+  paymongoPayment PaymongoPayment @relation(fields: [paymongoPaymentId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("paymongo_bank_transfers")
+}
+
+// PayMongo Refunds
+model PaymongoRefund {
+  id        String @id @default(uuid())
+  paymentId String
+
+  refundId String  @unique
+  amount   Decimal @db.Decimal(10, 2)
+  currency String  @default("PHP")
+  reason   String?
+  notes    String?
+
+  status String
+
+  // PayMongo metadata
+  metadata Json?
+
+  // Fees
+  fee Decimal? @db.Decimal(10, 2)
+
+  // Related payment
+  paymentIntentId String
+
+  payment Payment @relation(fields: [paymentId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([paymentId])
+  @@index([refundId])
+  @@index([status])
+  @@map("paymongo_refunds")
+}
+
+// PayMongo Disputes/Chargebacks
+model PaymongoDispute {
+  id        String @id @default(uuid())
+  paymentId String
+
+  disputeId String @unique
+  type      String
+  status    String
+
+  amount        Decimal   @db.Decimal(10, 2)
+  currency      String    @default("PHP")
+  reason        String?
+  evidenceDueBy DateTime?
+
+  // Dispute details
+  transactionId String?
+  evidence      Json?
+
+  payment Payment @relation(fields: [paymentId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([paymentId])
+  @@index([disputeId])
+  @@index([status])
+  @@map("paymongo_disputes")
+}
+
+// PayMongo checkout sessions
+model PaymongoCheckoutSession {
+  id        String  @id @default(uuid())
+  paymentId String?
+
+  sessionId String @unique
+  url       String
+
+  // Session configuration
+  currency   String @default("PHP")
+  lineItems  Json
+  successUrl String
+  cancelUrl  String
+
+  // Customer details
+  customerEmail  String?
+  billingDetails Json?
+
+  // Session status
+  status    String
+  expiresAt DateTime
+
+  // Metadata
+  metadata Json?
+
+  payment Payment? @relation(fields: [paymentId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([sessionId])
+  @@index([status, expiresAt])
+  @@map("paymongo_checkout_sessions")
+}
+
+// Enhanced webhook event processing
+model PaymongoWebhookEndpoint {
+  id String @id @default(uuid())
+
+  endpointId  String  @unique
+  url         String
+  description String?
+
+  isActive Boolean @default(true)
+  secret   String
+
+  // Event types this endpoint handles
+  events String[]
+
+  // Statistics
+  totalEvents      Int @default(0)
+  successfulEvents Int @default(0)
+  failedEvents     Int @default(0)
+
+  lastEventAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  webhookEvents PaymongoWebhookEvent[]
+
+  @@index([endpointId])
+  @@index([isActive])
+  @@map("paymongo_webhook_endpoints")
+}
+
+// More detailed webhook event model
+model PaymongoWebhookEvent {
+  id String @id @default(uuid())
+
+  endpointId String?
+
+  // PayMongo event details
+  eventId   String @unique
+  eventType String
+
+  // Resource details
+  resourceType String
+  resourceId   String
+
+  // Processing status
+  status      String    @default("received")
+  processedAt DateTime?
+  error       String?
+
+  // Retry logic
+  retryCount  Int       @default(0)
+  maxRetries  Int       @default(3)
+  nextRetryAt DateTime?
+
+  // Event data
+  data     Json
+  livemode Boolean @default(false)
+
+  // Request details
+  signature String?
+  headers   Json?
+  ipAddress String?
+
+  endpoint PaymongoWebhookEndpoint? @relation(fields: [endpointId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([eventType, createdAt])
+  @@index([resourceId, eventType])
+  @@index([status, nextRetryAt])
+  @@index([endpointId])
+  @@map("paymongo_webhook_events")
+}
+
+// Payment attempt tracking
+model PaymentAttempt {
+  id        String @id @default(uuid())
+  paymentId String
+
+  // Attempt details
+  attemptNumber Int
+  status        String
+  failureReason String?
+  failureCode   String?
+
+  // PayMongo specific
+  intentId String?
+  sourceId String?
+
+  // Timing
+  attemptedAt DateTime  @default(now())
+  completedAt DateTime?
+
+  // Metadata
+  metadata Json?
+
+  payment Payment @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([paymentId, attemptNumber])
+  @@index([status, attemptedAt])
+  @@map("payment_attempts")
+}
+
+// =============================================================================
+// PAYMENT ANALYTICS & SUMMARIES
+// =============================================================================
+
+// Payment summary/reporting view
+model PaymentSummary {
+  id String @id @default(uuid())
+
+  // Time period
+  summaryDate    DateTime @db.Date
+  businessUnitId String?
+  roomId         String?
+  roomTypeId     String?
+
+  // Summary metrics
+  totalBookings  Int     @default(0)
+  totalRevenue   Decimal @default(0) @db.Decimal(12, 2)
+  roomRevenue    Decimal @default(0) @db.Decimal(12, 2)
+  addonsRevenue  Decimal @default(0) @db.Decimal(12, 2)
+  serviceRevenue Decimal @default(0) @db.Decimal(12, 2)
+  taxesCollected Decimal @default(0) @db.Decimal(12, 2)
+  feesCollected  Decimal @default(0) @db.Decimal(12, 2)
+
+  // Payment method breakdown
+  cardPayments    Decimal @default(0) @db.Decimal(12, 2)
+  cashPayments    Decimal @default(0) @db.Decimal(12, 2)
+  ewalletPayments Decimal @default(0) @db.Decimal(12, 2)
+
+  // Performance metrics
+  averageRoomRate Decimal? @db.Decimal(10, 2)
+  occupancyRate   Decimal? @db.Decimal(5, 2)
+  revPAR          Decimal? @db.Decimal(10, 2)
+
+  businessUnit BusinessUnit?   @relation(fields: [businessUnitId], references: [id])
+  room         Room?           @relation(fields: [roomId], references: [id])
+  roomType     RoomType_Model? @relation(fields: [roomTypeId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([summaryDate, businessUnitId, roomId])
+  @@index([summaryDate, businessUnitId])
+  @@map("payment_summaries")
+}
+
+// =============================================================================
+// SERVICE & OPERATIONS MODELS
+// =============================================================================
+
+model Service {
+  id             String  @id @default(uuid())
+  businessUnitId String
+  departmentId   String?
+
+  name        String
+  description String?
+  category    ServiceCategory
+
+  basePrice        Decimal @db.Decimal(10, 2)
+  duration         Int?
+  isChargeable     Boolean @default(true)
+  requiresApproval Boolean @default(false)
+
+  isActive       Boolean @default(true)
+  availableHours Json?
+  advanceNotice  Int?
+
+  businessUnit BusinessUnit @relation(fields: [businessUnitId], references: [id])
+  department   Department?  @relation(fields: [departmentId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  requests ServiceRequest[]
+
+  @@unique([businessUnitId, name])
+  @@index([businessUnitId, category])
+  @@map("services")
+}
+
+model ServiceRequest {
+  id        String  @id @default(uuid())
+  serviceId String?
+  roomId    String?
+  guestId   String?
+
+  title       String
+  description String
+  category    ServiceCategory
+  priority    TaskPriority    @default(NORMAL)
+  status      ServiceStatus   @default(REQUESTED)
+
+  assignedTo String?
+  assignedAt DateTime?
+
+  requestedAt DateTime  @default(now())
+  scheduledAt DateTime?
+  startedAt   DateTime?
+  completedAt DateTime?
+
+  estimatedCost Decimal? @db.Decimal(10, 2)
+  actualCost    Decimal? @db.Decimal(10, 2)
+
+  guestNotes String?
+  staffNotes String?
+
+  service      Service? @relation(fields: [serviceId], references: [id])
+  room         Room?    @relation(fields: [roomId], references: [id])
+  guest        Guest?   @relation(fields: [guestId], references: [id])
+  assignedUser User?    @relation("ServiceRequestHandler", fields: [assignedTo], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status, priority])
+  @@index([assignedTo, scheduledAt])
+  @@index([roomId])
+  @@map("service_requests")
+}
+
+model Task {
+  id           String  @id @default(uuid())
+  departmentId String?
+  roomId       String?
+
+  title       String
+  description String?
+  category    ServiceCategory
+  priority    TaskPriority    @default(NORMAL)
+  status      ServiceStatus   @default(REQUESTED)
+
+  assignedTo String?
+  createdBy  String
+
+  scheduledAt       DateTime?
+  estimatedDuration Int?
+  actualDuration    Int?
+  startedAt         DateTime?
+  completedAt       DateTime?
+  dueAt             DateTime?
+
+  checklist Json?
+
+  notes String?
+
+  department   Department? @relation(fields: [departmentId], references: [id])
+  room         Room?       @relation(fields: [roomId], references: [id])
+  assignedUser User?       @relation("TaskAssignee", fields: [assignedTo], references: [id])
+  creator      User        @relation("TaskCreator", fields: [createdBy], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status, priority])
+  @@index([assignedTo, scheduledAt])
+  @@index([departmentId])
+  @@map("tasks")
+}
+
+// =============================================================================
+// FINANCIAL MODELS
+// =============================================================================
+
+model RoomRate {
+  id          String  @id @default(uuid())
+  roomTypeId  String
+  name        String
+  description String?
+
+  baseRate Decimal @db.Decimal(10, 2)
+  currency String  @default("PHP")
+
+  validFrom DateTime
+  validTo   DateTime
+
+  monday    Boolean @default(true)
+  tuesday   Boolean @default(true)
+  wednesday Boolean @default(true)
+  thursday  Boolean @default(true)
+  friday    Boolean @default(true)
+  saturday  Boolean @default(true)
+  sunday    Boolean @default(true)
+
+  minStay    Int  @default(1)
+  maxStay    Int?
+  minAdvance Int?
+  maxAdvance Int?
+
+  extraPersonRate Decimal? @db.Decimal(10, 2)
+  childRate       Decimal? @db.Decimal(10, 2)
+
+  isActive Boolean @default(true)
+  priority Int     @default(0)
+
+  roomType RoomType_Model @relation(fields: [roomTypeId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([roomTypeId, validFrom, validTo])
+  @@index([isActive, priority])
+  @@map("room_rates")
+}
+
+model Charge {
+  id     String @id @default(uuid())
+  stayId String
+
+  description String
+  amount      Decimal @db.Decimal(10, 2)
+  quantity    Int     @default(1)
+  unitPrice   Decimal @db.Decimal(10, 2)
+
+  department String?
+  reference  String?
+
+  chargedAt DateTime  @default(now())
+  posted    Boolean   @default(false)
+  postedAt  DateTime?
+
+  stay Stay @relation(fields: [stayId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([stayId, chargedAt])
+  @@map("charges")
+}
+
+model Folio {
+  id     String @id @default(uuid())
+  stayId String
+
+  number    String  @unique
+  balance   Decimal @db.Decimal(10, 2)
+  isPrimary Boolean @default(true)
+
+  stay Stay @relation(fields: [stayId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([stayId])
+  @@map("folios")
+}
+
+// =============================================================================
+// GUEST EXPERIENCE MODELS
+// =============================================================================
+
+model GuestInteraction {
+  id            String  @id @default(uuid())
+  guestId       String
+  reservationId String?
+  stayId        String?
+  userId        String
+
+  type        String
+  subject     String
+  description String
+
+  requiresFollowUp Boolean   @default(false)
+  followUpDate     DateTime?
+  resolved         Boolean   @default(false)
+  resolution       String?
+
+  guest       Guest        @relation(fields: [guestId], references: [id])
+  reservation Reservation? @relation(fields: [reservationId], references: [id])
+  stay        Stay?        @relation(fields: [stayId], references: [id])
+  user        User         @relation(fields: [userId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([guestId, createdAt])
+  @@index([requiresFollowUp, followUpDate])
+  @@map("guest_interactions")
+}
+
+model Amenity {
+  id             String @id @default(uuid())
+  businessUnitId String
+
+  name        String
+  description String?
+  category    String?
+  icon        String?
+
+  isActive     Boolean  @default(true)
+  isChargeable Boolean  @default(false)
+  chargeAmount Decimal? @db.Decimal(10, 2)
+
+  sortOrder Int @default(0)
+
+  businessUnit BusinessUnit @relation(fields: [businessUnitId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  roomTypes RoomTypeAmenity[]
+
+  @@unique([businessUnitId, name])
+  @@index([businessUnitId, category])
+  @@map("amenities")
+}
+
+model RoomTypeAmenity {
+  roomTypeId String
+  amenityId  String
+
+  roomType RoomType_Model @relation(fields: [roomTypeId], references: [id], onDelete: Cascade)
+  amenity  Amenity        @relation(fields: [amenityId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@id([roomTypeId, amenityId])
+  @@map("room_type_amenities")
+}
+
+// =============================================================================
+// MAINTENANCE MODELS
+// =============================================================================
+
+model MaintenanceLog {
+  id     String @id @default(uuid())
+  roomId String
+
+  type        String
+  title       String
+  description String
+  priority    TaskPriority @default(NORMAL)
+
+  reportedAt  DateTime  @default(now())
+  scheduledAt DateTime?
+  startedAt   DateTime?
+  completedAt DateTime?
+
+  contractor String?
+  cost       Decimal? @db.Decimal(10, 2)
+
+  notes String?
+
+  room Room @relation(fields: [roomId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([roomId, reportedAt])
+  @@map("maintenance_logs")
+}
+
+// =============================================================================
+// SPECIAL OFFERS & PACKAGES
+// =============================================================================
+
+model SpecialOffer {
+  id             String  @id @default(uuid())
+  businessUnitId String?
+
+  title       String
+  slug        String
+  subtitle    String?
+  description String
+  shortDesc   String?
+
+  type   OfferType
+  status OfferStatus @default(DRAFT)
+
+  // Removed images String[] - now using dedicated Image model
+  videoUrl String?
+
+  originalPrice  Decimal? @db.Decimal(10, 2)
+  offerPrice     Decimal  @db.Decimal(10, 2)
+  currency       String   @default("PHP")
+  savingsAmount  Decimal? @db.Decimal(10, 2)
+  savingsPercent Int?     @db.SmallInt
+
+  validFrom       DateTime
+  validTo         DateTime
+  bookingDeadline DateTime?
+  blackoutDates   DateTime[]
+
+  stayPeriodFrom DateTime?
+  stayPeriodTo   DateTime?
+
+  minNights      Int  @default(1)
+  maxNights      Int?
+  minAdvanceBook Int?
+  maxAdvanceBook Int?
+
+  monday    Boolean @default(true)
+  tuesday   Boolean @default(true)
+  wednesday Boolean @default(true)
+  thursday  Boolean @default(true)
+  friday    Boolean @default(true)
+  saturday  Boolean @default(true)
+  sunday    Boolean @default(true)
+
+  maxUses       Int?
+  usesRemaining Int?
+  maxPerGuest   Int  @default(1)
+
+  promoCode    String? @unique
+  requiresCode Boolean @default(false)
+
+  inclusions      String[]
+  exclusions      String[]
+  termsConditions String?
+
+  metaTitle       String?
+  metaDescription String?
+  metaKeywords    String?
+
+  isPublished Boolean   @default(false)
+  publishedAt DateTime?
+
+  isFeatured Boolean @default(false)
+  isPinned   Boolean @default(false)
+  sortOrder  Int     @default(0)
+
+  viewCount    Int @default(0)
+  clickCount   Int @default(0)
+  bookingCount Int @default(0)
+
+  businessUnit              BusinessUnit?       @relation("BusinessUnitOffers", fields: [businessUnitId], references: [id])
+  combinableWithOtherOffers Boolean             @default(false)
+  autoApply                 Boolean             @default(false)
+  images                    SpecialOfferImage[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  roomTypes OfferRoomType[]
+  bookings  OfferBooking[]
+
+  @@unique([businessUnitId, slug])
+  @@index([businessUnitId, status, validFrom, validTo])
+  @@index([type, isPublished, isFeatured])
+  @@index([validFrom, validTo, isPublished])
+  @@map("special_offers")
+}
+
+model OfferRoomType {
+  offerId    String
+  roomTypeId String
+
+  offer    SpecialOffer   @relation(fields: [offerId], references: [id], onDelete: Cascade)
+  roomType RoomType_Model @relation("RoomTypeOffers", fields: [roomTypeId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@id([offerId, roomTypeId])
+  @@map("offer_room_types")
+}
+
+model OfferBooking {
+  id            String @id @default(uuid())
+  offerId       String
+  reservationId String
+
+  promoCode      String?
+  discountAmount Decimal @db.Decimal(10, 2)
+
+  offer       SpecialOffer @relation(fields: [offerId], references: [id])
+  reservation Reservation  @relation("OfferReservations", fields: [reservationId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@index([offerId])
+  @@index([reservationId])
+  @@map("offer_bookings")
+}
+
+// =============================================================================
+// RESTAURANTS & DINING
+// =============================================================================
+
+model Restaurant {
+  id             String @id @default(uuid())
+  businessUnitId String
+
+  name        String
+  slug        String
+  description String
+  shortDesc   String?
+
+  type    RestaurantType
+  cuisine String[]
+
+  location String?
+  phone    String?
+  email    String?
+
+  totalSeats     Int?
+  privateRooms   Int     @default(0)
+  outdoorSeating Boolean @default(false)
+  airConditioned Boolean @default(true)
+
+  operatingHours Json?
+
+  features  String[]
+  dressCode String?
+
+  priceRange  String?
+  averageMeal Decimal? @db.Decimal(8, 2)
+  currency    String   @default("PHP")
+
+  acceptsReservations Boolean @default(true)
+  advanceBookingDays  Int     @default(30)
+  minPartySize        Int     @default(1)
+  maxPartySize        Int?
+
+  // Removed images String[] - now using dedicated Image model
+  virtualTourUrl String?
+
+  hasMenu     Boolean   @default(true)
+  menuUrl     String?
+  menuUpdated DateTime?
+
+  metaTitle       String?
+  metaDescription String?
+
+  isActive    Boolean   @default(true)
+  isPublished Boolean   @default(false)
+  publishedAt DateTime?
+
+  isFeatured Boolean @default(false)
+  sortOrder  Int     @default(0)
+
+  viewCount Int @default(0)
+
+  businessUnit BusinessUnit      @relation("BusinessUnitRestaurants", fields: [businessUnitId], references: [id])
+  images       RestaurantImage[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  menuCategories MenuCategory[]
+  reservations   RestaurantReservation[]
+
+  @@unique([businessUnitId, slug])
+  @@index([businessUnitId, type, isActive])
+  @@index([isPublished, isFeatured])
+  @@map("restaurants")
+}
+
+model MenuCategory {
+  id           String @id @default(uuid())
+  restaurantId String
+
+  name        String
+  description String?
+  sortOrder   Int     @default(0)
+  isActive    Boolean @default(true)
+
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  items MenuItem[]
+
+  @@index([restaurantId, sortOrder])
+  @@map("menu_categories")
+}
+
+model MenuItem {
+  id         String @id @default(uuid())
+  categoryId String
+
+  name        String
+  description String?
+  price       Decimal @db.Decimal(8, 2)
+  currency    String  @default("PHP")
+
+  allergens  String[]
+  dietary    String[]
+  spiceLevel Int?     @db.SmallInt
+
+  isAvailable   Boolean @default(true)
+  isSignature   Boolean @default(false)
+  isRecommended Boolean @default(false)
+  isNew         Boolean @default(false)
+
+  // Removed image String? - now using dedicated Image model
+  sortOrder Int @default(0)
+
+  category MenuCategory    @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  images   MenuItemImage[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([categoryId, sortOrder])
+  @@index([isSignature, isRecommended])
+  @@map("menu_items")
+}
+
+model RestaurantReservation {
+  id           String  @id @default(uuid())
+  restaurantId String
+  guestId      String?
+
+  guestName  String
+  guestEmail String?
+  guestPhone String?
+
+  reservationDate DateTime
+  partySize       Int
+  specialRequests String?
+
+  status      String    @default("confirmed")
+  confirmedAt DateTime?
+  cancelledAt DateTime?
+
+  seatingArea String?
+  tableNumber String?
+
+  notes String?
+
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id])
+  guest      Guest?     @relation("GuestRestaurantReservations", fields: [guestId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([restaurantId, reservationDate])
+  @@index([guestId])
+  @@map("restaurant_reservations")
+}
+
+// =============================================================================
+// EVENTS & ACTIVITIES
+// =============================================================================
+
+model Event {
+  id             String @id @default(uuid())
+  businessUnitId String
+
+  title       String
+  slug        String
+  description String
+  shortDesc   String?
+
+  type   EventType
+  status EventStatus @default(PLANNING)
+
+  category String[]
+  tags     String[]
+
+  startDate DateTime
+  endDate   DateTime
+  startTime String?
+  endTime   String?
+  timezone  String   @default("Asia/Manila")
+
+  isMultiDay     Boolean @default(false)
+  isRecurring    Boolean @default(false)
+  recurrenceRule String?
+
+  venue         String
+  venueDetails  String?
+  venueCapacity Int?
+
+  isFree      Boolean  @default(true)
+  ticketPrice Decimal? @db.Decimal(10, 2)
+  currency    String   @default("PHP")
+
+  requiresBooking  Boolean @default(false)
+  maxAttendees     Int?
+  currentAttendees Int     @default(0)
+  waitlistEnabled  Boolean @default(false)
+
+  bookingOpenDate  DateTime?
+  bookingCloseDate DateTime?
+
+  minAge        Int?
+  maxAge        Int?
+  isAdultsOnly  Boolean @default(false)
+  isFamilyEvent Boolean @default(true)
+
+  requirements String[]
+  includes     String[]
+  excludes     String[]
+
+  // Removed images String[] and videoUrl - now using dedicated Image model
+  videoUrl String?
+
+  fullDetails String?
+  highlights  String[]
+
+  hostName    String?
+  hostBio     String?
+  contactInfo String?
+
+  metaTitle       String?
+  metaDescription String?
+
+  isPublished Boolean   @default(false)
+  publishedAt DateTime?
+
+  isFeatured Boolean @default(false)
+  isPinned   Boolean @default(false)
+  sortOrder  Int     @default(0)
+
+  viewCount  Int @default(0)
+  clickCount Int @default(0)
+
+  businessUnit BusinessUnit @relation("BusinessUnitEvents", fields: [businessUnitId], references: [id])
+  images       EventImage[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  bookings EventBooking[]
+
+  @@unique([businessUnitId, slug])
+  @@index([businessUnitId, type, status])
+  @@index([startDate, endDate, isPublished])
+  @@index([isFeatured, isPinned, sortOrder])
+  @@map("events")
+}
+
+model EventBooking {
+  id      String  @id @default(uuid())
+  eventId String
+  guestId String?
+
+  guestName  String
+  guestEmail String
+  guestPhone String?
+  partySize  Int     @default(1)
+
+  bookingRef String @unique
+  status     String @default("confirmed")
+
+  totalAmount   Decimal @default(0) @db.Decimal(10, 2)
+  paymentStatus String  @default("n/a")
+
+  specialRequests    String?
+  dietaryRequests    String?
+  accessibilityNeeds String?
+
+  checkedIn   Boolean   @default(false)
+  checkedInAt DateTime?
+
+  notes String?
+
+  event Event  @relation(fields: [eventId], references: [id])
+  guest Guest? @relation("GuestEventBookings", fields: [guestId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([eventId, status])
+  @@index([guestId])
+  @@map("event_bookings")
+}
+
+// =============================================================================
+// GLOBAL CMS MODELS
+// =============================================================================
+
+// Global Website Configuration
+model WebsiteConfiguration {
+  id String @id @default(uuid())
+
+  // Site Identity
+  siteName    String
+  tagline     String?
+  description String?
+  companyName String
+  logo        String?
+  favicon     String?
+
+  // Theme & Branding
+  primaryColor   String?
+  secondaryColor String?
+  accentColor    String?
+  fontFamily     String?
+  customCss      String? @db.Text
+
+  // SEO Defaults
+  defaultMetaTitle       String?
+  defaultMetaDescription String?
+  defaultMetaKeywords    String?
+
+  // Social Media
+  facebookUrl  String?
+  instagramUrl String?
+  twitterUrl   String?
+  youtubeUrl   String?
+  linkedinUrl  String?
+
+  // Contact Information
+  primaryPhone String?
+  primaryEmail String?
+  bookingEmail String?
+  supportEmail String?
+  headquarters String?
+
+  // Global Settings
+  defaultCurrency    String   @default("PHP")
+  defaultTimezone    String   @default("Asia/Manila")
+  defaultLocale      String   @default("en")
+  enableMultilingual Boolean  @default(false)
+  availableLocales   String[]
+
+  // Date & Time Formatting
+  dateFormat String @default("MM/DD/YYYY")
+  timeFormat String @default("12-hour")
+
+  // Booking Settings
+  enableOnlineBooking Boolean @default(true)
+  bookingNotice       Int     @default(24)
+  maxBookingDays      Int     @default(365)
+
+  // Features
+  enableReviews       Boolean @default(true)
+  enableNewsletter    Boolean @default(true)
+  enableLiveChat      Boolean @default(false)
+  enableBlog          Boolean @default(true)
+  enableMultiProperty Boolean @default(true)
+
+  // System Settings
+  maintenanceMode Boolean @default(false)
+  debugMode       Boolean @default(false)
+
+  // Notification Settings
+  emailNotifications      Boolean @default(true)
+  newReservationAlerts    Boolean @default(true)
+  paymentAlerts           Boolean @default(true)
+  systemMaintenanceAlerts Boolean @default(false)
+
+  // Security Settings
+  twoFactorAuth   Boolean @default(false)
+  sessionTimeout  Boolean @default(true)
+  loginMonitoring Boolean @default(true)
+  sessionDuration Int     @default(480)
+
+  // Analytics & Tracking
+  googleAnalyticsId  String?
+  facebookPixelId    String?
+  customTrackingCode String? @db.Text
+
+  // Legal Pages
+  privacyPolicyUrl  String?
+  termsOfServiceUrl String?
+  cookiePolicyUrl   String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("website_configuration")
+}
+
+// Enhanced Global Content Items
+model ContentItem {
+  id String @id @default(uuid())
+
+  // Content Identification
+  key         String
+  section     String
+  name        String
+  description String?
+
+  // Content Data
+  content     String      @db.Text
+  contentType ContentType @default(TEXT)
+
+  // Scope & Localization
+  scope  ContentScope @default(GLOBAL)
+  locale String       @default("en")
+
+  // Publishing
+  status      PublishStatus @default(PUBLISHED)
+  publishedAt DateTime?
+
+  // Versioning
+  version  Int     @default(1)
+  parentId String?
+
+  // Media associations
+  mediaItems ContentMedia[] @relation("ContentMediaItems")
+
+  parent   ContentItem?  @relation("ContentVersions", fields: [parentId], references: [id])
+  versions ContentItem[] @relation("ContentVersions")
+
+  author   User    @relation("ContentAuthor", fields: [authorId], references: [id])
+  authorId String
+  editor   User?   @relation("ContentEditor", fields: [editorId], references: [id])
+  editorId String?
+
+  // Property associations
+  properties PropertyContent[] @relation("PropertyContentItems")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([key, locale, scope])
+  @@index([section, scope])
+  @@index([status])
+  @@index([locale])
+  @@map("content_items")
+}
+
+// Junction table for ContentItem-BusinessUnit relationships
+model PropertyContent {
+  propertyId String
+  contentId  String
+
+  property BusinessUnit @relation("PropertyContentItems", fields: [propertyId], references: [id], onDelete: Cascade)
+  content  ContentItem  @relation("PropertyContentItems", fields: [contentId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@id([propertyId, contentId])
+  @@map("property_content")
+}
+
+// Enhanced Global Media Library
+model MediaItem {
+  id String @id @default(uuid())
+
+  // File Information
+  filename     String
+  originalName String
+  mimeType     String
+  size         Int
+
+  // Storage
+  url          String
+  thumbnailUrl String?
+  mediumUrl    String?
+  largeUrl     String?
+
+  // Metadata
+  title       String?
+  description String?
+  altText     String?
+  caption     String?
+
+  // Organization
+  category MediaCategory @default(OTHER)
+  tags     String[]
+  folder   String?
+
+  // SEO
+  seoFilename String?
+
+  // Usage tracking
+  usageCount Int       @default(0)
+  lastUsedAt DateTime?
+
+  // Scope & Localization
+  scope  ContentScope @default(GLOBAL)
+  locale String       @default("en")
+
+  isActive Boolean @default(true)
+
+  uploader   User   @relation("MediaUploader", fields: [uploaderId], references: [id])
+  uploaderId String
+
+  // Relationships
+  properties   PropertyMedia[] @relation("PropertyMediaItems")
+  contentItems ContentMedia[]  @relation("ContentMediaItems")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([category, isActive])
+  @@index([tags])
+  @@index([scope, locale])
+  @@map("media_items")
+}
+
+// Junction table for MediaItem-BusinessUnit relationships
+model PropertyMedia {
+  propertyId String
+  mediaId    String
+
+  property BusinessUnit @relation("PropertyMediaItems", fields: [propertyId], references: [id], onDelete: Cascade)
+  media    MediaItem    @relation("PropertyMediaItems", fields: [mediaId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@id([propertyId, mediaId])
+  @@map("property_media")
+}
+
+// Junction table for ContentItem-MediaItem relationships
+model ContentMedia {
+  contentId String
+  mediaId   String
+
+  content ContentItem @relation("ContentMediaItems", fields: [contentId], references: [id], onDelete: Cascade)
+  media   MediaItem   @relation("ContentMediaItems", fields: [mediaId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@id([contentId, mediaId])
+  @@map("content_media")
+}
+
+// Add this Hero model to your existing schema
+
+model Hero {
+  id String @id @default(uuid())
+
+  // Content
+  title       String
+  subtitle    String?
+  description String?
+  buttonText  String?
+  buttonUrl   String?
+
+  // Media
+  backgroundImage String?
+  backgroundVideo String?
+  overlayImage    String?
+
+  // Display Settings
+  isActive    Boolean @default(true)
+  isFeatured  Boolean @default(false)
+  sortOrder   Int     @default(0)
+  displayType String  @default("fullscreen") // fullscreen, banner, carousel
+
+  // Styling Options
+  textAlignment  String?  @default("center") // left, center, right
+  overlayColor   String? // for background overlay
+  overlayOpacity Decimal? @db.Decimal(3, 2) // 0.00 to 1.00
+  textColor      String?  @default("white")
+
+  // Call-to-Action
+  primaryButtonText    String?
+  primaryButtonUrl     String?
+  primaryButtonStyle   String? @default("primary")
+  secondaryButtonText  String?
+  secondaryButtonUrl   String?
+  secondaryButtonStyle String? @default("secondary")
+
+  // Scheduling
+  showFrom  DateTime?
+  showUntil DateTime?
+
+  // Targeting (if you want different heroes for different sections)
+  targetPages    String[] // e.g., ["homepage", "properties", "about"]
+  targetAudience String[] // e.g., ["all", "returning-visitors", "mobile-users"]
+
+  // SEO
+  altText String?
+  caption String?
+
+  // Analytics
+  viewCount       Int @default(0)
+  clickCount      Int @default(0)
+  conversionCount Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isActive, isFeatured, sortOrder])
+  @@index([showFrom, showUntil])
+  @@index([targetPages])
+  @@map("heroes")
+}
+
+// Global Testimonials
+model Testimonial {
+  id String @id @default(uuid())
+
+  guestName    String
+  guestTitle   String?
+  guestImage   String?
+  guestCountry String?
+
+  content String @db.Text
+  rating  Int?   @db.SmallInt
+
+  // Source
+  source    String?
+  sourceUrl String?
+
+  // Display Settings
+  isActive   Boolean      @default(true)
+  isFeatured Boolean      @default(false)
+  scope      ContentScope @default(GLOBAL)
+  sortOrder  Int          @default(0)
+
+  // Dates
+  stayDate   DateTime?
+  reviewDate DateTime?
+
+  // Property associations
+  properties PropertyTestimonial[] @relation("PropertyTestimonials")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isActive, isFeatured, scope])
+  @@index([scope, sortOrder])
+  @@map("testimonials")
+}
+
+// Junction table for Testimonial-BusinessUnit relationships
+model PropertyTestimonial {
+  propertyId    String
+  testimonialId String
+
+  property    BusinessUnit @relation("PropertyTestimonials", fields: [propertyId], references: [id], onDelete: Cascade)
+  testimonial Testimonial  @relation("PropertyTestimonials", fields: [testimonialId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@id([propertyId, testimonialId])
+  @@map("property_testimonials")
+}
+
+// Global FAQs
+model FAQ {
+  id String @id @default(uuid())
+
+  question String
+  answer   String       @db.Text
+  category String       @default("General")
+  scope    ContentScope @default(GLOBAL)
+
+  isActive  Boolean @default(true)
+  sortOrder Int     @default(0)
+
+  // Usage tracking
+  viewCount  Int       @default(0)
+  lastViewed DateTime?
+
+  // Property associations
+  properties PropertyFAQ[] @relation("PropertyFAQs")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([category, isActive, scope])
+  @@index([scope, sortOrder])
+  @@map("faqs")
+}
+
+// Junction table for FAQ-BusinessUnit relationships
+model PropertyFAQ {
+  propertyId String
+  faqId      String
+
+  property BusinessUnit @relation("PropertyFAQs", fields: [propertyId], references: [id], onDelete: Cascade)
+  faq      FAQ          @relation("PropertyFAQs", fields: [faqId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@id([propertyId, faqId])
+  @@map("property_faqs")
+}
+
+// SEO & Analytics
+model SeoSetting {
+  id String @id @default(uuid())
+
+  // Page/URL identification
+  path     String @unique
+  pageType String
+
+  title       String?
+  description String?
+  keywords    String?
+
+  // Open Graph
+  ogTitle       String?
+  ogDescription String?
+  ogImage       String?
+
+  // Schema.org structured data
+  schemaMarkup String? @db.Text
+
+  // Canonical URL
+  canonicalUrl String?
+
+  // Robots directives
+  robotsIndex  Boolean @default(true)
+  robotsFollow Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([pageType])
+  @@map("seo_settings")
+}
+
+// =============================================================================
+// CONTACT & NEWSLETTER
+// =============================================================================
+
+model ContactForm {
+  id             String  @id @default(uuid())
+  businessUnitId String?
+
+  name    String
+  email   String
+  phone   String?
+  subject String?
+  message String
+
+  category String?
+  priority String  @default("normal")
+
+  status      String    @default("new")
+  assignedTo  String?
+  response    String?
+  respondedAt DateTime?
+
+  ipAddress String?
+  userAgent String?
+  referrer  String?
+
+  businessUnit BusinessUnit? @relation("ContactForms", fields: [businessUnitId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([businessUnitId, status])
+  @@index([category, createdAt])
+  @@map("contact_forms")
+}
+
+model Newsletter {
+  id             String  @id @default(uuid())
+  businessUnitId String?
+
+  email     String
+  firstName String?
+  lastName  String?
+
+  isActive       Boolean   @default(true)
+  confirmedAt    DateTime?
+  unsubscribedAt DateTime?
+
+  preferences Json?
+
+  businessUnit BusinessUnit? @relation("NewsletterSubscriptions", fields: [businessUnitId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([businessUnitId, email])
+  @@index([isActive])
+  @@map("newsletter_subscriptions")
+}
+
+// =============================================================================
+// SYSTEM MODELS
+// =============================================================================
+
+model UserSession {
+  id        String   @id @default(uuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  ipAddress String?
+  userAgent String?
+  isActive  Boolean  @default(true)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([token])
+  @@index([expiresAt])
+  @@map("user_sessions")
+}
+
+model AuditLog {
+  id        String  @id @default(uuid())
+  userId    String?
+  action    String
+  entity    String
+  entityId  String?
+  oldValues Json?
+  newValues Json?
+  ipAddress String?
+  userAgent String?
+
+  user User? @relation(fields: [userId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@index([entity, entityId])
+  @@index([action, createdAt])
+  @@map("audit_logs")
+}
+
+model SystemSetting {
+  id    String @id @default(uuid())
+  key   String @unique
+  value String
+  type  String @default("string")
+
+  description String?
+  category    String?
+  isPublic    Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([category])
+  @@map("system_settings")
+}
+
+model Notification {
+  id      String  @id @default(uuid())
+  userId  String?
+  type    String
+  title   String
+  message String
+  data    Json?
+
+  isRead Boolean   @default(false)
+  readAt DateTime?
+
+  user User? @relation("UserNotifications", fields: [userId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@index([userId, isRead])
+  @@index([type, createdAt])
+  @@map("notifications")
+}
+
+// Email Templates
+model EmailTemplate {
+  id String @id @default(uuid())
+
+  name        String  @unique
+  subject     String
+  htmlContent String  @db.Text
+  textContent String? @db.Text
+
+  variables Json? @db.Json
+
+  category String
+
+  locale String @default("en")
+
+  isActive Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([category, locale])
+  @@index([isActive])
+  @@map("email_templates")
+}
+
+// Site-wide announcements
+model Announcement {
+  id String @id @default(uuid())
+
+  title   String
+  content String
+  type    String @default("info")
+
+  showOnPages   String[]
+  position      String   @default("top")
+  isDismissible Boolean  @default(true)
+
+  backgroundColor String?
+  textColor       String?
+
+  startDate DateTime?
+  endDate   DateTime?
+
+  userRoles      String[]
+  isGuestVisible Boolean  @default(true)
+
+  isActive Boolean @default(true)
+  priority Int     @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isActive, startDate, endDate])
+  @@index([priority])
+  @@map("announcements")
+}
+
+// Site performance and analytics
+model PageAnalytics {
+  id String @id @default(uuid())
+
+  path String
+  date DateTime @db.Date
+
+  pageViews     Int      @default(0)
+  uniqueViews   Int      @default(0)
+  bounceRate    Decimal? @db.Decimal(5, 2)
+  avgTimeOnPage Int?
+
+  loadTime Decimal? @db.Decimal(8, 2)
+
+  topReferrers Json? @db.Json
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([path, date])
+  @@index([date])
+  @@index([path, date])
+  @@map("page_analytics")
+}
+
+// Search functionality
+model SearchIndex {
+  id String @id @default(uuid())
+
+  entityType String
+  entityId   String
+
+  title    String
+  content  String   @db.Text
+  keywords String[]
+
+  url         String
+  locale      String   @default("en")
+  lastIndexed DateTime @default(now())
+
+  boost Decimal @default(1.0) @db.Decimal(3, 2)
+
+  isActive Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([entityType, entityId, locale])
+  @@index([keywords])
+  @@index([locale, isActive])
+  @@map("search_index")
+}
+
+model SearchQuery {
+  id String @id @default(uuid())
+
+  query         String
+  results       Int     @default(0)
+  clickedResult String?
+
+  ipAddress String?
+  userAgent String?
+  locale    String  @default("en")
+
+  createdAt DateTime @default(now())
+
+  @@index([query, createdAt])
+  @@index([createdAt])
+  @@map("search_queries")
+}
+
+// Feedback system
+model Feedback {
+  id String @id @default(cuid())
+
+  content String @db.Text
+
+  category  FeedbackCategory  @default(GENERAL_INQUIRY)
+  sentiment FeedbackSentiment @default(NEUTRAL)
+  status    FeedbackStatus    @default(NEW)
+  priority  FeedbackPriority?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("feedback")
+}
+
+model Promo {
+  id String @id @default(uuid())
+
+  // Basic Information
+  code        String      @unique
+  title       String
+  description String
+  type        PromoType
+  status      PromoStatus @default(DRAFT)
+
+  // Discount Configuration
+  discountValue     Decimal  @db.Decimal(10, 2) // percentage or fixed amount
+  maxDiscountAmount Decimal? @db.Decimal(10, 2) // max discount for percentage type
+  minOrderAmount    Decimal? @db.Decimal(10, 2) // minimum booking amount required
+
+  // Usage Limits
+  maxUses        Int? // null = unlimited
+  maxUsesPerUser Int  @default(1)
+  usedCount      Int  @default(0)
+
+  // Date Restrictions
+  validFrom     DateTime
+  validTo       DateTime
+  blackoutDates DateTime[] // dates when promo can't be used
+
+  // Stay Period Restrictions (when the actual stay can happen)
+  stayPeriodFrom DateTime?
+  stayPeriodTo   DateTime?
+
+  // Booking Restrictions
+  minAdvanceBooking Int? // minimum days in advance
+  maxAdvanceBooking Int? // maximum days in advance
+  minNights         Int  @default(1)
+  maxNights         Int?
+
+  // Day of Week Restrictions
+  validDays Json? // {"monday": true, "tuesday": false, ...}
+
+  // Property/Room Type Restrictions
+  applicableProperties String[] // business unit IDs, empty = all properties
+  applicableRoomTypes  String[] // room type IDs, empty = all room types
+  excludedProperties   String[] // excluded business unit IDs
+  excludedRoomTypes    String[] // excluded room type IDs
+
+  // Additional Conditions
+  requiresNewCustomer  Boolean @default(false)
+  combinableWithOffers Boolean @default(false)
+
+  // Terms & Conditions
+  terms        String?
+  restrictions String?
+
+  // Display Settings
+  isPublic   Boolean @default(true) // show on website
+  isFeatured Boolean @default(false)
+  priority   Int     @default(0)
+
+  // Metadata
+  internalNotes String?
+  createdBy     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationships
+  vouchers PromoVoucher[] @relation("PromoVouchers")
+  usages   PromoUsage[]   @relation("PromoUsages")
+
+  @@index([code])
+  @@index([status, validFrom, validTo])
+  @@index([type, isPublic])
+  @@map("promos")
+}
+
+// Individual voucher instances (for unique/gift vouchers)
+model PromoVoucher {
+  id String @id @default(uuid())
+
+  // Voucher Details
+  voucherCode String        @unique
+  promoId     String?
+  status      VoucherStatus @default(ACTIVE)
+
+  // If not linked to a Promo, standalone voucher details
+  title             String?
+  description       String?
+  discountType      PromoType?
+  discountValue     Decimal?   @db.Decimal(10, 2)
+  maxDiscountAmount Decimal?   @db.Decimal(10, 2)
+  minOrderAmount    Decimal?   @db.Decimal(10, 2)
+
+  // Validity
+  validFrom DateTime
+  validTo   DateTime
+
+  // Usage Tracking
+  maxUses   Int @default(1)
+  usedCount Int @default(0)
+
+  // Assignment (for gift vouchers)
+  assignedToEmail String?
+  assignedToName  String?
+  assignedBy      String? // user ID who created/assigned this voucher
+
+  // Purchase Info (for paid vouchers)
+  purchaseAmount Decimal?  @db.Decimal(10, 2)
+  purchasedBy    String? // user/guest ID
+  purchasedAt    DateTime?
+
+  // Usage Details
+  usedBy         String? // user/guest ID
+  usedAt         DateTime?
+  usedInBooking  String? // reservation ID
+  remainingValue Decimal?  @db.Decimal(10, 2) // for partial usage
+
+  // Metadata
+  notes         String?
+  internalNotes String?
+
+  promo Promo? @relation("PromoVouchers", fields: [promoId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([voucherCode])
+  @@index([status, validFrom, validTo])
+  @@index([assignedToEmail])
+  @@index([usedBy])
+  @@map("promo_vouchers")
+}
+
+// Track promo usage in bookings
+model PromoUsage {
+  id String @id @default(uuid())
+
+  promoId       String?
+  voucherId     String?
+  reservationId String
+
+  // Usage Details
+  originalAmount Decimal @db.Decimal(10, 2)
+  discountAmount Decimal @db.Decimal(10, 2)
+  finalAmount    Decimal @db.Decimal(10, 2)
+
+  // User who applied the promo
+  appliedBy String? // user/guest ID
+  appliedAt DateTime @default(now())
+
+  // Validation details
+  codeUsed   String
+  promoTitle String
+
+  promo       Promo?      @relation("PromoUsages", fields: [promoId], references: [id])
+  reservation Reservation @relation("ReservationPromos", fields: [reservationId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@index([promoId, appliedAt])
+  @@index([reservationId])
+  @@index([codeUsed])
+  @@map("promo_usages")
+}
