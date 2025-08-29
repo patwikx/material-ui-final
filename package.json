@@ -2,12 +2,12 @@
   "name": "material-ui-final",
   "version": "0.1.0",
   "private": true,
-  "scripts": {
-    "dev": "next dev --turbopack",
-    "build": "next build --turbopack",
-    "start": "next start",
-    "lint": "eslint"
-  },
+ "scripts": {
+  "dev": "npx prisma generate && next dev --turbopack",
+  "build": "npx prisma generate && next build --turbopack",
+  "start": "next start",
+  "lint": "eslint"
+},
   "prisma": {
     "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} lib/seed.ts"
   },
