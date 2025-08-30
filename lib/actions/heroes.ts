@@ -2,7 +2,6 @@
 
 import { prisma } from '../prisma';
 import { cache } from 'react';
-import { generatePresignedUrl } from '@/lib/minio';
 import { Hero as PrismaHero } from '@prisma/client';
 
 export interface HeroData {
@@ -42,18 +41,19 @@ export interface HeroData {
   updatedAt: Date;
 }
 
-const mapPrismaHeroToHeroData = async (hero: PrismaHero): Promise<HeroData> => {
-  // Generate presigned URLs for all image and video fields
-  const backgroundImage = hero.backgroundImage ? await generatePresignedUrl(hero.backgroundImage) : null;
-  const backgroundVideo = hero.backgroundVideo ? await generatePresignedUrl(hero.backgroundVideo) : null;
-  const overlayImage = hero.overlayImage ? await generatePresignedUrl(hero.overlayImage) : null;
+// FIX: Helper function now generates a permanent public URL
+const mapPrismaHeroToHeroData = (hero: PrismaHero): HeroData => {
+  const minioBaseUrl = `https://${process.env.MINIO_ENDPOINT}/${process.env.MINIO_DOCUMENTS_BUCKET}`;
+
+  const getPublicUrl = (fileName: string | null) => {
+    return fileName ? `${minioBaseUrl}/${fileName}` : null;
+  };
 
   return {
     ...hero,
-    // Overwrite the filenames with the pre-signed URLs
-    backgroundImage,
-    backgroundVideo,
-    overlayImage,
+    backgroundImage: getPublicUrl(hero.backgroundImage),
+    backgroundVideo: getPublicUrl(hero.backgroundVideo),
+    overlayImage: getPublicUrl(hero.overlayImage),
     // Convert Decimal types to number for client components
     overlayOpacity: hero.overlayOpacity ? Number(hero.overlayOpacity) : null,
     // Ensure array fields are handled
@@ -106,8 +106,7 @@ export const getActiveHeroes = cache(async (targetPage: string = 'homepage'): Pr
       ]
     });
 
-    // Map each hero to HeroData and generate presigned URLs
-    return Promise.all(heroes.map(hero => mapPrismaHeroToHeroData(hero)));
+    return heroes.map(hero => mapPrismaHeroToHeroData(hero));
 
   } catch (error) {
     console.error('Error fetching heroes:', error);
@@ -161,8 +160,7 @@ export const getFeaturedHero = cache(async (targetPage: string = 'homepage'): Pr
 
     if (!hero) return null;
 
-    // Map the single hero object to HeroData and generate presigned URLs
-    return await mapPrismaHeroToHeroData(hero);
+    return mapPrismaHeroToHeroData(hero);
 
   } catch (error) {
     console.error('Error fetching featured hero:', error);

@@ -1,18 +1,18 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   Box,
   Typography,
   LinearProgress,
   IconButton,
-  CircularProgress,
 } from '@mui/material';
 import {
   CloudUpload as UploadIcon,
   Close as CloseIcon,
   InsertDriveFile as FileIcon,
   Autorenew as Loader2,
+  Image as ImageIcon,
   Videocam as VideoIcon,
 } from '@mui/icons-material';
 
@@ -230,10 +230,11 @@ export function FileUpload({
   );
 }
 
-// MODIFIED: The display component now handles previewing images and videos
+// MODIFIED: The display component now receives the public URL as a prop
 interface UploadedFileDisplayProps {
-  fileName: string; // The unique key from MinIO
-  name: string; // The original, user-friendly filename
+  fileName: string;
+  name: string;
+  fileUrl: string | null; // This prop now contains the direct public URL
   onRemove: () => void;
   disabled?: boolean;
 }
@@ -241,46 +242,16 @@ interface UploadedFileDisplayProps {
 export function UploadedFileDisplay({
   fileName,
   name,
+  fileUrl,
   onRemove,
   disabled = false,
 }: UploadedFileDisplayProps) {
-  const [fileUrl, setFileUrl] = useState<string | null>(null);
-  const [loadingUrl, setLoadingUrl] = useState(true);
-
-  useEffect(() => {
-    const fetchPresignedUrl = async () => {
-      setLoadingUrl(true);
-      try {
-        const response = await fetch(`/api/minio/presigned-url?fileName=${fileName}`);
-        const result = await response.json();
-        if (result.success) {
-          setFileUrl(result.url);
-        } else {
-          console.error('Failed to get pre-signed URL:', result.error);
-        }
-      } catch (error) {
-        console.error('API call failed:', error);
-      } finally {
-        setLoadingUrl(false);
-      }
-    };
-
-    if (fileName) {
-      fetchPresignedUrl();
-    } else {
-      setFileUrl(null);
-      setLoadingUrl(false);
-    }
-  }, [fileName]);
-
   const fileExtension = name.split('.').pop()?.toLowerCase() || '';
   const isImage = ['jpg', 'jpeg', 'png', 'gif'].includes(fileExtension);
   const isVideo = ['mp4', 'webm', 'mov'].includes(fileExtension);
 
   const renderPreview = () => {
-    if (loadingUrl) {
-      return <CircularProgress size={20} sx={{ color: darkTheme.primary }} />;
-    }
+    // FIX: Directly use the fileUrl prop
     if (isImage && fileUrl) {
       return (
         <Box sx={{ position: 'relative', width: 64, height: 64, flexShrink: 0, mr: 2 }}>
@@ -288,6 +259,7 @@ export function UploadedFileDisplay({
         </Box>
       );
     }
+    // FIX: Directly use the fileUrl prop for the video icon preview
     if (isVideo && fileUrl) {
       return (
         <Box sx={{ position: 'relative', width: 64, height: 64, flexShrink: 0, mr: 2 }}>

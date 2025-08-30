@@ -21,7 +21,6 @@ import {
   IconButton,
   Alert,
   Snackbar,
-  FormControlLabel,
   CircularProgress,
 } from '@mui/material';
 import {
@@ -134,12 +133,18 @@ const EditHeroPage: React.FC = () => {
     severity: 'success',
   });
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [errors, setErrors] = useState<Record<string, string>>({}); // FIX: Correctly declared errors state
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const [uploadedBackgroundImage, setUploadedBackgroundImage] = useState<{ fileName: string; name: string } | null>(null);
-  const [uploadedBackgroundVideo, setUploadedBackgroundVideo] = useState<{ fileName: string; name: string } | null>(null);
-  const [uploadedOverlayImage, setUploadedOverlayImage] = useState<{ fileName: string; name: string } | null>(null);
+  // Updated state for uploaded files - now storing both fileName and fileUrl
+  const [uploadedFiles, setUploadedFiles] = useState<{
+    backgroundImage: { fileName: string; name: string; fileUrl: string } | null;
+    backgroundVideo: { fileName: string; name: string; fileUrl: string } | null;
+    overlayImage: { fileName: string; name: string; fileUrl: string } | null;
+  }>({
+    backgroundImage: null,
+    backgroundVideo: null,
+    overlayImage: null,
+  });
 
   useEffect(() => {
     const loadHero = async () => {
@@ -177,9 +182,39 @@ const EditHeroPage: React.FC = () => {
             caption: heroData.caption || '',
           });
 
-          if (heroData.backgroundImage) setUploadedBackgroundImage({ fileName: heroData.backgroundImage, name: heroData.backgroundImage.split('/').pop()! });
-          if (heroData.backgroundVideo) setUploadedBackgroundVideo({ fileName: heroData.backgroundVideo, name: heroData.backgroundVideo.split('/').pop()! });
-          if (heroData.overlayImage) setUploadedOverlayImage({ fileName: heroData.overlayImage, name: heroData.overlayImage.split('/').pop()! });
+          // Set uploaded files with both fileName and public URL
+          if (heroData.backgroundImage) {
+            setUploadedFiles(prev => ({
+              ...prev,
+              backgroundImage: {
+                fileName: heroData.backgroundImage!.split('/').pop()!,
+                name: heroData.backgroundImage!.split('/').pop()!,
+                fileUrl: heroData.backgroundImage!, // This is now the full public URL
+              }
+            }));
+          }
+          
+          if (heroData.backgroundVideo) {
+            setUploadedFiles(prev => ({
+              ...prev,
+              backgroundVideo: {
+                fileName: heroData.backgroundVideo!.split('/').pop()!,
+                name: heroData.backgroundVideo!.split('/').pop()!,
+                fileUrl: heroData.backgroundVideo!, // This is now the full public URL
+              }
+            }));
+          }
+          
+          if (heroData.overlayImage) {
+            setUploadedFiles(prev => ({
+              ...prev,
+              overlayImage: {
+                fileName: heroData.overlayImage!.split('/').pop()!,
+                name: heroData.overlayImage!.split('/').pop()!,
+                fileUrl: heroData.overlayImage!, // This is now the full public URL
+              }
+            }));
+          }
 
         } else {
           setSnackbar({
@@ -212,16 +247,90 @@ const EditHeroPage: React.FC = () => {
     }));
   };
 
+  // Updated upload handlers to work with the new API response structure
+  const handleBackgroundImageUpload = (result: { fileName: string; name: string }) => {
+    // Since the API now returns fileUrl, we need to construct it from the response
+    const fileUrl = `/api/file/${result.fileName}`; // Adjust this based on your actual file serving endpoint
+    
+    setUploadedFiles(prev => ({
+      ...prev,
+      backgroundImage: {
+        fileName: result.fileName,
+        name: result.name,
+        fileUrl: fileUrl,
+      }
+    }));
+    
+    // Update form data with just the fileName for storage
+    handleInputChange('backgroundImage', result.fileName);
+  };
+
+  const handleBackgroundVideoUpload = (result: { fileName: string; name: string }) => {
+    const fileUrl = `/api/file/${result.fileName}`;
+    
+    setUploadedFiles(prev => ({
+      ...prev,
+      backgroundVideo: {
+        fileName: result.fileName,
+        name: result.name,
+        fileUrl: fileUrl,
+      }
+    }));
+    
+    handleInputChange('backgroundVideo', result.fileName);
+  };
+
+  const handleOverlayImageUpload = (result: { fileName: string; name: string }) => {
+    const fileUrl = `/api/file/${result.fileName}`;
+    
+    setUploadedFiles(prev => ({
+      ...prev,
+      overlayImage: {
+        fileName: result.fileName,
+        name: result.name,
+        fileUrl: fileUrl,
+      }
+    }));
+    
+    handleInputChange('overlayImage', result.fileName);
+  };
+
+  // Updated remove handlers
+  const handleRemoveBackgroundImage = () => {
+    setUploadedFiles(prev => ({
+      ...prev,
+      backgroundImage: null,
+    }));
+    handleInputChange('backgroundImage', '');
+  };
+
+  const handleRemoveBackgroundVideo = () => {
+    setUploadedFiles(prev => ({
+      ...prev,
+      backgroundVideo: null,
+    }));
+    handleInputChange('backgroundVideo', '');
+  };
+
+  const handleRemoveOverlayImage = () => {
+    setUploadedFiles(prev => ({
+      ...prev,
+      overlayImage: null,
+    }));
+    handleInputChange('overlayImage', '');
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
 
     try {
+      // Use just the fileName for database storage (not the full URL)
       const updatedData = {
         ...formData,
-        backgroundImage: uploadedBackgroundImage?.fileName || '',
-        backgroundVideo: uploadedBackgroundVideo?.fileName || '',
-        overlayImage: uploadedOverlayImage?.fileName || '',
+        backgroundImage: uploadedFiles.backgroundImage?.fileName || '',
+        backgroundVideo: uploadedFiles.backgroundVideo?.fileName || '',
+        overlayImage: uploadedFiles.overlayImage?.fileName || '',
         showFrom: formData.showFrom ? new Date(formData.showFrom) : null,
         showUntil: formData.showUntil ? new Date(formData.showUntil) : null,
       };
@@ -256,7 +365,6 @@ const EditHeroPage: React.FC = () => {
     setSnackbar(prev => ({ ...prev, open: false }));
   };
 
-  // FIX: Helper function to get the error message
   const getError = (field: keyof HeroFormData) => errors[field];
 
   if (loading) {
@@ -649,60 +757,66 @@ const EditHeroPage: React.FC = () => {
                     <Stack spacing={4}>
                       {/* Background Image Upload */}
                       <Box>
-                        <Typography sx={{ fontWeight: 600, color: darkTheme.text, mb: 1, fontSize: '0.875rem' }}>
+                        <Typography sx={{ fontWeight: 600, color: darkTheme.text, mb: 2, fontSize: '0.875rem' }}>
                           Background Image
                         </Typography>
-                        {formData.backgroundImage ? (
+                        {uploadedFiles.backgroundImage ? (
                           <UploadedFileDisplay
-                            fileName={formData.backgroundImage}
-                            name={formData.altText || formData.backgroundImage.split('/').pop()!}
-                            onRemove={() => handleInputChange('backgroundImage', '')}
+                            fileName={uploadedFiles.backgroundImage.fileName}
+                            name={uploadedFiles.backgroundImage.name}
+                            fileUrl={uploadedFiles.backgroundImage.fileUrl}
+                            onRemove={handleRemoveBackgroundImage}
                           />
                         ) : (
                           <FileUpload
-                            onUploadComplete={(result) => handleInputChange('backgroundImage', result.fileName)}
+                            onUploadComplete={handleBackgroundImageUpload}
                             onUploadError={(message) => setSnackbar({ open: true, message, severity: 'error' })}
-                            accept="image/jpeg,image/png,image/gif"
+                            accept=".jpg,.jpeg,.png,.gif,.webp"
+                            maxSize={16}
                           />
                         )}
                       </Box>
 
-                      {/* Background Video URL */}
+                      {/* Background Video Upload */}
                       <Box>
-                        <Typography sx={{ fontWeight: 600, color: darkTheme.text, mb: 1, fontSize: '0.875rem' }}>
+                        <Typography sx={{ fontWeight: 600, color: darkTheme.text, mb: 2, fontSize: '0.875rem' }}>
                           Background Video
                         </Typography>
-                        {formData.backgroundVideo ? (
+                        {uploadedFiles.backgroundVideo ? (
                           <UploadedFileDisplay
-                            fileName={formData.backgroundVideo}
-                            name={formData.caption || formData.backgroundVideo.split('/').pop()!}
-                            onRemove={() => handleInputChange('backgroundVideo', '')}
+                            fileName={uploadedFiles.backgroundVideo.fileName}
+                            name={uploadedFiles.backgroundVideo.name}
+                            fileUrl={uploadedFiles.backgroundVideo.fileUrl}
+                            onRemove={handleRemoveBackgroundVideo}
                           />
                         ) : (
                           <FileUpload
-                            onUploadComplete={(result) => handleInputChange('backgroundVideo', result.fileName)}
+                            onUploadComplete={handleBackgroundVideoUpload}
                             onUploadError={(message) => setSnackbar({ open: true, message, severity: 'error' })}
-                            accept="video/mp4,video/webm"
+                            accept=".mp4,.webm,.mov"
+                            maxSize={50}
                           />
                         )}
                       </Box>
 
-                      {/* Overlay Image URL */}
+                      {/* Overlay Image Upload */}
                       <Box>
-                        <Typography sx={{ fontWeight: 600, color: darkTheme.text, mb: 1, fontSize: '0.875rem' }}>
+                        <Typography sx={{ fontWeight: 600, color: darkTheme.text, mb: 2, fontSize: '0.875rem' }}>
                           Overlay Image
                         </Typography>
-                        {formData.overlayImage ? (
+                        {uploadedFiles.overlayImage ? (
                           <UploadedFileDisplay
-                            fileName={formData.overlayImage}
-                            name={formData.overlayImage.split('/').pop()!}
-                            onRemove={() => handleInputChange('overlayImage', '')}
+                            fileName={uploadedFiles.overlayImage.fileName}
+                            name={uploadedFiles.overlayImage.name}
+                            fileUrl={uploadedFiles.overlayImage.fileUrl}
+                            onRemove={handleRemoveOverlayImage}
                           />
                         ) : (
                           <FileUpload
-                            onUploadComplete={(result) => handleInputChange('overlayImage', result.fileName)}
+                            onUploadComplete={handleOverlayImageUpload}
                             onUploadError={(message) => setSnackbar({ open: true, message, severity: 'error' })}
-                            accept="image/jpeg,image/png,image/gif"
+                            accept=".jpg,.jpeg,.png,.gif,.webp"
+                            maxSize={16}
                           />
                         )}
                       </Box>

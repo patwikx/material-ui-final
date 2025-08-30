@@ -1,8 +1,6 @@
 'use client';
 
 import React, { useState } from 'react';
-import Link from 'next/link';
-import { useRouter, useParams } from 'next/navigation';
 import {
   Box,
   Container,
@@ -38,9 +36,11 @@ import {
   ChevronRightTwoTone,
   Mouse as ClickIcon,
 } from '@mui/icons-material';
+import { useRouter } from 'next/navigation';
 import { HeroData } from '@/lib/actions/heroes';
 import { deleteHeroSlide, toggleHeroFeatured, toggleHeroStatus } from '@/lib/cms-actions/hero-management';
 import { useBusinessUnit } from '@/context/business-unit-context';
+import Link from 'next/link';
 
 // Enhanced dark theme matching BusinessUnitSwitcher aesthetic
 const darkTheme = {
@@ -60,7 +60,6 @@ const darkTheme = {
   errorBg: 'rgba(239, 68, 68, 0.1)',
   warning: '#f59e0b',
   warningBg: 'rgba(245, 158, 11, 0.1)',
-  // FIX: Added the missing property
   errorHover: '#b91c1c',
 };
 
@@ -195,6 +194,10 @@ const HeroListPage: React.FC<HeroListPageProps> = ({ initialHeroes }) => {
     return 'No Background';
   };
 
+  const handleCloseSnackbar = () => {
+    setSnackbar(null);
+  };
+  
   return (
     <Box 
       sx={{ 
@@ -246,7 +249,7 @@ const HeroListPage: React.FC<HeroListPageProps> = ({ initialHeroes }) => {
             
             <Button
               startIcon={<AddIcon />}
-              onClick={() => router.push(`/admin/cms/hero/new`)}
+              onClick={() => router.push(`/${businessUnitId}/admin/cms/hero/new`)}
               sx={{
                 backgroundColor: darkTheme.primary,
                 color: 'white',
@@ -390,7 +393,7 @@ const HeroListPage: React.FC<HeroListPageProps> = ({ initialHeroes }) => {
             </Typography>
             <Button
               startIcon={<AddIcon />}
-              onClick={() => router.push(`/admin/cms/hero/new`)}
+              onClick={() => router.push(`/${businessUnitId}/admin/cms/hero/new`)}
               sx={{
                 backgroundColor: darkTheme.primary,
                 color: 'white',
@@ -443,34 +446,30 @@ const HeroListPage: React.FC<HeroListPageProps> = ({ initialHeroes }) => {
                         mr: 2,
                       }}
                     >
-                      {hero.backgroundImage ? (
-  <Box
-    component="img"
-    src={hero.backgroundImage}
-    alt={hero.altText || hero.title || ''} // FIX: Added a final fallback of an empty string
-    sx={{
-      width: '100%',
-      height: '100%',
-      objectFit: 'cover',
-    }}
-  />
-) : hero.backgroundVideo ? (
-  <Box // FIX: Conditionally render the video preview as an img
-    component="img"
-    src={hero.backgroundVideo} // This will be the video thumbnail URL if available
-    alt={hero.altText || hero.title || ''} // FIX: Added a final fallback
-    sx={{
-      width: '100%',
-      height: '100%',
-      objectFit: 'cover',
-    }}
-  />
-) : (
-  <MediaIcon sx={{
-    fontSize: '24px',
-    color: darkTheme.textSecondary
-  }} />
-)}
+                      {hero.backgroundImage && (
+                        <Box
+                          component="img"
+                          src={hero.backgroundImage}
+                          alt={hero.altText || hero.title || ''} // FIX: Added a fallback
+                          sx={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover',
+                          }}
+                        />
+                      )}
+                      {hero.backgroundVideo && !hero.backgroundImage && (
+                        <MediaIcon sx={{ 
+                          fontSize: '24px', 
+                          color: darkTheme.textSecondary 
+                        }} />
+                      )}
+                      {!hero.backgroundImage && !hero.backgroundVideo && (
+                        <ImageIcon sx={{ 
+                          fontSize: '24px', 
+                          color: darkTheme.textSecondary 
+                        }} />
+                      )}
                     </Box>
 
                     {/* Content - BusinessUnit style layout */}
@@ -626,7 +625,8 @@ const HeroListPage: React.FC<HeroListPageProps> = ({ initialHeroes }) => {
 
                       <Tooltip title="Edit hero slide">
                         <IconButton
-                          onClick={() => router.push(`/admin/cms/hero/${hero.id}`)}
+                          component={Link}
+                          href={`/admin/cms/hero/${hero.id}`}
                           sx={{ 
                             color: darkTheme.textSecondary,
                             '&:hover': {
@@ -745,11 +745,11 @@ const HeroListPage: React.FC<HeroListPageProps> = ({ initialHeroes }) => {
         <Snackbar
           open={snackbar !== null}
           autoHideDuration={6000}
-          onClose={() => setSnackbar(null)}
+          onClose={handleCloseSnackbar}
           anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
         >
           <Alert
-            onClose={() => setSnackbar(null)}
+            onClose={handleCloseSnackbar}
             severity={snackbar?.severity}
             sx={{ 
               width: '100%',
