@@ -42,7 +42,6 @@ const Hero: React.FC<HeroProps> = ({ heroData }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
-  // Default fallback data if no hero data is provided
   const defaultHero: Partial<HeroData> = {
     title: 'Experience Luxury Beyond Imagination',
     subtitle: 'Award-winning luxury hospitality since 1995',
@@ -68,7 +67,6 @@ const Hero: React.FC<HeroProps> = ({ heroData }) => {
 
   const handleButtonClick = async (url?: string | null) => {
     if (heroData?.id) {
-      // Track click count using server action
       try {
         await incrementHeroClick(heroData.id);
       } catch (error) {
@@ -81,7 +79,6 @@ const Hero: React.FC<HeroProps> = ({ heroData }) => {
     }
   };
 
-  // Parse title to handle line breaks
   const titleParts = hero.title?.split('\n') || ['Experience Luxury', 'Beyond Imagination'];
   
   return (
@@ -91,6 +88,7 @@ const Hero: React.FC<HeroProps> = ({ heroData }) => {
         minHeight: hero.displayType === 'banner' ? '60vh' : '100vh',
         display: 'flex',
         alignItems: 'center',
+        // FIX: Use the presigned URL directly
         backgroundImage: hero.backgroundImage ? `url(${hero.backgroundImage})` : `url(${defaultHero.backgroundImage})`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
@@ -107,7 +105,6 @@ const Hero: React.FC<HeroProps> = ({ heroData }) => {
         },
       }}
     >
-      {/* Background Video if provided */}
       {hero.backgroundVideo && (
         <Box
           component="video"
@@ -124,14 +121,15 @@ const Hero: React.FC<HeroProps> = ({ heroData }) => {
             zIndex: 0,
           }}
         >
+          {/* FIX: Use the presigned URL directly */}
           <source src={hero.backgroundVideo} type="video/mp4" />
         </Box>
       )}
 
-      {/* Overlay Image if provided */}
       {hero.overlayImage && (
         <Box
           component="img"
+          // FIX: Use the presigned URL directly
           src={hero.overlayImage}
           alt={hero.altText || 'Hero overlay'}
           sx={{
@@ -155,7 +153,6 @@ const Hero: React.FC<HeroProps> = ({ heroData }) => {
           color: hero.textColor || darkTheme.text,
         }}
       >
-        {/* Subtitle with stars */}
         {hero.subtitle && (
           <Box sx={{ mb: 3 }}>
             <Stack direction="row" spacing={1} justifyContent={hero.textAlignment === 'left' ? 'flex-start' : hero.textAlignment === 'right' ? 'flex-end' : 'center'} alignItems="center" sx={{ mb: 2 }}>
@@ -169,7 +166,6 @@ const Hero: React.FC<HeroProps> = ({ heroData }) => {
           </Box>
         )}
 
-        {/* Main Title */}
         <Typography
           variant="h1"
           component="h1"
@@ -196,7 +192,6 @@ const Hero: React.FC<HeroProps> = ({ heroData }) => {
           )}
         </Typography>
 
-        {/* Description */}
         {hero.description && (
           <Typography
             variant="h5"
@@ -214,7 +209,6 @@ const Hero: React.FC<HeroProps> = ({ heroData }) => {
           </Typography>
         )}
 
-        {/* Action Buttons */}
         {(hero.primaryButtonText || hero.secondaryButtonText) && (
           <Stack
             direction={isMobile ? 'column' : 'row'}
@@ -222,7 +216,6 @@ const Hero: React.FC<HeroProps> = ({ heroData }) => {
             justifyContent={hero.textAlignment === 'left' ? 'flex-start' : hero.textAlignment === 'right' ? 'flex-end' : 'center'}
             alignItems="center"
           >
-            {/* Primary Button */}
             {hero.primaryButtonText && (
               <Button
                 variant={hero.primaryButtonStyle === 'outlined' ? 'outlined' : 'contained'}
@@ -256,7 +249,6 @@ const Hero: React.FC<HeroProps> = ({ heroData }) => {
               </Button>
             )}
             
-            {/* Secondary Button */}
             {hero.secondaryButtonText && (
               <Button
                 variant={hero.secondaryButtonStyle === 'contained' ? 'contained' : 'outlined'}
