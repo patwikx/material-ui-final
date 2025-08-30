@@ -1,44 +1,44 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   Box,
   Container,
   Typography,
+  TextField,
+  Button,
   Card,
   CardContent,
-  Button,
-  TextField,
-  Select,
-  MenuItem,
   FormControl,
   InputLabel,
+  Select,
+  MenuItem,
   Switch,
-  Alert,
-  Chip,
   Stack,
+  Chip,
   IconButton,
+  Alert,
+  Snackbar,
   CircularProgress,
 } from '@mui/material';
 import {
-  Save,
-  ArrowBack,
-  Image as ImageIcon,
-  Monitor,
-  Palette,
+  ArrowBack as ArrowBackIcon,
+  Save as SaveIcon,
+  Add as AddIcon,
   Visibility,
-  Star,
-  People,
-  AccessTime,
-  BarChart,
-  Report,
+  Star as StarIcon,
+  AccessTime as AccessTimeIcon,
+  Monitor as MonitorIcon,
+  Palette as PaletteIcon,
+  People as PeopleIcon,
+  Report as ReportIcon,
+  Image as ImageIcon,
 } from '@mui/icons-material';
-import Link from 'next/link';
+
+import { FileUpload, UploadedFileDisplay } from '@/components/file-upload';
 import { createHeroSlide } from '@/lib/cms-actions/hero';
-import { FileUpload, UploadedFileDisplay } from '@/components/file-upload'; // Import the FileUpload component
-import { useRouter } from 'next/navigation';
-
-
 
 // Dark theme colors matching the sidebar
 const darkTheme = {
@@ -61,58 +61,230 @@ const darkTheme = {
   errorHover: '#b91c1c',
 };
 
+interface HeroFormData {
+  title: string;
+  subtitle: string;
+  description: string;
+  buttonText: string;
+  buttonUrl: string;
+  backgroundImage: string;
+  backgroundVideo: string;
+  overlayImage: string;
+  isActive: boolean;
+  isFeatured: boolean;
+  sortOrder: number;
+  displayType: string;
+  textAlignment: string;
+  overlayColor: string;
+  overlayOpacity: number;
+  textColor: string;
+  primaryButtonText: string;
+  primaryButtonUrl: string;
+  primaryButtonStyle: string;
+  secondaryButtonText: string;
+  secondaryButtonUrl: string;
+  secondaryButtonStyle: string;
+  showFrom: string;
+  showUntil: string;
+  targetPages: string[];
+  targetAudience: string[];
+  altText: string;
+  caption: string;
+}
+
 const NewHeroSlidePage: React.FC = () => {
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
-  const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+  const [saving, setSaving] = useState(false);
+  const [formData, setFormData] = useState<HeroFormData>({
+    title: '',
+    subtitle: '',
+    description: '',
+    buttonText: '',
+    buttonUrl: '',
+    backgroundImage: '',
+    backgroundVideo: '',
+    overlayImage: '',
+    isActive: true,
+    isFeatured: false,
+    sortOrder: 0,
+    displayType: 'fullscreen',
+    textAlignment: 'center',
+    overlayColor: '#000000',
+    overlayOpacity: 0.3,
+    textColor: '#ffffff',
+    primaryButtonText: '',
+    primaryButtonUrl: '',
+    primaryButtonStyle: 'primary',
+    secondaryButtonText: '',
+    secondaryButtonUrl: '',
+    secondaryButtonStyle: 'secondary',
+    showFrom: '',
+    showUntil: '',
+    targetPages: [],
+    targetAudience: [],
+    altText: '',
+    caption: '',
+  });
+  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({
+    open: false,
+    message: '',
+    severity: 'success',
+  });
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const formRef = useRef<HTMLFormElement>(null);
 
-  const [targetPages, setTargetPages] = useState<string[]>([]);
-  const [targetAudience, setTargetAudience] = useState<string[]>([]);
+  const [uploadedBackgroundImage, setUploadedBackgroundImage] = useState<{ fileName: string; name: string } | null>(null);
+  const [uploadedBackgroundVideo, setUploadedBackgroundVideo] = useState<{ fileName: string; name: string } | null>(null);
+  const [uploadedOverlayImage, setUploadedOverlayImage] = useState<{ fileName: string; name: string } | null>(null);
 
-  // FIX: State to hold uploaded file information
-  const [uploadedImage, setUploadedImage] = useState<{ fileName: string; name: string } | null>(null);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [uploadedVideo, setUploadedVideo] = useState<{ fileName: string; name: string } | null>(null);
-
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setIsLoading(true);
-    setNotification(null);
-    setErrors({});
-
-    if (!formRef.current) return;
-
-    const formData = new FormData(event.currentTarget);
-
-    // FIX: Add uploaded file info to FormData
-    if (uploadedImage) {
-      formData.set('backgroundImage', uploadedImage.fileName);
-    }
-    if (uploadedVideo) {
-      formData.set('backgroundVideo', uploadedVideo.fileName);
-    }
+  const handleInputChange = (field: keyof HeroFormData, value: string | number | boolean | string[]) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value,
+    }));
     
-    // Convert multi-select arrays to FormData
-    targetPages.forEach(page => formData.append('targetPages', page));
-    targetAudience.forEach(audience => formData.append('targetAudience', audience));
-
-    const result = await createHeroSlide(formData);
-
-    if (result.success) {
-      setNotification({ type: 'success', message: 'Hero slide created successfully! Redirecting...' });
-      setTimeout(() => {
-        router.push('/admin/cms/hero-slides');
-      }, 2000);
-    } else {
-      setNotification({ type: 'error', message: result.message });
-      setErrors(result.errors || {});
+    // Clear error when user starts typing
+    if (errors[field]) {
+      setErrors(prev => ({
+        ...prev,
+        [field]: '',
+      }));
     }
-    setIsLoading(false);
   };
 
-  const getError = (field: string) => errors[field];
+  const validateForm = (): boolean => {
+    const newErrors: Record<string, string> = {};
+
+    if (!formData.title.trim()) {
+      newErrors.title = 'Title is required';
+    }
+
+    if (formData.overlayOpacity < 0 || formData.overlayOpacity > 1) {
+      newErrors.overlayOpacity = 'Overlay opacity must be between 0 and 1';
+    }
+
+    if (formData.showFrom && formData.showUntil) {
+      const fromDate = new Date(formData.showFrom);
+      const untilDate = new Date(formData.showUntil);
+      if (fromDate >= untilDate) {
+        newErrors.showUntil = 'End date must be after start date';
+      }
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!validateForm()) {
+      setSnackbar({
+        open: true,
+        message: 'Please fix the validation errors',
+        severity: 'error',
+      });
+      return;
+    }
+
+    setSaving(true);
+
+    try {
+      const heroData = {
+        ...formData,
+        backgroundImage: uploadedBackgroundImage?.fileName || '',
+        backgroundVideo: uploadedBackgroundVideo?.fileName || '',
+        overlayImage: uploadedOverlayImage?.fileName || '',
+        showFrom: formData.showFrom ? new Date(formData.showFrom) : null,
+        showUntil: formData.showUntil ? new Date(formData.showUntil) : null,
+      };
+
+      // Convert to FormData if the API expects it
+      const formDataToSend = new FormData();
+      
+      // Add all form fields to FormData
+      Object.entries(heroData).forEach(([key, value]) => {
+        if (value !== null && value !== undefined) {
+          if (Array.isArray(value)) {
+            // Handle arrays (targetPages, targetAudience)
+            formDataToSend.append(key, JSON.stringify(value));
+          } else if (value instanceof Date) {
+            // Handle dates
+            formDataToSend.append(key, value.toISOString());
+          } else {
+            // Handle all other types
+            formDataToSend.append(key, String(value));
+          }
+        }
+      });
+
+      const result = await createHeroSlide(formDataToSend);
+
+      if (result.success) {
+        setSnackbar({
+          open: true,
+          message: 'Hero slide created successfully',
+          severity: 'success',
+        });
+        
+        // Redirect to the hero slides list after a short delay
+        setTimeout(() => {
+          router.push('/admin/cms/hero-slides');
+        }, 2000);
+      } else {
+        setSnackbar({
+          open: true,
+          message: result.message || 'Failed to create hero slide',
+          severity: 'error',
+        });
+      }
+    } catch (error) {
+      setSnackbar({
+        open: true,
+        message: `An error occurred while creating: ${error}`,
+        severity: 'error',
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleCloseSnackbar = () => {
+    setSnackbar(prev => ({ ...prev, open: false }));
+  };
+
+  const getError = (field: keyof HeroFormData) => errors[field];
+
+  const handleFileUploadComplete = (field: 'backgroundImage' | 'backgroundVideo' | 'overlayImage') => 
+    (result: { fileName: string; name: string }) => {
+      setFormData(prev => ({
+        ...prev,
+        [field]: result.fileName,
+      }));
+      
+      if (field === 'backgroundImage') {
+        setUploadedBackgroundImage(result);
+      } else if (field === 'backgroundVideo') {
+        setUploadedBackgroundVideo(result);
+      } else if (field === 'overlayImage') {
+        setUploadedOverlayImage(result);
+      }
+    };
+
+  const handleFileRemove = (field: 'backgroundImage' | 'backgroundVideo' | 'overlayImage') => () => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: '',
+    }));
+    
+    if (field === 'backgroundImage') {
+      setUploadedBackgroundImage(null);
+    } else if (field === 'backgroundVideo') {
+      setUploadedBackgroundVideo(null);
+    } else if (field === 'overlayImage') {
+      setUploadedOverlayImage(null);
+    }
+  };
 
   return (
     <Box 
@@ -138,7 +310,7 @@ const NewHeroSlidePage: React.FC = () => {
                   }
                 }}
               >
-                <ArrowBack />
+                <ArrowBackIcon />
               </IconButton>
               <Typography
                 sx={{
@@ -151,12 +323,24 @@ const NewHeroSlidePage: React.FC = () => {
               >
                 Back to Hero Slides
               </Typography>
+              <Typography sx={{ color: darkTheme.textSecondary, mx: 1 }}>/</Typography>
+              <Typography
+                sx={{
+                  color: darkTheme.primary,
+                  fontWeight: 700,
+                  fontSize: '0.875rem',
+                  textTransform: 'uppercase',
+                  letterSpacing: '1px',
+                }}
+              >
+                New Hero Slide
+              </Typography>
             </Box>
             
             <Button
-              form="hero-form"
               type="submit"
-              disabled={isLoading}
+              form="hero-form"
+              disabled={saving}
               sx={{
                 backgroundColor: darkTheme.primary,
                 color: 'white',
@@ -172,14 +356,14 @@ const NewHeroSlidePage: React.FC = () => {
                 },
                 '&:disabled': {
                   backgroundColor: darkTheme.textSecondary,
+                  color: darkTheme.surface,
                 },
               }}
-              startIcon={isLoading ? <CircularProgress size={20} color="inherit" /> : <Save />}
+              startIcon={saving ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />}
             >
-              {isLoading ? 'Creating...' : 'Create Hero Slide'}
+              {saving ? 'Creating...' : 'Create Hero Slide'}
             </Button>
           </Box>
-
           <Typography
             sx={{
               fontWeight: 900,
@@ -188,64 +372,57 @@ const NewHeroSlidePage: React.FC = () => {
               textTransform: 'uppercase',
               letterSpacing: '-0.02em',
               lineHeight: 0.9,
-              textAlign: 'center',
               mb: 2,
             }}
           >
             Create New Hero Slide
           </Typography>
-          
           <Typography
             sx={{
               color: darkTheme.textSecondary,
               fontSize: '1.125rem',
-              textAlign: 'center',
               maxWidth: '600px',
-              mx: 'auto',
               lineHeight: 1.6,
             }}
           >
-            Design compelling hero sections that capture attention and drive engagement
+            Create a new hero slide with compelling content and media to showcase your brand.
           </Typography>
         </Box>
 
         {/* Notification Alert */}
-        {notification && (
-          <Alert 
-            severity={notification.type} 
-            sx={{ 
-              mb: 4,
-              backgroundColor: notification.type === 'success' ? darkTheme.successBg : darkTheme.errorBg,
-              borderColor: notification.type === 'success' ? darkTheme.success : darkTheme.error,
+        <Snackbar
+          open={snackbar.open}
+          autoHideDuration={6000}
+          onClose={handleCloseSnackbar}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+        >
+          <Alert
+            onClose={handleCloseSnackbar}
+            severity={snackbar.severity}
+            sx={{
+              width: '100%',
+              backgroundColor: snackbar.severity === 'success' ? darkTheme.successBg : darkTheme.errorBg,
+              borderColor: snackbar.severity === 'success' ? darkTheme.success : darkTheme.error,
               border: `1px solid`,
               borderRadius: '8px',
-              color: notification.type === 'success' ? darkTheme.success : darkTheme.error,
-              '& .MuiAlert-icon': { 
-                color: notification.type === 'success' ? darkTheme.success : darkTheme.error 
-              }
+              color: snackbar.severity === 'success' ? darkTheme.success : darkTheme.error,
+              '& .MuiAlert-icon': {
+                color: snackbar.severity === 'success' ? darkTheme.success : darkTheme.error,
+              },
             }}
           >
-            {notification.message}
-            {notification.type === 'error' && Object.keys(errors).length > 0 && (
-              <Box component="ul" sx={{ m: 0, pl: 2, mt: 1 }}>
-                {Object.entries(errors).map(([field, error]) => (
-                  <Box component="li" key={field} sx={{ fontSize: '0.875rem' }}>
-                    {error}
-                  </Box>
-                ))}
-              </Box>
-            )}
+            {snackbar.message}
           </Alert>
-        )}
+        </Snackbar>
 
-        <form onSubmit={handleSubmit} ref={formRef} id="hero-form">
+        <form onSubmit={handleSubmit} id="hero-form">
           <Box sx={{ display: 'flex', gap: 4, flexDirection: { xs: 'column', xl: 'row' } }}>
             {/* Left Column - Main Content */}
             <Box sx={{ flex: { xl: '2' } }}>
               <Stack spacing={4}>
                 {/* Hero Content Card */}
-                <Card 
-                  sx={{ 
+                <Card
+                  sx={{
                     backgroundColor: darkTheme.surface,
                     borderRadius: '12px',
                     boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
@@ -295,6 +472,8 @@ const NewHeroSlidePage: React.FC = () => {
                       <TextField
                         label="Title"
                         name="title"
+                        value={formData.title}
+                        onChange={(e) => handleInputChange('title', e.target.value)}
                         required
                         fullWidth
                         placeholder="Discover Paradise Across the Philippines"
@@ -329,6 +508,8 @@ const NewHeroSlidePage: React.FC = () => {
                       <TextField
                         label="Subtitle"
                         name="subtitle"
+                        value={formData.subtitle}
+                        onChange={(e) => handleInputChange('subtitle', e.target.value)}
                         fullWidth
                         placeholder="Experience world-class hospitality"
                         sx={{
@@ -351,6 +532,8 @@ const NewHeroSlidePage: React.FC = () => {
                       <TextField
                         label="Description"
                         name="description"
+                        value={formData.description}
+                        onChange={(e) => handleInputChange('description', e.target.value)}
                         fullWidth
                         multiline
                         rows={4}
@@ -376,6 +559,8 @@ const NewHeroSlidePage: React.FC = () => {
                         <TextField
                           label="Button Text"
                           name="buttonText"
+                          value={formData.buttonText}
+                          onChange={(e) => handleInputChange('buttonText', e.target.value)}
                           fullWidth
                           placeholder="Book Your Stay"
                           sx={{
@@ -398,6 +583,8 @@ const NewHeroSlidePage: React.FC = () => {
                         <TextField
                           label="Button URL"
                           name="buttonUrl"
+                          value={formData.buttonUrl}
+                          onChange={(e) => handleInputChange('buttonUrl', e.target.value)}
                           fullWidth
                           placeholder="/reservations"
                           sx={{
@@ -422,8 +609,8 @@ const NewHeroSlidePage: React.FC = () => {
                 </Card>
 
                 {/* Media Assets Card */}
-                <Card 
-                  sx={{ 
+                <Card
+                  sx={{
                     backgroundColor: darkTheme.surface,
                     borderRadius: '12px',
                     boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
@@ -444,7 +631,7 @@ const NewHeroSlidePage: React.FC = () => {
                           justifyContent: 'center',
                         }}
                       >
-                        <Monitor sx={{ color: darkTheme.success, fontSize: 24 }} />
+                        <MonitorIcon sx={{ color: darkTheme.success, fontSize: 24 }} />
                       </Box>
                       <Typography
                         sx={{
@@ -475,47 +662,67 @@ const NewHeroSlidePage: React.FC = () => {
                         <Typography sx={{ fontWeight: 600, color: darkTheme.text, mb: 1, fontSize: '0.875rem' }}>
                           Background Image
                         </Typography>
-                        {uploadedImage ? (
+                        {uploadedBackgroundImage ? (
                           <UploadedFileDisplay
-                            file={uploadedImage}
-                            onRemove={() => setUploadedImage(null)}
+                            fileName={uploadedBackgroundImage.fileName}
+                            name={uploadedBackgroundImage.name}
+                            onRemove={handleFileRemove('backgroundImage')}
                           />
                         ) : (
                           <FileUpload
-                            onUploadComplete={setUploadedImage}
-                            onUploadError={(message) => setNotification({ type: 'error', message })}
+                            onUploadComplete={handleFileUploadComplete('backgroundImage')}
+                            onUploadError={(message) => setSnackbar({ open: true, message, severity: 'error' })}
                             accept="image/jpeg,image/png,image/gif"
                           />
                         )}
                       </Box>
 
-                      {/* Background Video URL */}
-                      <TextField
-                        label="Background Video URL"
-                        name="backgroundVideo"
-                        fullWidth
-                        placeholder="https://example.com/hero-video.mp4"
-                        sx={{
-                          '& .MuiInputLabel-root': {
-                            fontWeight: 600,
-                            color: darkTheme.textSecondary,
-                            '&.Mui-focused': { color: darkTheme.primary },
-                          },
-                          '& .MuiOutlinedInput-root': {
-                            backgroundColor: darkTheme.background,
-                            borderRadius: '8px',
-                            color: darkTheme.text,
-                            '& fieldset': { borderColor: darkTheme.border },
-                            '&:hover fieldset': { borderColor: darkTheme.primary },
-                            '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
-                          },
-                        }}
-                      />
+                      {/* Background Video Upload */}
+                      <Box>
+                        <Typography sx={{ fontWeight: 600, color: darkTheme.text, mb: 1, fontSize: '0.875rem' }}>
+                          Background Video
+                        </Typography>
+                        {uploadedBackgroundVideo ? (
+                          <UploadedFileDisplay
+                            fileName={uploadedBackgroundVideo.fileName}
+                            name={uploadedBackgroundVideo.name}
+                            onRemove={handleFileRemove('backgroundVideo')}
+                          />
+                        ) : (
+                          <FileUpload
+                            onUploadComplete={handleFileUploadComplete('backgroundVideo')}
+                            onUploadError={(message) => setSnackbar({ open: true, message, severity: 'error' })}
+                            accept="video/mp4,video/webm"
+                          />
+                        )}
+                      </Box>
+
+                      {/* Overlay Image Upload */}
+                      <Box>
+                        <Typography sx={{ fontWeight: 600, color: darkTheme.text, mb: 1, fontSize: '0.875rem' }}>
+                          Overlay Image
+                        </Typography>
+                        {uploadedOverlayImage ? (
+                          <UploadedFileDisplay
+                            fileName={uploadedOverlayImage.fileName}
+                            name={uploadedOverlayImage.name}
+                            onRemove={handleFileRemove('overlayImage')}
+                          />
+                        ) : (
+                          <FileUpload
+                            onUploadComplete={handleFileUploadComplete('overlayImage')}
+                            onUploadError={(message) => setSnackbar({ open: true, message, severity: 'error' })}
+                            accept="image/jpeg,image/png,image/gif"
+                          />
+                        )}
+                      </Box>
 
                       {/* Alt Text and Caption */}
                       <TextField
                         label="Alt Text"
                         name="altText"
+                        value={formData.altText}
+                        onChange={(e) => handleInputChange('altText', e.target.value)}
                         fullWidth
                         placeholder="Stunning view of tropical resort"
                         sx={{
@@ -537,6 +744,8 @@ const NewHeroSlidePage: React.FC = () => {
                       <TextField
                         label="Caption"
                         name="caption"
+                        value={formData.caption}
+                        onChange={(e) => handleInputChange('caption', e.target.value)}
                         fullWidth
                         multiline
                         rows={2}
@@ -563,12 +772,12 @@ const NewHeroSlidePage: React.FC = () => {
               </Stack>
             </Box>
 
-            {/* Right Column - Sidebar */}
+            {/* Right Column */}
             <Box sx={{ flex: { xl: '1' }, minWidth: { xl: '350px' } }}>
               <Stack spacing={3}>
                 {/* Hero Status Card */}
-                <Card 
-                  sx={{ 
+                <Card
+                  sx={{
                     backgroundColor: darkTheme.surface,
                     borderRadius: '12px',
                     boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
@@ -576,25 +785,25 @@ const NewHeroSlidePage: React.FC = () => {
                     overflow: 'hidden',
                   }}
                 >
-                  <Box sx={{ p: 3, borderBottom: `1px solid ${darkTheme.border}` }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
+                  <Box sx={{ p: 4, borderBottom: `1px solid ${darkTheme.border}` }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
                       <Box
                         sx={{
-                          width: 32,
-                          height: 32,
+                          width: 48,
+                          height: 48,
                           backgroundColor: darkTheme.selectedBg,
-                          borderRadius: '8px',
+                          borderRadius: '12px',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
                         }}
                       >
-                        <Report sx={{ color: darkTheme.primary, fontSize: 16 }} />
+                        <ReportIcon sx={{ color: darkTheme.primary, fontSize: 24 }} />
                       </Box>
                       <Typography
                         sx={{
                           fontWeight: 900,
-                          fontSize: '1.125rem',
+                          fontSize: '1.5rem',
                           color: darkTheme.text,
                           textTransform: 'uppercase',
                           letterSpacing: '-0.01em',
@@ -603,8 +812,17 @@ const NewHeroSlidePage: React.FC = () => {
                         Slide Status
                       </Typography>
                     </Box>
+                    <Typography
+                      sx={{
+                        color: darkTheme.textSecondary,
+                        fontSize: '0.875rem',
+                        fontWeight: 500,
+                      }}
+                    >
+                      Control the visibility of this slide on the website
+                    </Typography>
                   </Box>
-                  <CardContent sx={{ p: 3 }}>
+                  <CardContent sx={{ p: 4 }}>
                     <Stack spacing={3}>
                       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                         <Box>
@@ -614,7 +832,7 @@ const NewHeroSlidePage: React.FC = () => {
                             </Typography>
                             <Chip
                                 size="small"
-                                icon={<Visibility sx={{ fontSize: 14 }} />}
+                                icon={<Visibility style={{ fontSize: 14 }} />}
                                 label="Visible"
                                 sx={{
                                   backgroundColor: darkTheme.selectedBg,
@@ -632,7 +850,8 @@ const NewHeroSlidePage: React.FC = () => {
                         </Box>
                         <Switch
                           name="isActive"
-                          defaultChecked={true}
+                          checked={formData.isActive}
+                          onChange={(e) => handleInputChange('isActive', e.target.checked)}
                           sx={{
                             '& .MuiSwitch-switchBase.Mui-checked': {
                               color: darkTheme.primary,
@@ -656,7 +875,7 @@ const NewHeroSlidePage: React.FC = () => {
                             </Typography>
                             <Chip
                                 size="small"
-                                icon={<Star sx={{ fontSize: 14 }} />}
+                                icon={<StarIcon style={{ fontSize: 14 }} />}
                                 label="Priority"
                                 sx={{
                                   backgroundColor: darkTheme.warningBg,
@@ -674,7 +893,8 @@ const NewHeroSlidePage: React.FC = () => {
                         </Box>
                         <Switch
                           name="isFeatured"
-                          defaultChecked={false}
+                          checked={formData.isFeatured}
+                          onChange={(e) => handleInputChange('isFeatured', e.target.checked)}
                           sx={{
                             '& .MuiSwitch-switchBase.Mui-checked': {
                               color: darkTheme.primary,
@@ -694,7 +914,8 @@ const NewHeroSlidePage: React.FC = () => {
                         label="Sort Order"
                         name="sortOrder"
                         type="number"
-                        defaultValue={0}
+                        value={formData.sortOrder}
+                        onChange={(e) => handleInputChange('sortOrder', parseInt(e.target.value) || 0)}
                         placeholder="0"
                         inputProps={{ min: "0" }}
                         helperText="Lower numbers appear first"
@@ -723,8 +944,8 @@ const NewHeroSlidePage: React.FC = () => {
                 </Card>
 
                 {/* Design & Layout Card */}
-                <Card 
-                  sx={{ 
+                <Card
+                  sx={{
                     backgroundColor: darkTheme.surface,
                     borderRadius: '12px',
                     boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
@@ -732,25 +953,25 @@ const NewHeroSlidePage: React.FC = () => {
                     overflow: 'hidden',
                   }}
                 >
-                  <Box sx={{ p: 3, borderBottom: `1px solid ${darkTheme.border}` }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
+                  <Box sx={{ p: 4, borderBottom: `1px solid ${darkTheme.border}` }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
                       <Box
                         sx={{
-                          width: 32,
-                          height: 32,
+                          width: 48,
+                          height: 48,
                           backgroundColor: darkTheme.warningBg,
-                          borderRadius: '8px',
+                          borderRadius: '12px',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
                         }}
                       >
-                        <Palette sx={{ color: darkTheme.warning, fontSize: 16 }} />
+                        <PaletteIcon sx={{ color: darkTheme.warning, fontSize: 24 }} />
                       </Box>
                       <Typography
                         sx={{
                           fontWeight: 900,
-                          fontSize: '1.125rem',
+                          fontSize: '1.5rem',
                           color: darkTheme.text,
                           textTransform: 'uppercase',
                           letterSpacing: '-0.01em',
@@ -759,103 +980,127 @@ const NewHeroSlidePage: React.FC = () => {
                         Design & Layout
                       </Typography>
                     </Box>
+                    <Typography
+                      sx={{
+                        color: darkTheme.textSecondary,
+                        fontSize: '0.875rem',
+                        fontWeight: 500,
+                      }}
+                    >
+                      Define how the slide looks and behaves
+                    </Typography>
                   </Box>
-                  <CardContent sx={{ p: 3 }}>
-                    <Stack spacing={3}>
-                      {['displayType', 'textAlignment'].map((field) => (
-                        <FormControl 
-                          key={field}
-                          fullWidth 
-                          sx={{ 
-                            '& .MuiOutlinedInput-root': { 
-                              backgroundColor: darkTheme.background,
-                              borderRadius: '8px',
-                              color: darkTheme.text,
-                              '& fieldset': { borderColor: darkTheme.border },
-                              '&:hover fieldset': { borderColor: darkTheme.primary },
-                              '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
-                            },
-                            '& .MuiInputLabel-root': {
-                              fontWeight: 600,
-                              color: darkTheme.textSecondary,
-                              '&.Mui-focused': { color: darkTheme.primary },
-                            },
-                            '& .MuiSelect-icon': { color: darkTheme.textSecondary },
+                  <CardContent sx={{ p: 4 }}>
+                    <Stack spacing={4}>
+                      <FormControl fullWidth sx={{
+                        '& .MuiOutlinedInput-root': { backgroundColor: darkTheme.background, borderRadius: '8px' },
+                        '& .MuiInputLabel-root': { fontWeight: 600, color: darkTheme.textSecondary, '&.Mui-focused': { color: darkTheme.primary } },
+                        '& .MuiSelect-icon': { color: darkTheme.textSecondary }
+                      }}>
+                        <InputLabel>Display Type</InputLabel>
+                        <Select
+                          name="displayType"
+                          value={formData.displayType}
+                          onChange={(e) => handleInputChange('displayType', e.target.value)}
+                          label="Display Type"
+                          sx={{
+                            color: darkTheme.text,
+                            '& fieldset': { borderColor: darkTheme.border },
+                            '&:hover fieldset': { borderColor: darkTheme.primary },
+                            '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
                           }}
-                        >
-                          <InputLabel>
-                            {field === 'displayType' ? 'Display Type' : 'Text Alignment'}
-                          </InputLabel>
-                          <Select
-                            name={field}
-                            defaultValue={field === 'displayType' ? 'fullscreen' : 'center'}
-                            label={field === 'displayType' ? 'Display Type' : 'Text Alignment'}
-                            MenuProps={{
-                              PaperProps: {
-                                sx: {
-                                  backgroundColor: darkTheme.surface,
-                                  border: `1px solid ${darkTheme.border}`,
-                                  borderRadius: '8px',
-                                  '& .MuiMenuItem-root': {
-                                    color: darkTheme.text,
-                                    '&:hover': { backgroundColor: darkTheme.surfaceHover },
-                                    '&.Mui-selected': { backgroundColor: darkTheme.selectedBg },
-                                  },
+                          MenuProps={{
+                            PaperProps: {
+                              sx: {
+                                backgroundColor: darkTheme.surface,
+                                border: `1px solid ${darkTheme.border}`,
+                                borderRadius: '8px',
+                                '& .MuiMenuItem-root': {
+                                  color: darkTheme.text,
+                                  '&:hover': { backgroundColor: darkTheme.surfaceHover },
+                                  '&.Mui-selected': { backgroundColor: darkTheme.selectedBg },
                                 },
                               },
-                            }}
-                          >
-                            {field === 'displayType' ? [
-                              <MenuItem key="fullscreen" value="fullscreen">Fullscreen</MenuItem>,
-                              <MenuItem key="banner" value="banner">Banner</MenuItem>,
-                              <MenuItem key="carousel" value="carousel">Carousel</MenuItem>
-                            ] : [
-                              <MenuItem key="left" value="left">Left Aligned</MenuItem>,
-                              <MenuItem key="center" value="center">Center Aligned</MenuItem>,
-                              <MenuItem key="right" value="right">Right Aligned</MenuItem>
-                            ]}
-                          </Select>
-                        </FormControl>
-                      ))}
-                      
-                      <Box>
-                        <Typography sx={{ fontWeight: 600, color: darkTheme.text, mb: 1, fontSize: '0.875rem' }}>
-                          Overlay Color
-                        </Typography>
-                        <TextField
-                          name="overlayColor"
-                          type="color"
-                          defaultValue="#000000"
-                          fullWidth
-                          sx={{
-                            height: '56px',
-                            '& .MuiInputBase-root': { 
-                              p: 0,
-                              backgroundColor: darkTheme.background,
-                              borderRadius: '8px',
-                            },
-                            '& .MuiOutlinedInput-input': { 
-                              height: '100%', 
-                              p: 0, 
-                              borderRadius: '8px',
-                              border: `1px solid ${darkTheme.border}`,
-                              '&::-webkit-color-swatch-wrapper': { p: 0 },
-                              '&::-webkit-color-swatch': { border: 'none', borderRadius: '8px' },
                             },
                           }}
-                        />
-                      </Box>
-                      
+                        >
+                          <MenuItem value="fullscreen">Fullscreen</MenuItem>
+                          <MenuItem value="banner">Banner</MenuItem>
+                          <MenuItem value="carousel">Carousel</MenuItem>
+                        </Select>
+                      </FormControl>
+                      <FormControl fullWidth sx={{
+                        '& .MuiOutlinedInput-root': { backgroundColor: darkTheme.background, borderRadius: '8px' },
+                        '& .MuiInputLabel-root': { fontWeight: 600, color: darkTheme.textSecondary, '&.Mui-focused': { color: darkTheme.primary } },
+                        '& .MuiSelect-icon': { color: darkTheme.textSecondary }
+                      }}>
+                        <InputLabel>Text Alignment</InputLabel>
+                        <Select
+                          name="textAlignment"
+                          value={formData.textAlignment}
+                          onChange={(e) => handleInputChange('textAlignment', e.target.value)}
+                          label="Text Alignment"
+                          sx={{
+                            color: darkTheme.text,
+                            '& fieldset': { borderColor: darkTheme.border },
+                            '&:hover fieldset': { borderColor: darkTheme.primary },
+                            '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                          }}
+                          MenuProps={{
+                            PaperProps: {
+                              sx: {
+                                backgroundColor: darkTheme.surface,
+                                border: `1px solid ${darkTheme.border}`,
+                                borderRadius: '8px',
+                                '& .MuiMenuItem-root': {
+                                  color: darkTheme.text,
+                                  '&:hover': { backgroundColor: darkTheme.surfaceHover },
+                                  '&.Mui-selected': { backgroundColor: darkTheme.selectedBg },
+                                },
+                              },
+                            },
+                          }}
+                        >
+                          <MenuItem value="left">Left Aligned</MenuItem>
+                          <MenuItem value="center">Center Aligned</MenuItem>
+                          <MenuItem value="right">Right Aligned</MenuItem>
+                        </Select>
+                      </FormControl>
+                      <TextField
+                        label="Overlay Color"
+                        name="overlayColor"
+                        type="color"
+                        value={formData.overlayColor}
+                        onChange={(e) => handleInputChange('overlayColor', e.target.value)}
+                        fullWidth
+                        sx={{
+                          height: '56px',
+                          '& .MuiInputBase-root': {
+                            p: 0,
+                            backgroundColor: darkTheme.background,
+                            borderRadius: '8px',
+                          },
+                          '& .MuiOutlinedInput-input': {
+                            height: '100%',
+                            p: 0,
+                            borderRadius: '8px',
+                            border: `1px solid ${darkTheme.border}`,
+                            '&::-webkit-color-swatch-wrapper': { p: 0 },
+                            '&::-webkit-color-swatch': { border: 'none', borderRadius: '8px' },
+                          },
+                          '& .MuiInputLabel-root': { display: 'none' },
+                        }}
+                      />
                       <TextField
                         label="Overlay Opacity"
                         name="overlayOpacity"
                         type="number"
-                        defaultValue={0.3}
-                        placeholder="0.3"
-                        inputProps={{ min: "0", max: "1", step: "0.1" }}
+                        value={formData.overlayOpacity}
+                        onChange={(e) => handleInputChange('overlayOpacity', parseFloat(e.target.value) || 0)}
                         fullWidth
+                        inputProps={{ min: 0, max: 1, step: 0.1 }}
+                        helperText="Value between 0.0 and 1.0"
                         error={!!getError('overlayOpacity')}
-                        helperText={getError('overlayOpacity')}
                         sx={{
                           '& .MuiInputLabel-root': {
                             fontWeight: 600,
@@ -870,46 +1115,43 @@ const NewHeroSlidePage: React.FC = () => {
                             '&:hover fieldset': { borderColor: darkTheme.primary },
                             '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
                           },
-                          '& .MuiFormHelperText-root': {
-                            color: getError('overlayOpacity') ? darkTheme.error : darkTheme.textSecondary,
+                          '& .MuiFormHelperText-root': { 
+                            color: getError('overlayOpacity') ? darkTheme.error : darkTheme.textSecondary 
                           },
                         }}
                       />
-                      
-                      <Box>
-                        <Typography sx={{ fontWeight: 600, color: darkTheme.text, mb: 1, fontSize: '0.875rem' }}>
-                          Text Color
-                        </Typography>
-                        <TextField
-                          name="textColor"
-                          type="color"
-                          defaultValue="#ffffff"
-                          fullWidth
-                          sx={{
-                            height: '56px',
-                            '& .MuiInputBase-root': { 
-                              p: 0,
-                              backgroundColor: darkTheme.background,
-                              borderRadius: '8px',
-                            },
-                            '& .MuiOutlinedInput-input': { 
-                              height: '100%', 
-                              p: 0, 
-                              borderRadius: '8px',
-                              border: `1px solid ${darkTheme.border}`,
-                              '&::-webkit-color-swatch-wrapper': { p: 0 },
-                              '&::-webkit-color-swatch': { border: 'none', borderRadius: '8px' },
-                            },
-                          }}
-                        />
-                      </Box>
+                      <TextField
+                        label="Text Color"
+                        name="textColor"
+                        type="color"
+                        value={formData.textColor}
+                        onChange={(e) => handleInputChange('textColor', e.target.value)}
+                        fullWidth
+                        sx={{
+                          height: '56px',
+                          '& .MuiInputBase-root': {
+                            p: 0,
+                            backgroundColor: darkTheme.background,
+                            borderRadius: '8px',
+                          },
+                          '& .MuiOutlinedInput-input': {
+                            height: '100%',
+                            p: 0,
+                            borderRadius: '8px',
+                            border: `1px solid ${darkTheme.border}`,
+                            '&::-webkit-color-swatch-wrapper': { p: 0 },
+                            '&::-webkit-color-swatch': { border: 'none', borderRadius: '8px' },
+                          },
+                          '& .MuiInputLabel-root': { display: 'none' },
+                        }}
+                      />
                     </Stack>
                   </CardContent>
                 </Card>
 
                 {/* Targeting Card */}
-                <Card 
-                  sx={{ 
+                <Card
+                  sx={{
                     backgroundColor: darkTheme.surface,
                     borderRadius: '12px',
                     boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
@@ -917,25 +1159,25 @@ const NewHeroSlidePage: React.FC = () => {
                     overflow: 'hidden',
                   }}
                 >
-                  <Box sx={{ p: 3, borderBottom: `1px solid ${darkTheme.border}` }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
+                  <Box sx={{ p: 4, borderBottom: `1px solid ${darkTheme.border}` }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
                       <Box
                         sx={{
-                          width: 32,
-                          height: 32,
+                          width: 48,
+                          height: 48,
                           backgroundColor: darkTheme.selectedBg,
-                          borderRadius: '8px',
+                          borderRadius: '12px',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
                         }}
                       >
-                        <People sx={{ color: darkTheme.primary, fontSize: 16 }} />
+                        <PeopleIcon sx={{ color: darkTheme.primary, fontSize: 24 }} />
                       </Box>
                       <Typography
                         sx={{
                           fontWeight: 900,
-                          fontSize: '1.125rem',
+                          fontSize: '1.5rem',
                           color: darkTheme.text,
                           textTransform: 'uppercase',
                           letterSpacing: '-0.01em',
@@ -944,53 +1186,48 @@ const NewHeroSlidePage: React.FC = () => {
                         Targeting
                       </Typography>
                     </Box>
+                    <Typography
+                      sx={{
+                        color: darkTheme.textSecondary,
+                        fontSize: '0.875rem',
+                        fontWeight: 500,
+                      }}
+                    >
+                      Define when and where this slide is displayed
+                    </Typography>
                   </Box>
-                  <CardContent sx={{ p: 3 }}>
-                    <Stack spacing={3}>
-                      <FormControl 
-                        fullWidth 
-                        sx={{ 
-                          '& .MuiOutlinedInput-root': { 
-                            backgroundColor: darkTheme.background,
-                            borderRadius: '8px',
-                            color: darkTheme.text,
-                            '& fieldset': { borderColor: darkTheme.border },
-                            '&:hover fieldset': { borderColor: darkTheme.primary },
-                            '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
-                          },
-                          '& .MuiInputLabel-root': {
-                            fontWeight: 600,
-                            color: darkTheme.textSecondary,
-                            '&.Mui-focused': { color: darkTheme.primary },
-                          },
-                          '& .MuiSelect-icon': { color: darkTheme.textSecondary },
-                        }}
-                      >
+                  <CardContent sx={{ p: 4 }}>
+                    <Stack spacing={4}>
+                      <FormControl fullWidth sx={{
+                        '& .MuiOutlinedInput-root': { backgroundColor: darkTheme.background, borderRadius: '8px' },
+                        '& .MuiInputLabel-root': { fontWeight: 600, color: darkTheme.textSecondary, '&.Mui-focused': { color: darkTheme.primary } },
+                        '& .MuiSelect-icon': { color: darkTheme.textSecondary },
+                      }}>
                         <InputLabel>Target Pages</InputLabel>
                         <Select
                           name="targetPages"
                           multiple
-                          value={targetPages}
+                          value={formData.targetPages}
                           onChange={(e) => {
                             const value = e.target.value as string[];
-                            setTargetPages(typeof value === 'string' ? [value] : value);
+                            handleInputChange('targetPages', value);
                           }}
                           label="Target Pages"
                           renderValue={(selected) => (
-                              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                                {selected.map((value) => (
-                                  <Chip 
-                                    key={value} 
-                                    label={value} 
-                                    size="small"
-                                    sx={{
-                                      backgroundColor: darkTheme.selectedBg,
-                                      color: darkTheme.primary,
-                                      fontWeight: 600,
-                                    }}
-                                  />
-                                ))}
-                              </Box>
+                            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                              {selected.map((value) => (
+                                <Chip
+                                  key={value}
+                                  label={value}
+                                  size="small"
+                                  sx={{
+                                    backgroundColor: darkTheme.selectedBg,
+                                    color: darkTheme.primary,
+                                    fontWeight: 600,
+                                  }}
+                                />
+                              ))}
+                            </Box>
                           )}
                           MenuProps={{
                             PaperProps: {
@@ -1007,31 +1244,20 @@ const NewHeroSlidePage: React.FC = () => {
                             },
                           }}
                         >
-                          <MenuItem key="homepage" value="homepage">Homepage</MenuItem>
-                          <MenuItem key="properties" value="properties">Properties</MenuItem>
-                          <MenuItem key="offers" value="offers">Offers</MenuItem>
-                          <MenuItem key="events" value="events">Events</MenuItem>
-                          <MenuItem key="about" value="about">About</MenuItem>
-                          <MenuItem key="all" value="all">All Pages</MenuItem>
+                          <MenuItem value="homepage">Homepage</MenuItem>
+                          <MenuItem value="properties">Properties</MenuItem>
+                          <MenuItem value="offers">Offers</MenuItem>
+                          <MenuItem value="events">Events</MenuItem>
+                          <MenuItem value="about">About</MenuItem>
+                          <MenuItem value="all">All Pages</MenuItem>
                         </Select>
                       </FormControl>
 
-                      <FormControl 
-                        fullWidth 
-                        sx={{ 
-                          '& .MuiOutlinedInput-root': { 
-                            backgroundColor: darkTheme.background,
-                            borderRadius: '8px',
-                            color: darkTheme.text,
-                            '& fieldset': { borderColor: darkTheme.border },
-                            '&:hover fieldset': { borderColor: darkTheme.primary },
-                            '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
-                          },
-                          '& .MuiInputLabel-root': {
-                            fontWeight: 600,
-                            color: darkTheme.textSecondary,
-                            '&.Mui-focused': { color: darkTheme.primary },
-                          },
+                      <FormControl
+                        fullWidth
+                        sx={{
+                          '& .MuiOutlinedInput-root': { backgroundColor: darkTheme.background, borderRadius: '8px' },
+                          '& .MuiInputLabel-root': { fontWeight: 600, color: darkTheme.textSecondary, '&.Mui-focused': { color: darkTheme.primary } },
                           '& .MuiSelect-icon': { color: darkTheme.textSecondary },
                         }}
                       >
@@ -1039,27 +1265,27 @@ const NewHeroSlidePage: React.FC = () => {
                         <Select
                           name="targetAudience"
                           multiple
-                          value={targetAudience}
+                          value={formData.targetAudience}
                           onChange={(e) => {
                             const value = e.target.value as string[];
-                            setTargetAudience(typeof value === 'string' ? [value] : value);
+                            handleInputChange('targetAudience', value);
                           }}
                           label="Target Audience"
                           renderValue={(selected) => (
-                              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                                {selected.map((value) => (
-                                  <Chip 
-                                    key={value} 
-                                    label={value} 
-                                    size="small"
-                                    sx={{
-                                      backgroundColor: darkTheme.selectedBg,
-                                      color: darkTheme.primary,
-                                      fontWeight: 600,
-                                    }}
-                                  />
-                                ))}
-                              </Box>
+                            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                              {selected.map((value) => (
+                                <Chip
+                                  key={value}
+                                  label={value}
+                                  size="small"
+                                  sx={{
+                                    backgroundColor: darkTheme.selectedBg,
+                                    color: darkTheme.primary,
+                                    fontWeight: 600,
+                                  }}
+                                />
+                              ))}
+                            </Box>
                           )}
                           MenuProps={{
                             PaperProps: {
@@ -1076,10 +1302,10 @@ const NewHeroSlidePage: React.FC = () => {
                             },
                           }}
                         >
-                          <MenuItem key="all" value="all">All Visitors</MenuItem>
-                          <MenuItem key="returning-visitors" value="returning-visitors">Returning Visitors</MenuItem>
-                          <MenuItem key="mobile-users" value="mobile-users">Mobile Users</MenuItem>
-                          <MenuItem key="desktop-users" value="desktop-users">Desktop Users</MenuItem>
+                          <MenuItem value="all">All Visitors</MenuItem>
+                          <MenuItem value="returning-visitors">Returning Visitors</MenuItem>
+                          <MenuItem value="mobile-users">Mobile Users</MenuItem>
+                          <MenuItem value="desktop-users">Desktop Users</MenuItem>
                         </Select>
                       </FormControl>
                     </Stack>
@@ -1087,8 +1313,8 @@ const NewHeroSlidePage: React.FC = () => {
                 </Card>
 
                 {/* Schedule Card */}
-                <Card 
-                  sx={{ 
+                <Card
+                  sx={{
                     backgroundColor: darkTheme.surface,
                     borderRadius: '12px',
                     boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
@@ -1096,25 +1322,25 @@ const NewHeroSlidePage: React.FC = () => {
                     overflow: 'hidden',
                   }}
                 >
-                  <Box sx={{ p: 3, borderBottom: `1px solid ${darkTheme.border}` }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
+                  <Box sx={{ p: 4, borderBottom: `1px solid ${darkTheme.border}` }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
                       <Box
                         sx={{
-                          width: 32,
-                          height: 32,
+                          width: 48,
+                          height: 48,
                           backgroundColor: darkTheme.selectedBg,
-                          borderRadius: '8px',
+                          borderRadius: '12px',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
                         }}
                       >
-                        <AccessTime sx={{ color: darkTheme.primary, fontSize: 16 }} />
+                        <AccessTimeIcon sx={{ color: darkTheme.primary, fontSize: 24 }} />
                       </Box>
                       <Typography
                         sx={{
                           fontWeight: 900,
-                          fontSize: '1.125rem',
+                          fontSize: '1.5rem',
                           color: darkTheme.text,
                           textTransform: 'uppercase',
                           letterSpacing: '-0.01em',
@@ -1123,13 +1349,24 @@ const NewHeroSlidePage: React.FC = () => {
                         Schedule
                       </Typography>
                     </Box>
+                    <Typography
+                      sx={{
+                        color: darkTheme.textSecondary,
+                        fontSize: '0.875rem',
+                        fontWeight: 500,
+                      }}
+                    >
+                      Define when this slide is displayed
+                    </Typography>
                   </Box>
-                  <CardContent sx={{ p: 3 }}>
-                    <Stack spacing={3}>
+                  <CardContent sx={{ p: 4 }}>
+                    <Stack spacing={4}>
                       <TextField
                         label="Show From"
                         name="showFrom"
                         type="datetime-local"
+                        value={formData.showFrom}
+                        onChange={(e) => handleInputChange('showFrom', e.target.value)}
                         fullWidth
                         InputLabelProps={{ shrink: true }}
                         sx={{
@@ -1152,8 +1389,12 @@ const NewHeroSlidePage: React.FC = () => {
                         label="Show Until"
                         name="showUntil"
                         type="datetime-local"
+                        value={formData.showUntil}
+                        onChange={(e) => handleInputChange('showUntil', e.target.value)}
                         fullWidth
                         InputLabelProps={{ shrink: true }}
+                        error={!!getError('showUntil')}
+                        helperText={getError('showUntil')}
                         sx={{
                           '& .MuiInputLabel-root': {
                             fontWeight: 600,
@@ -1168,87 +1409,12 @@ const NewHeroSlidePage: React.FC = () => {
                             '&:hover fieldset': { borderColor: darkTheme.primary },
                             '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
                           },
+                          '& .MuiFormHelperText-root': {
+                            color: getError('showUntil') ? darkTheme.error : darkTheme.textSecondary,
+                          },
                         }}
                       />
                     </Stack>
-                  </CardContent>
-                </Card>
-
-                {/* Analytics Preview Card */}
-                <Card 
-                  sx={{ 
-                    backgroundColor: darkTheme.surface,
-                    borderRadius: '12px',
-                    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
-                    border: `1px solid ${darkTheme.border}`,
-                    overflow: 'hidden',
-                  }}
-                >
-                  <Box sx={{ p: 3, borderBottom: `1px solid ${darkTheme.border}` }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
-                      <Box
-                        sx={{
-                          width: 32,
-                          height: 32,
-                          backgroundColor: darkTheme.successBg,
-                          borderRadius: '8px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                        }}
-                      >
-                        <BarChart sx={{ color: darkTheme.success, fontSize: 16 }} />
-                      </Box>
-                      <Typography
-                        sx={{
-                          fontWeight: 900,
-                          fontSize: '1.125rem',
-                          color: darkTheme.text,
-                          textTransform: 'uppercase',
-                          letterSpacing: '-0.01em',
-                        }}
-                      >
-                        Analytics
-                      </Typography>
-                    </Box>
-                  </Box>
-                  <CardContent sx={{ p: 3 }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-around', textAlign: 'center', mb: 2 }}>
-                      {['Views', 'Clicks', 'Conversions'].map((metric) => (
-                        <Box key={metric}>
-                          <Typography
-                            sx={{
-                              fontSize: '2rem',
-                              fontWeight: 900,
-                              color: darkTheme.text,
-                              lineHeight: 1,
-                            }}
-                          >
-                            0
-                          </Typography>
-                          <Typography
-                            sx={{
-                              fontSize: '0.75rem',
-                              color: darkTheme.textSecondary,
-                              textTransform: 'uppercase',
-                              letterSpacing: '1px',
-                              fontWeight: 600,
-                            }}
-                          >
-                            {metric}
-                          </Typography>
-                        </Box>
-                      ))}
-                    </Box>
-                    <Typography
-                      sx={{
-                        fontSize: '0.75rem',
-                        color: darkTheme.textSecondary,
-                        textAlign: 'center',
-                      }}
-                    >
-                      Analytics will be available after publishing
-                    </Typography>
                   </CardContent>
                 </Card>
               </Stack>
@@ -1260,4 +1426,4 @@ const NewHeroSlidePage: React.FC = () => {
   );
 };
 
-export default NewHeroSlidePage;
+export default NewHeroSlidePage
