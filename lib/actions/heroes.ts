@@ -41,19 +41,10 @@ export interface HeroData {
   updatedAt: Date;
 }
 
-// FIX: Helper function now generates a permanent public URL
+// Simplified mapping function - URLs are already complete from file upload
 const mapPrismaHeroToHeroData = (hero: PrismaHero): HeroData => {
-  const minioBaseUrl = `https://${process.env.MINIO_ENDPOINT}/${process.env.MINIO_DOCUMENTS_BUCKET}`;
-
-  const getPublicUrl = (fileName: string | null) => {
-    return fileName ? `${minioBaseUrl}/${fileName}` : null;
-  };
-
   return {
     ...hero,
-    backgroundImage: getPublicUrl(hero.backgroundImage),
-    backgroundVideo: getPublicUrl(hero.backgroundVideo),
-    overlayImage: getPublicUrl(hero.overlayImage),
     // Convert Decimal types to number for client components
     overlayOpacity: hero.overlayOpacity ? Number(hero.overlayOpacity) : null,
     // Ensure array fields are handled
