@@ -12,7 +12,7 @@ import FAQ from '../../components/faqs';
 import { getActiveHeroes } from '../../lib/actions/heroes'; // Changed from getFeaturedHero
 import { getFeaturedBusinessUnits } from '../../lib/actions/properties';
 import { getFeaturedRestaurants } from '../../lib/actions/restaurants';
-import { getFeaturedEvents } from '../../lib/actions/events';
+import { getFeaturedEvents, getPublishedEvents } from '../../lib/actions/events';
 import { getFeaturedSpecialOffers } from '../../lib/actions/special-offers';
 import { getFeaturedTestimonials } from '../../lib/actions/testimonials';
 
@@ -29,7 +29,7 @@ const Home: React.FC = async () => {
     getActiveHeroes(), // Changed from getFeaturedHero()
     getFeaturedBusinessUnits(),
     getFeaturedRestaurants(),
-    getFeaturedEvents(6),
+    getPublishedEvents(),
     getFeaturedSpecialOffers(4),
     getFeaturedTestimonials(6),
   ]);
