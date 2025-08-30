@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { minioClient, DOCUMENTS_BUCKET, generateFileName, initializeBucket } from '@/lib/minio';
+import { minioClient, DOCUMENTS_BUCKET, generateFileName, initializeBucket, generatePublicUrl } from '@/lib/minio';
 
 export async function POST(request: NextRequest) {
     try {
@@ -24,13 +24,16 @@ export async function POST(request: NextRequest) {
         'application/pdf',
         'image/jpeg',
         'image/png',
-        'image/webp', // Add WebP support
+        'image/webp',
         'image/gif',
         'application/msword',
         'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
         'application/vnd.ms-excel',
         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         'text/plain',
+        'video/mp4',
+        'video/webm',
+        'video/quicktime',
       ];
   
       if (!allowedTypes.includes(file.type)) {
@@ -44,7 +47,7 @@ export async function POST(request: NextRequest) {
       const buffer = await file.arrayBuffer();
       const fileBuffer = Buffer.from(buffer);
   
-      // Upload to MinIO with enhanced metadata
+      // Upload to MinIO with proper metadata
       await minioClient.putObject(
         DOCUMENTS_BUCKET,
         fileName,
@@ -52,18 +55,18 @@ export async function POST(request: NextRequest) {
         file.size,
         {
           'Content-Type': file.type,
-          'Content-Disposition': `inline; filename="${file.name}"`, // FIX: Use inline to display in browser
+          'Content-Disposition': `inline; filename="${file.name}"`,
           'original-filename': file.name,
+          'Cache-Control': 'public, max-age=31536000', // Cache for 1 year
         }
       );
   
-      // FIX: Construct a permanent public URL
-      const minioBaseUrl = `https://${process.env.MINIO_ENDPOINT}/${process.env.MINIO_DOCUMENTS_BUCKET}`;
-      const fileUrl = `${minioBaseUrl}/${fileName}`;
+      // Generate the public URL
+      const fileUrl = generatePublicUrl(fileName);
   
       return NextResponse.json({
         success: true,
-        fileUrl, // FIX: Return the public URL
+        fileUrl,
         fileName,
         originalName: file.name,
       });
@@ -74,4 +77,4 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       );
     }
-  }
+}

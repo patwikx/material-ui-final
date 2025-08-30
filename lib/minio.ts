@@ -12,13 +12,29 @@ export const minioClient = new Client({
 // Bucket name for documents
 export const DOCUMENTS_BUCKET = process.env.MINIO_DOCUMENTS_BUCKET || 'pms-bucket';
 
-// Initialize bucket if it doesn't exist (now creates a private bucket)
+// Initialize bucket with public read policy
 export async function initializeBucket() {
   try {
     const exists = await minioClient.bucketExists(DOCUMENTS_BUCKET);
     if (!exists) {
       await minioClient.makeBucket(DOCUMENTS_BUCKET);
       console.log(`Bucket ${DOCUMENTS_BUCKET} created successfully.`);
+      
+      // Set public read policy for the bucket
+      const publicReadPolicy = {
+        Version: '2012-10-17',
+        Statement: [
+          {
+            Effect: 'Allow',
+            Principal: { AWS: ['*'] },
+            Action: ['s3:GetObject'],
+            Resource: [`arn:aws:s3:::${DOCUMENTS_BUCKET}/*`]
+          }
+        ]
+      };
+      
+      await minioClient.setBucketPolicy(DOCUMENTS_BUCKET, JSON.stringify(publicReadPolicy));
+      console.log(`Public read policy set for bucket ${DOCUMENTS_BUCKET}`);
     }
   } catch (error) {
     console.error('Error initializing MinIO bucket:', error);
@@ -33,16 +49,23 @@ export function generateFileName(originalName: string): string {
   return `${timestamp}-${randomStr}.${ext}`;
 }
 
+// Generate public URL for uploaded files
+export function generatePublicUrl(fileName: string): string {
+  const protocol = process.env.MINIO_USE_SSL === 'true' ? 'https' : 'http';
+  const port = process.env.MINIO_PORT && process.env.MINIO_PORT !== '80' && process.env.MINIO_PORT !== '443' 
+    ? `:${process.env.MINIO_PORT}` 
+    : '';
+  
+  return `${protocol}://${process.env.MINIO_ENDPOINT}${port}/${DOCUMENTS_BUCKET}/${fileName}`;
+}
+
 /**
  * Generates a secure, temporary URL to access a private file.
- * @param fileName The name of the object in the bucket.
- * @returns A promise that resolves to the pre-signed URL string.
+ * (Keep this for cases where you need temporary access)
  */
 export async function generatePresignedUrl(fileName: string): Promise<string> {
   try {
-    // Set the expiration time for the URL (e.g., 5 minutes from now)
     const expiryInSeconds = 5 * 60;
-
     const url = await minioClient.presignedGetObject(
       DOCUMENTS_BUCKET,
       fileName,

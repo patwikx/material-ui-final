@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -90,6 +91,12 @@ interface HeroFormData {
   caption: string;
 }
 
+interface UploadCompleteResult {
+  fileName: string;
+  name: string;
+  fileUrl: string;
+}
+
 const EditHeroPage: React.FC = () => {
   const router = useRouter();
   const params = useParams();
@@ -127,15 +134,17 @@ const EditHeroPage: React.FC = () => {
     altText: '',
     caption: '',
   });
+  
   const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({
     open: false,
     message: '',
     severity: 'success',
   });
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // Updated state for uploaded files - now storing both fileName and fileUrl
+  // Store uploaded files with complete URLs
   const [uploadedFiles, setUploadedFiles] = useState<{
     backgroundImage: { fileName: string; name: string; fileUrl: string } | null;
     backgroundVideo: { fileName: string; name: string; fileUrl: string } | null;
@@ -182,14 +191,14 @@ const EditHeroPage: React.FC = () => {
             caption: heroData.caption || '',
           });
 
-          // Set uploaded files with both fileName and public URL
+          // Set uploaded files using existing URLs from database
           if (heroData.backgroundImage) {
             setUploadedFiles(prev => ({
               ...prev,
               backgroundImage: {
                 fileName: heroData.backgroundImage!.split('/').pop()!,
                 name: heroData.backgroundImage!.split('/').pop()!,
-                fileUrl: heroData.backgroundImage!, // This is now the full public URL
+                fileUrl: heroData.backgroundImage!, // Complete URL from database
               }
             }));
           }
@@ -200,7 +209,7 @@ const EditHeroPage: React.FC = () => {
               backgroundVideo: {
                 fileName: heroData.backgroundVideo!.split('/').pop()!,
                 name: heroData.backgroundVideo!.split('/').pop()!,
-                fileUrl: heroData.backgroundVideo!, // This is now the full public URL
+                fileUrl: heroData.backgroundVideo!, // Complete URL from database
               }
             }));
           }
@@ -211,7 +220,7 @@ const EditHeroPage: React.FC = () => {
               overlayImage: {
                 fileName: heroData.overlayImage!.split('/').pop()!,
                 name: heroData.overlayImage!.split('/').pop()!,
-                fileUrl: heroData.overlayImage!, // This is now the full public URL
+                fileUrl: heroData.overlayImage!, // Complete URL from database
               }
             }));
           }
@@ -247,52 +256,45 @@ const EditHeroPage: React.FC = () => {
     }));
   };
 
-  // Updated upload handlers to work with the new API response structure
-  const handleBackgroundImageUpload = (result: { fileName: string; name: string }) => {
-    // Since the API now returns fileUrl, we need to construct it from the response
-    const fileUrl = `/api/file/${result.fileName}`; // Adjust this based on your actual file serving endpoint
-    
+  // Updated upload handlers to store complete URLs
+  const handleBackgroundImageUpload = (result: UploadCompleteResult) => {
     setUploadedFiles(prev => ({
       ...prev,
       backgroundImage: {
         fileName: result.fileName,
         name: result.name,
-        fileUrl: fileUrl,
+        fileUrl: result.fileUrl, // Store the complete public URL
       }
     }));
     
-    // Update form data with just the fileName for storage
-    handleInputChange('backgroundImage', result.fileName);
+    // Store the complete URL in form data
+    handleInputChange('backgroundImage', result.fileUrl);
   };
 
-  const handleBackgroundVideoUpload = (result: { fileName: string; name: string }) => {
-    const fileUrl = `/api/file/${result.fileName}`;
-    
+  const handleBackgroundVideoUpload = (result: UploadCompleteResult) => {
     setUploadedFiles(prev => ({
       ...prev,
       backgroundVideo: {
         fileName: result.fileName,
         name: result.name,
-        fileUrl: fileUrl,
+        fileUrl: result.fileUrl,
       }
     }));
     
-    handleInputChange('backgroundVideo', result.fileName);
+    handleInputChange('backgroundVideo', result.fileUrl);
   };
 
-  const handleOverlayImageUpload = (result: { fileName: string; name: string }) => {
-    const fileUrl = `/api/file/${result.fileName}`;
-    
+  const handleOverlayImageUpload = (result: UploadCompleteResult) => {
     setUploadedFiles(prev => ({
       ...prev,
       overlayImage: {
         fileName: result.fileName,
         name: result.name,
-        fileUrl: fileUrl,
+        fileUrl: result.fileUrl,
       }
     }));
     
-    handleInputChange('overlayImage', result.fileName);
+    handleInputChange('overlayImage', result.fileUrl);
   };
 
   // Updated remove handlers
@@ -320,17 +322,26 @@ const EditHeroPage: React.FC = () => {
     handleInputChange('overlayImage', '');
   };
 
+  const handleUploadError = (message: string) => {
+    setSnackbar({ 
+      open: true, 
+      message, 
+      severity: 'error' 
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
 
     try {
-      // Use just the fileName for database storage (not the full URL)
+      // Submit form data with complete URLs
       const updatedData = {
         ...formData,
-        backgroundImage: uploadedFiles.backgroundImage?.fileName || '',
-        backgroundVideo: uploadedFiles.backgroundVideo?.fileName || '',
-        overlayImage: uploadedFiles.overlayImage?.fileName || '',
+        // Use the complete URLs, not just filenames
+        backgroundImage: formData.backgroundImage, // This is now a complete URL
+        backgroundVideo: formData.backgroundVideo, // This is now a complete URL
+        overlayImage: formData.overlayImage, // This is now a complete URL
         showFrom: formData.showFrom ? new Date(formData.showFrom) : null,
         showUntil: formData.showUntil ? new Date(formData.showUntil) : null,
       };
@@ -486,32 +497,6 @@ const EditHeroPage: React.FC = () => {
             Update the hero content and settings to customize its appearance and behavior.
           </Typography>
         </Box>
-
-        {/* Notification Alert */}
-        <Snackbar
-          open={snackbar.open}
-          autoHideDuration={6000}
-          onClose={handleCloseSnackbar}
-          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-        >
-          <Alert
-            onClose={handleCloseSnackbar}
-            severity={snackbar.severity}
-            sx={{
-              width: '100%',
-              backgroundColor: snackbar.severity === 'success' ? darkTheme.successBg : darkTheme.errorBg,
-              borderColor: snackbar.severity === 'success' ? darkTheme.success : darkTheme.error,
-              border: `1px solid`,
-              borderRadius: '8px',
-              color: snackbar.severity === 'success' ? darkTheme.success : darkTheme.error,
-              '& .MuiAlert-icon': {
-                color: snackbar.severity === 'success' ? darkTheme.success : darkTheme.error,
-              },
-            }}
-          >
-            {snackbar.message}
-          </Alert>
-        </Snackbar>
 
         <form onSubmit={handleSubmit} id="hero-form">
           <Box sx={{ display: 'flex', gap: 4, flexDirection: { xs: 'column', xl: 'row' } }}>
@@ -770,7 +755,7 @@ const EditHeroPage: React.FC = () => {
                         ) : (
                           <FileUpload
                             onUploadComplete={handleBackgroundImageUpload}
-                            onUploadError={(message) => setSnackbar({ open: true, message, severity: 'error' })}
+                            onUploadError={handleUploadError}
                             accept=".jpg,.jpeg,.png,.gif,.webp"
                             maxSize={16}
                           />
@@ -792,7 +777,7 @@ const EditHeroPage: React.FC = () => {
                         ) : (
                           <FileUpload
                             onUploadComplete={handleBackgroundVideoUpload}
-                            onUploadError={(message) => setSnackbar({ open: true, message, severity: 'error' })}
+                            onUploadError={handleUploadError}
                             accept=".mp4,.webm,.mov"
                             maxSize={50}
                           />
@@ -814,7 +799,7 @@ const EditHeroPage: React.FC = () => {
                         ) : (
                           <FileUpload
                             onUploadComplete={handleOverlayImageUpload}
-                            onUploadError={(message) => setSnackbar({ open: true, message, severity: 'error' })}
+                            onUploadError={handleUploadError}
                             accept=".jpg,.jpeg,.png,.gif,.webp"
                             maxSize={16}
                           />

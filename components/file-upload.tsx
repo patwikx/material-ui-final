@@ -12,7 +12,6 @@ import {
   Close as CloseIcon,
   InsertDriveFile as FileIcon,
   Autorenew as Loader2,
-  Image as ImageIcon,
   Videocam as VideoIcon,
 } from '@mui/icons-material';
 
@@ -40,6 +39,7 @@ const darkTheme = {
 interface UploadCompleteResult {
   fileName: string;
   name: string;
+  fileUrl: string; // Add fileUrl to the interface
 }
 
 interface FileUploadProps {
@@ -101,10 +101,12 @@ export function FileUpload({
         throw new Error(result.error || 'Upload failed');
       }
       
-      if (result.success && result.fileName) {
+      if (result.success && result.fileName && result.fileUrl) {
+        // Pass the complete response including fileUrl
         onUploadComplete({
           fileName: result.fileName,
-          name: file.name,
+          name: result.originalName || file.name,
+          fileUrl: result.fileUrl, // Include the public URL
         });
       } else {
         throw new Error(result.error || 'Upload failed: Invalid server response');
@@ -240,7 +242,6 @@ interface UploadedFileDisplayProps {
 }
 
 export function UploadedFileDisplay({
-  fileName,
   name,
   fileUrl,
   onRemove,
