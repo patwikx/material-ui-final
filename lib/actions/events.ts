@@ -61,7 +61,6 @@ export const getPublishedEvents = cache(async (
     const events = await prisma.event.findMany({
       where: {
         isPublished: true,
-        isFeatured: true,
         status: {
           in: ['CONFIRMED', 'IN_PROGRESS']
         },
@@ -104,7 +103,7 @@ export const getPublishedEvents = cache(async (
         }
       },
       orderBy: [
-        { isFeatured: 'desc' },
+        { isFeatured: 'desc' }, // This will still prioritize featured events at the top
         { isPinned: 'desc' },
         { startDate: 'asc' },
         { sortOrder: 'asc' }
@@ -141,6 +140,7 @@ export const getPublishedEvents = cache(async (
     throw new Error('Failed to fetch events');
   }
 });
+
 
 export const getFeaturedEvents = cache(async (limit: number = 6): Promise<EventData[]> => {
   try {
