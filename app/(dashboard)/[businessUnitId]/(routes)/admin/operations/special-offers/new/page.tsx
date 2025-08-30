@@ -28,8 +28,7 @@ import {
 } from '@mui/icons-material';
 import { useRouter } from 'next/navigation';
 import { OfferType, OfferStatus } from '@prisma/client';
-import { getBusinessUnits } from '@/lib/actions/business-units';
-import { BusinessUnitData } from '@/lib/actions/business-management';
+import { BusinessUnitData, getAllBusinessUnits } from '@/lib/actions/business-management';
 import { createSpecialOffer, CreateSpecialOfferData } from '@/lib/cms-actions/special-offer';
 import { useBusinessUnit } from '@/context/business-unit-context';
 
@@ -126,7 +125,7 @@ const NewSpecialOfferPage: React.FC = () => {
   useEffect(() => {
     const loadBusinessUnits = async () => {
       try {
-        const units = await getBusinessUnits();
+        const units = await getAllBusinessUnits();
         setBusinessUnits(units);
         if (units.length > 0) {
           setFormData(prev => ({ ...prev, businessUnitId: units[0].id }));
