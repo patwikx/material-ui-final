@@ -133,8 +133,8 @@ const EditHeroPage: React.FC = () => {
     message: '',
     severity: 'success',
   });
-  const [newTargetPage, setNewTargetPage] = useState('');
-  const [newTargetAudience, setNewTargetAudience] = useState('');
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [errors, setErrors] = useState<Record<string, string>>({}); // FIX: Correctly declared errors state
 
   const [uploadedBackgroundImage, setUploadedBackgroundImage] = useState<{ fileName: string; name: string } | null>(null);

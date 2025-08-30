@@ -26,7 +26,6 @@ import {
 import {
   ArrowBack as ArrowBackIcon,
   Save as SaveIcon,
-  Add as AddIcon,
   Visibility,
   Star as StarIcon,
   AccessTime as AccessTimeIcon,
@@ -190,34 +189,40 @@ const NewHeroSlidePage: React.FC = () => {
     setSaving(true);
 
     try {
-      const heroData = {
-        ...formData,
-        backgroundImage: uploadedBackgroundImage?.fileName || '',
-        backgroundVideo: uploadedBackgroundVideo?.fileName || '',
-        overlayImage: uploadedOverlayImage?.fileName || '',
-        showFrom: formData.showFrom ? new Date(formData.showFrom) : null,
-        showUntil: formData.showUntil ? new Date(formData.showUntil) : null,
-      };
-
-      // Convert to FormData if the API expects it
+      // Create FormData object
       const formDataToSend = new FormData();
       
-      // Add all form fields to FormData
-      Object.entries(heroData).forEach(([key, value]) => {
+      // Add all form fields to FormData with proper handling
+      Object.entries(formData).forEach(([key, value]) => {
         if (value !== null && value !== undefined) {
           if (Array.isArray(value)) {
-            // Handle arrays (targetPages, targetAudience)
+            // Handle arrays - convert to JSON string
             formDataToSend.append(key, JSON.stringify(value));
+          } else if (typeof value === 'boolean') {
+            // Handle booleans - convert to string
+            formDataToSend.append(key, value.toString());
           } else if (value instanceof Date) {
             // Handle dates
             formDataToSend.append(key, value.toISOString());
-          } else {
-            // Handle all other types
+          } else if (value !== '') {
+            // Handle all other types - only add non-empty values
             formDataToSend.append(key, String(value));
           }
         }
       });
 
+      // Override media fields with uploaded file names if they exist
+      if (uploadedBackgroundImage?.fileName) {
+        formDataToSend.set('backgroundImage', uploadedBackgroundImage.fileName);
+      }
+      if (uploadedBackgroundVideo?.fileName) {
+        formDataToSend.set('backgroundVideo', uploadedBackgroundVideo.fileName);
+      }
+      if (uploadedOverlayImage?.fileName) {
+        formDataToSend.set('overlayImage', uploadedOverlayImage.fileName);
+      }
+
+    
       const result = await createHeroSlide(formDataToSend);
 
       if (result.success) {
@@ -257,11 +262,13 @@ const NewHeroSlidePage: React.FC = () => {
 
   const handleFileUploadComplete = (field: 'backgroundImage' | 'backgroundVideo' | 'overlayImage') => 
     (result: { fileName: string; name: string }) => {
+      // Update the form data with the uploaded file name
       setFormData(prev => ({
         ...prev,
         [field]: result.fileName,
       }));
       
+      // Update the display state
       if (field === 'backgroundImage') {
         setUploadedBackgroundImage(result);
       } else if (field === 'backgroundVideo') {
@@ -1426,4 +1433,4 @@ const NewHeroSlidePage: React.FC = () => {
   );
 };
 
-export default NewHeroSlidePage
+export default NewHeroSlidePage;

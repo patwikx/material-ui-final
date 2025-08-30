@@ -33,6 +33,7 @@ export async function POST(request: NextRequest) {
       'application/pdf',
       'image/jpeg',
       'image/png',
+      'image/webp', // Add WebP support
       'image/gif',
       'application/msword',
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
