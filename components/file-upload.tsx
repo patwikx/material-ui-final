@@ -1,33 +1,20 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   Box,
   Typography,
   LinearProgress,
   IconButton,
+  CircularProgress,
 } from '@mui/material';
 import {
   CloudUpload as UploadIcon,
   Close as CloseIcon,
   InsertDriveFile as FileIcon,
   Autorenew as Loader2,
+  Videocam as VideoIcon,
 } from '@mui/icons-material';
-
-// MODIFIED: This is the data that the onUploadComplete callback will provide.
-interface UploadCompleteResult {
-  fileName: string; // The unique key from MinIO
-  name: string; // The original, user-friendly filename
-}
-
-interface FileUploadProps {
-  onUploadComplete: (result: UploadCompleteResult) => void;
-  onUploadError: (error: string) => void;
-  disabled?: boolean;
-  maxSize?: number; // in MB
-  accept?: string;
-  className?: string;
-}
 
 // Re-using the darkTheme for consistency
 const darkTheme = {
@@ -49,6 +36,20 @@ const darkTheme = {
   warningBg: 'rgba(245, 158, 11, 0.1)',
   errorHover: '#b91c1c',
 };
+
+interface UploadCompleteResult {
+  fileName: string;
+  name: string;
+}
+
+interface FileUploadProps {
+  onUploadComplete: (result: UploadCompleteResult) => void;
+  onUploadError: (error: string) => void;
+  disabled?: boolean;
+  maxSize?: number;
+  accept?: string;
+  className?: string;
+}
 
 export function FileUpload({
   onUploadComplete,
@@ -229,17 +230,76 @@ export function FileUpload({
   );
 }
 
+// MODIFIED: The display component now handles previewing images and videos
 interface UploadedFileDisplayProps {
-  file: { name: string };
+  fileName: string; // The unique key from MinIO
+  name: string; // The original, user-friendly filename
   onRemove: () => void;
   disabled?: boolean;
 }
 
 export function UploadedFileDisplay({
-  file,
+  fileName,
+  name,
   onRemove,
   disabled = false,
 }: UploadedFileDisplayProps) {
+  const [fileUrl, setFileUrl] = useState<string | null>(null);
+  const [loadingUrl, setLoadingUrl] = useState(true);
+
+  useEffect(() => {
+    const fetchPresignedUrl = async () => {
+      setLoadingUrl(true);
+      try {
+        const response = await fetch(`/api/minio/presigned-url?fileName=${fileName}`);
+        const result = await response.json();
+        if (result.success) {
+          setFileUrl(result.url);
+        } else {
+          console.error('Failed to get pre-signed URL:', result.error);
+        }
+      } catch (error) {
+        console.error('API call failed:', error);
+      } finally {
+        setLoadingUrl(false);
+      }
+    };
+
+    if (fileName) {
+      fetchPresignedUrl();
+    } else {
+      setFileUrl(null);
+      setLoadingUrl(false);
+    }
+  }, [fileName]);
+
+  const fileExtension = name.split('.').pop()?.toLowerCase() || '';
+  const isImage = ['jpg', 'jpeg', 'png', 'gif'].includes(fileExtension);
+  const isVideo = ['mp4', 'webm', 'mov'].includes(fileExtension);
+
+  const renderPreview = () => {
+    if (loadingUrl) {
+      return <CircularProgress size={20} sx={{ color: darkTheme.primary }} />;
+    }
+    if (isImage && fileUrl) {
+      return (
+        <Box sx={{ position: 'relative', width: 64, height: 64, flexShrink: 0, mr: 2 }}>
+          <img src={fileUrl} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '4px' }} />
+        </Box>
+      );
+    }
+    if (isVideo && fileUrl) {
+      return (
+        <Box sx={{ position: 'relative', width: 64, height: 64, flexShrink: 0, mr: 2 }}>
+          <VideoIcon sx={{ fontSize: 40, color: darkTheme.primary }} />
+        </Box>
+      );
+    }
+    return (
+      <FileIcon sx={{ width: 20, height: 20, color: darkTheme.primary, flexShrink: 0, mr: 2 }} />
+    );
+  };
+
   return (
     <Box
       sx={{
@@ -254,9 +314,9 @@ export function UploadedFileDisplay({
       }}
     >
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, minWidth: 0 }}>
-        <FileIcon sx={{ width: 20, height: 20, color: darkTheme.success, flexShrink: 0 }} />
+        {renderPreview()}
         <Typography sx={{ fontSize: '0.875rem', fontWeight: 500, color: darkTheme.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-          {file.name}
+          {name}
         </Typography>
       </Box>
       <IconButton
