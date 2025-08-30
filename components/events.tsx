@@ -19,6 +19,27 @@ interface EventsProps {
   events: EventData[];
 }
 
+// Enhanced dark theme matching the Restaurants component
+const darkTheme = {
+  background: '#0a0e13',
+  surface: '#1a1f29',
+  surfaceHover: '#252a35',
+  primary: '#3b82f6',
+  primaryHover: '#2563eb',
+  text: '#e2e8f0',
+  textSecondary: '#94a3b8',
+  border: '#1e293b',
+  selected: '#1e40af',
+  selectedBg: 'rgba(59, 130, 246, 0.1)',
+  success: '#10b981',
+  successBg: 'rgba(16, 185, 129, 0.1)',
+  error: '#ef4444',
+  errorBg: 'rgba(239, 68, 68, 0.1)',
+  warning: '#f59e0b',
+  warningBg: 'rgba(245, 158, 11, 0.1)',
+  errorHover: '#b91c1c',
+};
+
 // Create motion variants for the animations
 const cardVariants = {
   hiddenLeft: {
@@ -39,6 +60,8 @@ const cardVariants = {
 };
 
 const Events: React.FC<EventsProps> = ({ events }) => {
+  console.log('Events prop received:', events);
+  
   const formatDate = (date: Date): string => {
     return date.toLocaleDateString('en-US', {
       weekday: 'long',
@@ -66,7 +89,7 @@ const Events: React.FC<EventsProps> = ({ events }) => {
     
     return imageToUse?.image?.mediumUrl || 
            imageToUse?.image?.originalUrl || 
-           '/images/events/default-event.jpg'; // Add a default fallback
+           'https://images.pexels.com/photos/1587927/pexels-photo-1587927.jpeg?auto=compress&cs=tinysrgb&w=800'; // Updated fallback
   };
 
   const getEventTypeDisplay = (type: string): string => {
@@ -100,7 +123,7 @@ const Events: React.FC<EventsProps> = ({ events }) => {
       <Box 
         sx={{ 
           py: { xs: 8, md: 16 },
-          backgroundColor: '#f8f9fa',
+          backgroundColor: darkTheme.background,
           textAlign: 'center',
         }}
       >
@@ -109,7 +132,7 @@ const Events: React.FC<EventsProps> = ({ events }) => {
             sx={{
               fontWeight: 900,
               fontSize: { xs: '2rem', md: '3rem' },
-              color: '#111827',
+              color: darkTheme.text,
               mb: 4,
               textTransform: 'uppercase',
             }}
@@ -118,7 +141,7 @@ const Events: React.FC<EventsProps> = ({ events }) => {
           </Typography>
           <Typography
             sx={{
-              color: '#6b7280',
+              color: darkTheme.textSecondary,
               fontSize: '1.125rem',
               maxWidth: '600px',
               mx: 'auto',
@@ -135,7 +158,7 @@ const Events: React.FC<EventsProps> = ({ events }) => {
     <Box 
       sx={{ 
         py: { xs: 8, md: 16 },
-        backgroundColor: '#f8f9fa',
+        backgroundColor: darkTheme.background,
         position: 'relative',
       }}
     >
@@ -145,7 +168,7 @@ const Events: React.FC<EventsProps> = ({ events }) => {
           <Typography
             variant="overline"
             sx={{
-              color: '#6b7280',
+              color: darkTheme.textSecondary,
               fontWeight: 700,
               letterSpacing: 3,
               fontSize: '0.875rem',
@@ -161,7 +184,7 @@ const Events: React.FC<EventsProps> = ({ events }) => {
               fontWeight: 900,
               fontSize: { xs: '2.75rem', md: '4rem', lg: '5rem' },
               lineHeight: { xs: 0.9, md: 0.85 },
-              color: '#111827',
+              color: darkTheme.text,
               mb: 4,
               letterSpacing: '-0.02em',
               textTransform: 'uppercase',
@@ -172,7 +195,7 @@ const Events: React.FC<EventsProps> = ({ events }) => {
           </Typography>
           <Typography
             sx={{
-              color: '#6b7280',
+              color: darkTheme.textSecondary,
               fontSize: { xs: '1.125rem', md: '1.25rem' },
               lineHeight: 1.6,
               maxWidth: '600px',
@@ -215,7 +238,7 @@ const Events: React.FC<EventsProps> = ({ events }) => {
             >
               <Card
                 sx={{
-                  backgroundColor: 'white',
+                  backgroundColor: darkTheme.surface,
                   borderRadius: 0,
                   boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
                   overflow: 'hidden',
@@ -287,7 +310,7 @@ const Events: React.FC<EventsProps> = ({ events }) => {
                         position: 'absolute',
                         top: 24,
                         [isEven ? 'right' : 'left']: 24,
-                        backgroundColor: 'white',
+                        backgroundColor: darkTheme.surface,
                         px: 3,
                         py: 2,
                         display: 'flex',
@@ -296,12 +319,14 @@ const Events: React.FC<EventsProps> = ({ events }) => {
                         boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
                         minWidth: '60px',
                         zIndex: 2,
+                        borderRadius: '8px',
+                        border: `1px solid ${darkTheme.border}`,
                       }}
                     >
                       <Typography 
                         sx={{ 
                           fontWeight: 900,
-                          color: '#111827',
+                          color: darkTheme.text,
                           fontSize: '1.5rem',
                           lineHeight: 1,
                           mb: 0.5,
@@ -312,7 +337,7 @@ const Events: React.FC<EventsProps> = ({ events }) => {
                       <Typography 
                         sx={{ 
                           fontWeight: 700,
-                          color: '#6b7280',
+                          color: darkTheme.textSecondary,
                           fontSize: '0.75rem',
                           textTransform: 'uppercase',
                           letterSpacing: '1px',
@@ -330,8 +355,8 @@ const Events: React.FC<EventsProps> = ({ events }) => {
                           position: 'absolute',
                           bottom: 24,
                           [isEven ? 'right' : 'left']: 24,
-                          backgroundColor: event.isFree ? '#10b981' : '#111827',
-                          color: 'white',
+                          backgroundColor: event.isFree ? darkTheme.success : darkTheme.surface,
+                          color: darkTheme.text,
                           px: 3,
                           py: 1.5,
                           fontSize: '0.875rem',
@@ -339,6 +364,9 @@ const Events: React.FC<EventsProps> = ({ events }) => {
                           textTransform: 'uppercase',
                           letterSpacing: '1px',
                           zIndex: 2,
+                          borderRadius: '8px',
+                          border: `1px solid ${darkTheme.border}`,
+                          boxShadow: `0 2px 8px ${darkTheme.surfaceHover}`,
                         }}
                       >
                         {formatPrice(event.ticketPrice, event.currency, event.isFree)}
@@ -372,9 +400,10 @@ const Events: React.FC<EventsProps> = ({ events }) => {
                           sx={{
                             fontSize: '0.75rem',
                             fontWeight: 700,
-                            color: '#6b7280',
+                            color: darkTheme.textSecondary,
                             textTransform: 'uppercase',
                             letterSpacing: '2px',
+                            display: 'block',
                           }}
                         >
                           Event {String(index + 1).padStart(2, '0')}
@@ -384,7 +413,7 @@ const Events: React.FC<EventsProps> = ({ events }) => {
                             sx={{
                               fontSize: '0.75rem',
                               fontWeight: 600,
-                              color: '#111827',
+                              color: darkTheme.text,
                               textTransform: 'uppercase',
                               letterSpacing: '1px',
                               mt: 0.5,
@@ -400,7 +429,7 @@ const Events: React.FC<EventsProps> = ({ events }) => {
                         sx={{
                           fontWeight: 900,
                           fontSize: { xs: '2rem', md: '2.5rem', lg: '3rem' },
-                          color: '#111827',
+                          color: darkTheme.text,
                           mb: 3,
                           letterSpacing: '-0.02em',
                           lineHeight: 0.9,
@@ -422,13 +451,13 @@ const Events: React.FC<EventsProps> = ({ events }) => {
                       >
                         <Box sx={{ display: 'flex', alignItems: 'center' }}>
                           <CalendarToday sx={{ 
-                            color: '#6b7280', 
+                            color: darkTheme.textSecondary, 
                             mr: 2, 
                             fontSize: 20 
                           }} />
                           <Typography 
                             sx={{ 
-                              color: '#6b7280',
+                              color: darkTheme.textSecondary,
                               fontWeight: 600,
                               fontSize: '1rem',
                               textTransform: 'uppercase',
@@ -442,13 +471,13 @@ const Events: React.FC<EventsProps> = ({ events }) => {
 
                         <Box sx={{ display: 'flex', alignItems: 'center' }}>
                           <LocationOn sx={{ 
-                            color: '#6b7280', 
+                            color: darkTheme.textSecondary, 
                             mr: 2, 
                             fontSize: 20 
                           }} />
                           <Typography 
                             sx={{ 
-                              color: '#6b7280',
+                              color: darkTheme.textSecondary,
                               fontWeight: 600,
                               fontSize: '1rem',
                               textTransform: 'uppercase',
@@ -463,7 +492,7 @@ const Events: React.FC<EventsProps> = ({ events }) => {
                       {/* Description */}
                       <Typography
                         sx={{
-                          color: '#6b7280',
+                          color: darkTheme.textSecondary,
                           fontSize: { xs: '1.1rem', md: '1.2rem' },
                           lineHeight: 1.6,
                           mb: 5,
@@ -482,10 +511,11 @@ const Events: React.FC<EventsProps> = ({ events }) => {
                           sx={{ 
                             fontSize: '0.75rem',
                             fontWeight: 700,
-                            color: '#111827',
+                            color: darkTheme.textSecondary,
                             mb: 2,
                             textTransform: 'uppercase',
                             letterSpacing: '2px',
+                            display: 'block',
                           }}
                         >
                           Event Details
@@ -505,12 +535,12 @@ const Events: React.FC<EventsProps> = ({ events }) => {
                           <Typography
                             sx={{
                               fontSize: '0.95rem',
-                              color: '#6b7280',
+                              color: darkTheme.textSecondary,
                               fontWeight: 500,
                               position: 'relative',
                               '&::before': {
                                 content: '"•"',
-                                color: '#111827',
+                                color: darkTheme.text,
                                 fontWeight: 700,
                                 mr: 1,
                               }
@@ -522,12 +552,12 @@ const Events: React.FC<EventsProps> = ({ events }) => {
                             <Typography
                               sx={{
                                 fontSize: '0.95rem',
-                                color: '#6b7280',
+                                color: darkTheme.textSecondary,
                                 fontWeight: 500,
                                 position: 'relative',
                                 '&::before': {
                                   content: '"•"',
-                                  color: '#111827',
+                                  color: darkTheme.text,
                                   fontWeight: 700,
                                   mr: 1,
                                 }
@@ -540,12 +570,12 @@ const Events: React.FC<EventsProps> = ({ events }) => {
                             <Typography
                               sx={{
                                 fontSize: '0.95rem',
-                                color: '#6b7280',
+                                color: darkTheme.textSecondary,
                                 fontWeight: 500,
                                 position: 'relative',
                                 '&::before': {
                                   content: '"•"',
-                                  color: '#111827',
+                                  color: darkTheme.text,
                                   fontWeight: 700,
                                   mr: 1,
                                 }
@@ -570,24 +600,24 @@ const Events: React.FC<EventsProps> = ({ events }) => {
                         <Button
                           endIcon={<ArrowForward sx={{ fontSize: 18 }} />}
                           sx={{
-                            backgroundColor: '#111827',
+                            backgroundColor: darkTheme.primary,
                             color: 'white',
                             px: 6,
                             py: 2.5,
-                            fontSize: '0.875rem',
+                            fontSize: '1rem',
                             fontWeight: 700,
                             textTransform: 'uppercase',
                             letterSpacing: '1px',
-                            borderRadius: 0,
+                            borderRadius: '8px',
                             minWidth: '200px',
                             transition: 'all 0.3s ease',
                             '&:hover': {
-                              backgroundColor: '#1f2937',
+                              backgroundColor: darkTheme.primaryHover,
                               transform: 'translateY(-3px)',
-                              boxShadow: '0 12px 24px rgba(17, 24, 39, 0.3)',
+                              boxShadow: '0 12px 24px rgba(59, 130, 246, 0.3)',
                             },
                           }}
-                          href={`/events/${event.slug}`} // Link to event detail page
+                          href={`/events/${event.slug}`}
                           component="a"
                         >
                           {event.requiresBooking ? 'Reserve Spot' : 'Learn More'}
@@ -615,7 +645,7 @@ const Events: React.FC<EventsProps> = ({ events }) => {
             sx={{
               fontWeight: 900,
               fontSize: { xs: '2.5rem', md: '4rem' },
-              color: '#111827',
+              color: darkTheme.text,
               mb: 4,
               textTransform: 'uppercase',
               letterSpacing: '-0.02em',
@@ -631,7 +661,7 @@ const Events: React.FC<EventsProps> = ({ events }) => {
             component="a"
             href="/events"
             sx={{
-              backgroundColor: '#111827',
+              backgroundColor: darkTheme.primary,
               color: 'white',
               px: 10,
               py: 3.5,
@@ -639,13 +669,13 @@ const Events: React.FC<EventsProps> = ({ events }) => {
               fontWeight: 700,
               textTransform: 'uppercase',
               letterSpacing: '1px',
-              borderRadius: 0,
+              borderRadius: '8px',
               mt: 4,
               transition: 'all 0.3s ease',
               '&:hover': {
-                backgroundColor: '#1f2937',
+                backgroundColor: darkTheme.primaryHover,
                 transform: 'translateY(-3px)',
-                boxShadow: '0 12px 24px rgba(17, 24, 39, 0.3)',
+                boxShadow: '0 12px 24px rgba(59, 130, 246, 0.3)',
               },
             }}
           >

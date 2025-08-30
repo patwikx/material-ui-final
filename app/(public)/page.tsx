@@ -12,7 +12,7 @@ import FAQ from '../../components/faqs';
 import { getActiveHeroes } from '../../lib/actions/heroes'; // Changed from getFeaturedHero
 import { getFeaturedBusinessUnits } from '../../lib/actions/properties';
 import { getFeaturedRestaurants } from '../../lib/actions/restaurants';
-import { getPublishedEvents } from '../../lib/actions/events';
+import { getPublishedEventsLessRestrictive } from '../../lib/actions/events';
 import { getFeaturedSpecialOffers } from '../../lib/actions/special-offers';
 import { getFeaturedTestimonials } from '../../lib/actions/testimonials';
 
@@ -29,10 +29,14 @@ const Home: React.FC = async () => {
     getActiveHeroes(), // Changed from getFeaturedHero()
     getFeaturedBusinessUnits(),
     getFeaturedRestaurants(),
-    getPublishedEvents(),
+    getPublishedEventsLessRestrictive(),
     getFeaturedSpecialOffers(4),
     getFeaturedTestimonials(6),
+    
   ]);
+
+console.log('Events data from server:', eventsData); // Add this line
+    console.log('Events count:', eventsData?.length); // Add this line
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>

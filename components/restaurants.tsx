@@ -9,13 +9,10 @@ import {
   CardMedia,
   CardContent,
   Button,
-  Stack,
-  Chip,
 } from '@mui/material';
 import {
   LocationOn,
   ArrowForward,
-  Restaurant as RestaurantIcon,
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 
@@ -161,12 +158,6 @@ const getImageAlt = (images: RestaurantWithDetails['images'], restaurantName: st
 const formatPriceRange = (priceRange: string | null): string => {
   if (!priceRange) return 'Moderate';
   return priceRange;
-};
-
-// Helper function to format average meal price
-const formatAverageMeal = (averageMeal: string | null, currency: string): string => {
-  if (!averageMeal) return '';
-  return `Average: ${currency} ${Number(averageMeal).toLocaleString()}`;
 };
 
 const Restaurants: React.FC<RestaurantCardProps> = ({ restaurants }) => {
