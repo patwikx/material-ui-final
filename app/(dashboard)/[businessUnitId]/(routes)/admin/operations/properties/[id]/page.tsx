@@ -36,7 +36,7 @@ import { BusinessUnitData } from '@/lib/actions/business-units';
 import { getBusinessUnitById, updateBusinessUnit, UpdateBusinessUnitData } from '@/lib/actions/business-management';
 import { useBusinessUnit } from '@/context/business-unit-context';
 import { FileUpload, UploadedFileDisplay } from '@/components/file-upload';
-
+import { useSession } from 'next-auth/react';
 
 // Enhanced dark theme matching BusinessUnitSwitcher aesthetic
 const darkTheme = {
@@ -86,7 +86,13 @@ interface BusinessUnitFormData {
 
 interface BusinessUnitImages {
   logo: { fileName: string; name: string; fileUrl: string } | null;
-  images: Array<{ fileName: string; name: string; fileUrl: string }>;
+  images: Array<{ 
+    fileName: string; 
+    name: string; 
+    fileUrl: string;
+    imageId?: string; // Add this to track existing image IDs
+  }>;
+  removeImageIds: string[];
 }
 
 const propertyTypes: { value: PropertyType; label: string }[] = [
@@ -123,6 +129,7 @@ const EditBusinessUnitPage: React.FC = () => {
   const params = useParams();
   const businessUnitId = params.id as string;
   const { businessUnitId: currentBusinessUnitId } = useBusinessUnit();
+  const { data: session, status } = useSession();
 
   const [tabValue, setTabValue] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -156,6 +163,7 @@ const EditBusinessUnitPage: React.FC = () => {
   const [images, setImages] = useState<BusinessUnitImages>({
     logo: null,
     images: [],
+    removeImageIds: [],
   });
 
   const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({
@@ -164,71 +172,85 @@ const EditBusinessUnitPage: React.FC = () => {
     severity: 'success',
   });
 
+  // Check authentication
   useEffect(() => {
-    const loadBusinessUnit = async () => {
-      try {
-        const businessUnitData = await getBusinessUnitById(businessUnitId);
-        if (businessUnitData) {
-          setBusinessUnit(businessUnitData);
-          setFormData({
-            name: businessUnitData.name,
-            displayName: businessUnitData.displayName,
-            description: businessUnitData.description || '',
-            shortDescription: businessUnitData.shortDescription || '',
-            propertyType: businessUnitData.propertyType,
-            city: businessUnitData.city,
-            state: businessUnitData.state || '',
-            country: businessUnitData.country,
-            address: businessUnitData.address || '',
-            latitude: businessUnitData.latitude,
-            longitude: businessUnitData.longitude,
-            phone: businessUnitData.phone || '',
-            email: businessUnitData.email || '',
-            website: businessUnitData.website || '',
-            slug: businessUnitData.slug,
-            isActive: businessUnitData.isActive,
-            isPublished: businessUnitData.isPublished,
-            isFeatured: businessUnitData.isFeatured,
-            sortOrder: businessUnitData.sortOrder,
-            primaryColor: businessUnitData.primaryColor || '',
-            secondaryColor: businessUnitData.secondaryColor || '',
-            logo: businessUnitData.logo || '',
-          });
+    if (status === 'loading') return; // Still loading
+    
+    if (status === 'unauthenticated') {
+      router.push('/auth/sign-in');
+      return;
+    }
+  }, [status, router]);
 
-          // Initialize existing logo if it exists
-          if (businessUnitData.logo) {
-            setImages(prev => ({
-              ...prev,
-              logo: {
-                fileName: businessUnitData.logo || '',
-                name: 'Current Logo',
-                fileUrl: businessUnitData.logo || '',
-              }
-            }));
-          }
-        } else {
-          setSnackbar({
-            open: true,
-            message: 'Business unit not found',
-            severity: 'error',
-          });
-          router.push(`/${currentBusinessUnitId}/admin/operations/properties`);
+useEffect(() => {
+  const loadBusinessUnit = async () => {
+    try {
+      const businessUnitData = await getBusinessUnitById(businessUnitId);
+      if (businessUnitData) {
+        setBusinessUnit(businessUnitData);
+        setFormData({
+          name: businessUnitData.name,
+          displayName: businessUnitData.displayName,
+          description: businessUnitData.description || '',
+          shortDescription: businessUnitData.shortDescription || '',
+          propertyType: businessUnitData.propertyType,
+          city: businessUnitData.city,
+          state: businessUnitData.state || '',
+          country: businessUnitData.country,
+          address: businessUnitData.address || '',
+          latitude: businessUnitData.latitude,
+          longitude: businessUnitData.longitude,
+          phone: businessUnitData.phone || '',
+          email: businessUnitData.email || '',
+          website: businessUnitData.website || '',
+          slug: businessUnitData.slug,
+          isActive: businessUnitData.isActive,
+          isPublished: businessUnitData.isPublished,
+          isFeatured: businessUnitData.isFeatured,
+          sortOrder: businessUnitData.sortOrder,
+          primaryColor: businessUnitData.primaryColor || '',
+          secondaryColor: businessUnitData.secondaryColor || '',
+          logo: businessUnitData.logo || '',
+        });
+
+        // Initialize existing property images with proper ID tracking
+        if (businessUnitData.images && businessUnitData.images.length > 0) {
+          const existingImages = businessUnitData.images.map(img => ({
+            fileName: img.image.originalUrl.split('/').pop() || 'image',
+            name: img.image.title || img.image.altText || 'Property Image',
+            fileUrl: img.image.originalUrl,
+            imageId: img.image.id, // Store the image ID for tracking
+          }));
+          
+          setImages(prev => ({
+            ...prev,
+            images: existingImages,
+          }));
         }
-      } catch (error) {
+      } else {
         setSnackbar({
           open: true,
-          message: 'Failed to load business unit',
+          message: 'Business unit not found',
           severity: 'error',
         });
-      } finally {
-        setLoading(false);
+        router.push(`/${currentBusinessUnitId}/admin/operations/properties`);
       }
-    };
-
-    if (businessUnitId && currentBusinessUnitId) {
-      loadBusinessUnit();
+    } catch (error) {
+      setSnackbar({
+        open: true,
+        message: 'Failed to load business unit',
+        severity: 'error',
+      });
+    } finally {
+      setLoading(false);
     }
-  }, [businessUnitId, router, currentBusinessUnitId]);
+  };
+
+  if (businessUnitId && currentBusinessUnitId && status === 'authenticated') {
+    loadBusinessUnit();
+  }
+}, [businessUnitId, router, currentBusinessUnitId, status]);
+
 
   const handleInputChange = (field: keyof BusinessUnitFormData, value: string | number | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -262,11 +284,23 @@ const EditBusinessUnitPage: React.FC = () => {
   };
 
   const handleImageRemove = (index: number) => {
+  const imageToRemove = images.images[index];
+  
+  // If this is an existing image (has an imageId), add it to removeImageIds
+  if (imageToRemove.imageId) {
     setImages(prev => ({
       ...prev,
-      images: prev.images.filter((_, i) => i !== index),
+      removeImageIds: [...prev.removeImageIds, imageToRemove.imageId!],
     }));
-  };
+  }
+
+  // Remove from display
+  setImages(prev => ({
+    ...prev,
+    images: prev.images.filter((_, i) => i !== index),
+  }));
+};
+
 
   const handleUploadError = (error: string) => {
     setSnackbar({
@@ -276,60 +310,104 @@ const EditBusinessUnitPage: React.FC = () => {
     });
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSaving(true);
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setSaving(true);
 
-    try {
-      const businessUnitData: UpdateBusinessUnitData = {
-        id: businessUnitId,
-        ...formData,
-        description: formData.description || null,
-        shortDescription: formData.shortDescription || null,
-        state: formData.state || null,
-        address: formData.address || null,
-        phone: formData.phone || null,
-        email: formData.email || null,
-        website: formData.website || null,
-        primaryColor: formData.primaryColor || null,
-        secondaryColor: formData.secondaryColor || null,
-        logo: formData.logo || null,
-      };
+  try {
+    // Filter out new images (ones that weren't in the original business unit)
+    // AND filter out any images with null fileUrl
+    const newImages = images.images
+      .filter(img => {
+        if (!businessUnit?.images) return true;
+        return !businessUnit.images.some(existingImg => 
+          existingImg.image.originalUrl === img.fileUrl
+        );
+      })
+      .filter(img => img.fileUrl !== null) // Filter out null fileUrl
+      .map(img => ({
+        ...img,
+        fileUrl: img.fileUrl as string // Type assertion since we filtered out nulls
+      }));
 
-      const result = await updateBusinessUnit(businessUnitData);
+    const businessUnitData: UpdateBusinessUnitData = {
+      id: businessUnitId,
+      ...formData,
+      description: formData.description || null,
+      shortDescription: formData.shortDescription || null,
+      state: formData.state || null,
+      address: formData.address || null,
+      phone: formData.phone || null,
+      email: formData.email || null,
+      website: formData.website || null,
+      primaryColor: formData.primaryColor || null,
+      secondaryColor: formData.secondaryColor || null,
+      logo: formData.logo || null,
+      // Include new images and removal instructions
+      propertyImages: newImages.length > 0 ? newImages : undefined,
+      removeImageIds: images.removeImageIds.length > 0 ? images.removeImageIds : undefined,
+    };
 
-      if (result.success) {
-        setSnackbar({
-          open: true,
-          message: 'Business unit updated successfully',
-          severity: 'success',
-        });
-        router.push(`/${currentBusinessUnitId}/admin/operations/properties`);
-      } else {
-        setSnackbar({
-          open: true,
-          message: result.message || 'Failed to update business unit',
-          severity: 'error',
-        });
-      }
-    } catch (error) {
+    const result = await updateBusinessUnit(businessUnitData);
+
+    if (result.success) {
       setSnackbar({
         open: true,
-        message: 'An error occurred while updating business unit',
+        message: 'Business unit updated successfully',
+        severity: 'success',
+      });
+      router.push(`/${currentBusinessUnitId}/admin/operations/properties`);
+    } else {
+      setSnackbar({
+        open: true,
+        message: result.message || 'Failed to update business unit',
         severity: 'error',
       });
-    } finally {
-      setSaving(false);
     }
-  };
+  } catch (error) {
+    setSnackbar({
+      open: true,
+      message: 'An error occurred while updating business unit',
+      severity: 'error',
+    });
+  } finally {
+    setSaving(false);
+  }
+};
 
-  if (loading) {
+  // Show loading if session is still loading
+  if (status === 'loading' || loading) {
     return (
       <Box sx={{ backgroundColor: darkTheme.background, minHeight: '100vh', color: darkTheme.text }}>
         <Container maxWidth="xl" sx={{ py: 4 }}>
           <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
-            <Typography sx={{ color: darkTheme.text }}>Loading business unit...</Typography>
+            <Typography sx={{ color: darkTheme.text }}>Loading...</Typography>
           </Box>
+        </Container>
+      </Box>
+    );
+  }
+
+  // Show error if not authenticated
+  if (status === 'unauthenticated') {
+    return (
+      <Box sx={{ backgroundColor: darkTheme.background, minHeight: '100vh', color: darkTheme.text }}>
+        <Container maxWidth="xl" sx={{ py: 4 }}>
+          <Alert severity="error"
+            sx={{
+              backgroundColor: darkTheme.errorBg,
+              borderColor: darkTheme.error,
+              border: `1px solid`,
+              borderRadius: '8px',
+              color: darkTheme.error,
+              fontSize: '12px',
+              fontWeight: 600,
+              '& .MuiAlert-icon': {
+                color: darkTheme.error
+              }
+            }}>
+            You must be logged in to access this page
+          </Alert>
         </Container>
       </Box>
     );
@@ -1006,12 +1084,12 @@ const EditBusinessUnitPage: React.FC = () => {
                   {images.images.length > 0 && (
                     <Box sx={{ mb: 3 }}>
                       <Typography sx={{ fontSize: '12px', color: darkTheme.textSecondary, mb: 2 }}>
-                        Uploaded Images ({images.images.length})
+                        Property Images ({images.images.length})
                       </Typography>
                       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                         {images.images.map((image, index) => (
                           <UploadedFileDisplay
-                            key={index}
+                            key={`${image.fileUrl}-${index}`}
                             fileName={image.fileName}
                             name={image.name}
                             fileUrl={image.fileUrl}

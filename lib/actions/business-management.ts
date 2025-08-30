@@ -3,6 +3,7 @@
 import { prisma } from '../prisma';
 import { revalidatePath } from 'next/cache';
 import { PropertyType } from '@prisma/client';
+import { auth } from '@/auth'; // Import your auth function
 
 export interface ActionResult {
   success: boolean;
@@ -94,6 +95,15 @@ export interface UpdateBusinessUnitData extends CreateBusinessUnitData {
     fileUrl: string;
   }>;
   removeImageIds?: string[]; // IDs of images to remove
+}
+
+// Helper function to get current user
+async function getCurrentUser() {
+  const session = await auth();
+  if (!session?.user?.id) {
+    throw new Error('User not authenticated');
+  }
+  return session.user;
 }
 
 export async function getAllBusinessUnits(businessUnitId?: string): Promise<BusinessUnitData[]> {
@@ -219,6 +229,9 @@ export async function getBusinessUnitById(id: string): Promise<BusinessUnitData 
 
 export async function createBusinessUnit(data: CreateBusinessUnitData): Promise<ActionResult> {
   try {
+    // Get current user
+    const user = await getCurrentUser();
+
     await prisma.businessUnit.create({
       data: {
         name: data.name,
@@ -257,13 +270,18 @@ export async function createBusinessUnit(data: CreateBusinessUnitData): Promise<
     console.error('Error creating business unit:', error);
     return {
       success: false,
-      message: 'Failed to create business unit'
+      message: error instanceof Error && error.message === 'User not authenticated' 
+        ? 'You must be logged in to create a business unit'
+        : 'Failed to create business unit'
     };
   }
 }
 
 export async function updateBusinessUnit(data: UpdateBusinessUnitData): Promise<ActionResult> {
   try {
+    // Get current user
+    const user = await getCurrentUser();
+
     // Start a transaction to handle both business unit update and image management
     await prisma.$transaction(async (tx) => {
       // Update the business unit
@@ -308,18 +326,26 @@ export async function updateBusinessUnit(data: UpdateBusinessUnitData): Promise<
           }
         });
 
-        // Optionally, you might want to delete the actual Image records
-        // if they're no longer used elsewhere. This requires additional logic
-        // to check if the image is used by other entities.
+        // Optionally delete orphaned images
+        for (const imageId of data.removeImageIds) {
+          const imageUsageCount = await tx.businessUnitImage.count({
+            where: { imageId: imageId }
+          });
+
+          // If the image is not used elsewhere, delete it
+          if (imageUsageCount === 0) {
+            await tx.image.delete({ 
+              where: { id: imageId },
+              // Add this to prevent errors if image doesn't exist
+            }).catch(() => {
+              // Ignore deletion errors for already deleted images
+            });
+          }
+        }
       }
 
       // Handle new property images
       if (data.propertyImages && data.propertyImages.length > 0) {
-        // First, we need a user ID for the uploader. You might need to pass this in the data
-        // For now, I'll assume you have a way to get the current user ID
-        // This is a placeholder - you'll need to implement proper user context
-        const uploaderUserId = 'placeholder-user-id'; // TODO: Get actual user ID
-        
         for (let i = 0; i < data.propertyImages.length; i++) {
           const imageData = data.propertyImages[i];
           
@@ -328,12 +354,12 @@ export async function updateBusinessUnit(data: UpdateBusinessUnitData): Promise<
             data: {
               filename: imageData.fileName,
               originalName: imageData.name,
-              mimeType: 'image/jpeg', // You might want to detect this from the file
-              size: 0, // You might want to get actual file size
+              mimeType: getImageMimeType(imageData.fileName),
+              size: 0, // You might want to get actual file size from your upload service
               originalUrl: imageData.fileUrl,
               title: imageData.name,
               category: 'PROPERTY_GALLERY',
-              uploaderId: uploaderUserId,
+              uploaderId: user.id, // Use actual authenticated user ID
             }
           });
 
@@ -344,7 +370,7 @@ export async function updateBusinessUnit(data: UpdateBusinessUnitData): Promise<
               imageId: createdImage.id,
               context: 'gallery',
               sortOrder: i,
-              isPrimary: i === 0, // Make first image primary
+              isPrimary: i === 0, // Make first image primary if no primary exists
             }
           });
         }
@@ -362,8 +388,30 @@ export async function updateBusinessUnit(data: UpdateBusinessUnitData): Promise<
     console.error('Error updating business unit:', error);
     return {
       success: false,
-      message: 'Failed to update business unit'
+      message: error instanceof Error && error.message === 'User not authenticated' 
+        ? 'You must be logged in to update a business unit'
+        : 'Failed to update business unit'
     };
+  }
+}
+
+// Helper function to determine MIME type from filename
+function getImageMimeType(fileName: string): string {
+  const extension = fileName.toLowerCase().split('.').pop();
+  switch (extension) {
+    case 'jpg':
+    case 'jpeg':
+      return 'image/jpeg';
+    case 'png':
+      return 'image/png';
+    case 'gif':
+      return 'image/gif';
+    case 'svg':
+      return 'image/svg+xml';
+    case 'webp':
+      return 'image/webp';
+    default:
+      return 'image/jpeg'; // Default fallback
   }
 }
 
@@ -374,26 +422,42 @@ export async function addBusinessUnitImage(
     fileName: string;
     name: string;
     fileUrl: string;
-    uploaderId: string;
     context?: string;
     isPrimary?: boolean;
   }
 ): Promise<ActionResult> {
   try {
+    // Get current user
+    const user = await getCurrentUser();
+
     await prisma.$transaction(async (tx) => {
       // Create the Image record
       const createdImage = await tx.image.create({
         data: {
           filename: imageData.fileName,
           originalName: imageData.name,
-          mimeType: 'image/jpeg', // You might want to detect this properly
+          mimeType: getImageMimeType(imageData.fileName),
           size: 0, // You might want to get actual file size
           originalUrl: imageData.fileUrl,
           title: imageData.name,
           category: 'PROPERTY_GALLERY',
-          uploaderId: imageData.uploaderId,
+          uploaderId: user.id, // Use actual authenticated user ID
         }
       });
+
+      // Check if we need to update existing primary image
+      if (imageData.isPrimary) {
+        // Remove primary status from existing images
+        await tx.businessUnitImage.updateMany({
+          where: {
+            businessUnitId: businessUnitId,
+            isPrimary: true,
+          },
+          data: {
+            isPrimary: false,
+          }
+        });
+      }
 
       // Create the junction table entry
       await tx.businessUnitImage.create({
@@ -417,7 +481,9 @@ export async function addBusinessUnitImage(
     console.error('Error adding business unit image:', error);
     return {
       success: false,
-      message: 'Failed to add image'
+      message: error instanceof Error && error.message === 'User not authenticated' 
+        ? 'You must be logged in to add images'
+        : 'Failed to add image'
     };
   }
 }
@@ -428,6 +494,9 @@ export async function removeBusinessUnitImage(
   imageId: string
 ): Promise<ActionResult> {
   try {
+    // Get current user for authorization
+    const user = await getCurrentUser();
+
     await prisma.$transaction(async (tx) => {
       // Remove the junction table entry
       await tx.businessUnitImage.deleteMany({
@@ -442,11 +511,13 @@ export async function removeBusinessUnitImage(
         where: { imageId: imageId }
       });
 
-      // If the image is not used elsewhere, you could delete it
-      // But be careful - you might want to keep it for audit purposes
+      // If the image is not used elsewhere, delete it
       if (imageUsageCount === 0) {
-        // Optionally delete the image record
-        // await tx.image.delete({ where: { id: imageId } });
+        await tx.image.delete({ 
+          where: { id: imageId } 
+        }).catch(() => {
+          // Ignore deletion errors for already deleted images
+        });
       }
     });
 
@@ -460,13 +531,18 @@ export async function removeBusinessUnitImage(
     console.error('Error removing business unit image:', error);
     return {
       success: false,
-      message: 'Failed to remove image'
+      message: error instanceof Error && error.message === 'User not authenticated' 
+        ? 'You must be logged in to remove images'
+        : 'Failed to remove image'
     };
   }
 }
 
 export async function deleteBusinessUnit(id: string): Promise<ActionResult> {
   try {
+    // Get current user for authorization
+    const user = await getCurrentUser();
+
     await prisma.businessUnit.delete({
       where: { id }
     });
@@ -482,13 +558,18 @@ export async function deleteBusinessUnit(id: string): Promise<ActionResult> {
     console.error('Error deleting business unit:', error);
     return {
       success: false,
-      message: 'Failed to delete business unit'
+      message: error instanceof Error && error.message === 'User not authenticated' 
+        ? 'You must be logged in to delete business units'
+        : 'Failed to delete business unit'
     };
   }
 }
 
 export async function toggleBusinessUnitStatus(id: string, isActive: boolean): Promise<ActionResult> {
   try {
+    // Get current user for authorization
+    const user = await getCurrentUser();
+
     await prisma.businessUnit.update({
       where: { id },
       data: { 
@@ -508,13 +589,18 @@ export async function toggleBusinessUnitStatus(id: string, isActive: boolean): P
     console.error('Error toggling business unit status:', error);
     return {
       success: false,
-      message: 'Failed to update business unit status'
+      message: error instanceof Error && error.message === 'User not authenticated' 
+        ? 'You must be logged in to update business unit status'
+        : 'Failed to update business unit status'
     };
   }
 }
 
 export async function toggleBusinessUnitFeatured(id: string, isFeatured: boolean): Promise<ActionResult> {
   try {
+    // Get current user for authorization
+    const user = await getCurrentUser();
+
     await prisma.businessUnit.update({
       where: { id },
       data: { 
@@ -534,7 +620,9 @@ export async function toggleBusinessUnitFeatured(id: string, isFeatured: boolean
     console.error('Error toggling business unit featured status:', error);
     return {
       success: false,
-      message: 'Failed to update business unit featured status'
+      message: error instanceof Error && error.message === 'User not authenticated' 
+        ? 'You must be logged in to update business unit featured status'
+        : 'Failed to update business unit featured status'
     };
   }
 }
