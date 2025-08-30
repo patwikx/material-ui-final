@@ -61,11 +61,9 @@ export const getPublishedEvents = cache(async (
     const events = await prisma.event.findMany({
       where: {
         isPublished: true,
-        status: {
-          in: ['CONFIRMED', 'IN_PROGRESS']
-        },
+        // Remove the isFeatured and status filters for a more general public listing
         startDate: {
-          gte: new Date() // Only future events
+          gte: new Date() // Still filter for only future events
         },
         ...(businessUnitId && {
           businessUnitId: businessUnitId
@@ -103,7 +101,7 @@ export const getPublishedEvents = cache(async (
         }
       },
       orderBy: [
-        { isFeatured: 'desc' }, // This will still prioritize featured events at the top
+        { isFeatured: 'desc' }, 
         { isPinned: 'desc' },
         { startDate: 'asc' },
         { sortOrder: 'asc' }
