@@ -3,6 +3,7 @@
 import { EventStatus, EventType } from '@prisma/client';
 import { EventData } from '../actions/events';
 import { prisma } from '../prisma';
+import { auth } from '@/auth';
 
 import { revalidatePath } from 'next/cache';
 
@@ -36,10 +37,45 @@ export interface CreateEventData {
   isFeatured: boolean;
   isPinned: boolean;
   sortOrder: number;
+  eventImages?: Array<{
+    fileName: string;
+    name: string;
+    fileUrl: string;
+  }>;
+  removeImageIds?: string[];
 }
 
 export interface UpdateEventData extends CreateEventData {
   id: string;
+}
+
+// Helper function to get current user
+async function getCurrentUser() {
+  const session = await auth();
+  if (!session?.user?.id) {
+    throw new Error('User not authenticated');
+  }
+  return session.user;
+}
+
+// Helper function to determine MIME type from filename
+function getImageMimeType(fileName: string): string {
+  const extension = fileName.toLowerCase().split('.').pop();
+  switch (extension) {
+    case 'jpg':
+    case 'jpeg':
+      return 'image/jpeg';
+    case 'png':
+      return 'image/png';
+    case 'gif':
+      return 'image/gif';
+    case 'svg':
+      return 'image/svg+xml';
+    case 'webp':
+      return 'image/webp';
+    default:
+      return 'image/jpeg';
+  }
 }
 
 export async function getAllEvents(): Promise<EventData[]> {
@@ -185,32 +221,69 @@ export async function getEventById(id: string): Promise<EventData | null> {
 
 export async function createEvent(data: CreateEventData): Promise<ActionResult> {
   try {
-    await prisma.event.create({
-      data: {
-        title: data.title,
-        slug: data.slug,
-        description: data.description,
-        shortDesc: data.shortDesc || null,
-        type: data.type,
-        status: data.status,
-        startDate: data.startDate,
-        endDate: data.endDate,
-        startTime: data.startTime || null,
-        endTime: data.endTime || null,
-        venue: data.venue,
-        venueDetails: data.venueDetails || null,
-        venueCapacity: data.venueCapacity,
-        isFree: data.isFree,
-        ticketPrice: data.ticketPrice,
-        currency: data.currency,
-        requiresBooking: data.requiresBooking,
-        maxAttendees: data.maxAttendees,
-        businessUnitId: data.businessUnitId,
-        isPublished: data.isPublished,
-        isFeatured: data.isFeatured,
-        isPinned: data.isPinned,
-        sortOrder: data.sortOrder,
-        currentAttendees: 0,
+    const user = await getCurrentUser();
+
+    await prisma.$transaction(async (tx) => {
+      // Create the event
+      const createdEvent = await tx.event.create({
+        data: {
+          title: data.title,
+          slug: data.slug,
+          description: data.description,
+          shortDesc: data.shortDesc || null,
+          type: data.type,
+          status: data.status,
+          startDate: data.startDate,
+          endDate: data.endDate,
+          startTime: data.startTime || null,
+          endTime: data.endTime || null,
+          venue: data.venue,
+          venueDetails: data.venueDetails || null,
+          venueCapacity: data.venueCapacity,
+          isFree: data.isFree,
+          ticketPrice: data.ticketPrice,
+          currency: data.currency,
+          requiresBooking: data.requiresBooking,
+          maxAttendees: data.maxAttendees,
+          businessUnitId: data.businessUnitId,
+          isPublished: data.isPublished,
+          isFeatured: data.isFeatured,
+          isPinned: data.isPinned,
+          sortOrder: data.sortOrder,
+          currentAttendees: 0,
+        }
+      });
+
+      // Handle event images
+      if (data.eventImages && data.eventImages.length > 0) {
+        for (let i = 0; i < data.eventImages.length; i++) {
+          const imageData = data.eventImages[i];
+          
+          // Create the Image record
+          const createdImage = await tx.image.create({
+            data: {
+              filename: imageData.fileName,
+              originalName: imageData.name,
+              mimeType: getImageMimeType(imageData.fileName),
+              size: 0,
+              originalUrl: imageData.fileUrl,
+              title: imageData.name,
+              category: 'EVENT',
+              uploaderId: user.id,
+            }
+          });
+
+          // Create the junction table entry
+          await tx.eventImage.create({
+            data: {
+              eventId: createdEvent.id,
+              imageId: createdImage.id,
+              context: 'gallery',
+              sortOrder: i,
+              isPrimary: i === 0,
+            }
+          });
+        }
       }
     });
 
@@ -232,33 +305,96 @@ export async function createEvent(data: CreateEventData): Promise<ActionResult> 
 
 export async function updateEvent(data: UpdateEventData): Promise<ActionResult> {
   try {
-    await prisma.event.update({
-      where: { id: data.id },
-      data: {
-        title: data.title,
-        slug: data.slug,
-        description: data.description,
-        shortDesc: data.shortDesc || null,
-        type: data.type,
-        status: data.status,
-        startDate: data.startDate,
-        endDate: data.endDate,
-        startTime: data.startTime || null,
-        endTime: data.endTime || null,
-        venue: data.venue,
-        venueDetails: data.venueDetails || null,
-        venueCapacity: data.venueCapacity,
-        isFree: data.isFree,
-        ticketPrice: data.ticketPrice,
-        currency: data.currency,
-        requiresBooking: data.requiresBooking,
-        maxAttendees: data.maxAttendees,
-        businessUnitId: data.businessUnitId,
-        isPublished: data.isPublished,
-        isFeatured: data.isFeatured,
-        isPinned: data.isPinned,
-        sortOrder: data.sortOrder,
-        updatedAt: new Date(),
+    const user = await getCurrentUser();
+
+    await prisma.$transaction(async (tx) => {
+      // Update the event
+      await tx.event.update({
+        where: { id: data.id },
+        data: {
+          title: data.title,
+          slug: data.slug,
+          description: data.description,
+          shortDesc: data.shortDesc || null,
+          type: data.type,
+          status: data.status,
+          startDate: data.startDate,
+          endDate: data.endDate,
+          startTime: data.startTime || null,
+          endTime: data.endTime || null,
+          venue: data.venue,
+          venueDetails: data.venueDetails || null,
+          venueCapacity: data.venueCapacity,
+          isFree: data.isFree,
+          ticketPrice: data.ticketPrice,
+          currency: data.currency,
+          requiresBooking: data.requiresBooking,
+          maxAttendees: data.maxAttendees,
+          businessUnitId: data.businessUnitId,
+          isPublished: data.isPublished,
+          isFeatured: data.isFeatured,
+          isPinned: data.isPinned,
+          sortOrder: data.sortOrder,
+          updatedAt: new Date(),
+        }
+      });
+
+      // Handle image removal if specified
+      if (data.removeImageIds && data.removeImageIds.length > 0) {
+        await tx.eventImage.deleteMany({
+          where: {
+            eventId: data.id,
+            imageId: {
+              in: data.removeImageIds
+            }
+          }
+        });
+
+        for (const imageId of data.removeImageIds) {
+          const imageUsageCount = await tx.eventImage.count({
+            where: { imageId: imageId }
+          });
+
+          if (imageUsageCount === 0) {
+            await tx.image.delete({ 
+              where: { id: imageId },
+            }).catch(() => {
+              // Ignore deletion errors for already deleted images
+            });
+          }
+        }
+      }
+
+      // Handle new event images
+      if (data.eventImages && data.eventImages.length > 0) {
+        for (let i = 0; i < data.eventImages.length; i++) {
+          const imageData = data.eventImages[i];
+          
+          // Create the Image record
+          const createdImage = await tx.image.create({
+            data: {
+              filename: imageData.fileName,
+              originalName: imageData.name,
+              mimeType: getImageMimeType(imageData.fileName),
+              size: 0,
+              originalUrl: imageData.fileUrl,
+              title: imageData.name,
+              category: 'EVENT',
+              uploaderId: user.id,
+            }
+          });
+
+          // Create the junction table entry
+          await tx.eventImage.create({
+            data: {
+              eventId: data.id,
+              imageId: createdImage.id,
+              context: 'gallery',
+              sortOrder: i,
+              isPrimary: i === 0,
+            }
+          });
+        }
       }
     });
 

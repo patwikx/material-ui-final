@@ -25,12 +25,14 @@ import {
   Visibility as VisibilityIcon,
   Star as StarIcon,
   PushPin as PushPinIcon,
+  AddPhotoAlternate as AddPhotoIcon,
 } from '@mui/icons-material';
 import { useRouter } from 'next/navigation';
 import { EventType, EventStatus } from '@prisma/client';
 import { BusinessUnitData, getBusinessUnits } from '@/lib/actions/business-units';
 import { createEvent, CreateEventData } from '@/lib/cms-actions/events-management';
 import { useBusinessUnit } from '@/context/business-unit-context';
+import { FileUpload, UploadedFileDisplay } from '@/components/file-upload';
 
 
 // Enhanced dark theme matching BusinessUnitSwitcher aesthetic
@@ -77,6 +79,15 @@ interface EventFormData {
   isFeatured: boolean;
   isPinned: boolean;
   sortOrder: number;
+}
+
+interface EventImages {
+  images: Array<{ 
+    fileName: string; 
+    name: string; 
+    fileUrl: string;
+  }>;
+  removeImageIds: string[];
 }
 
 const eventTypes: { value: EventType; label: string }[] = [
@@ -131,6 +142,10 @@ const NewEventPage: React.FC = () => {
     isPinned: false,
     sortOrder: 0,
   });
+  const [images, setImages] = useState<EventImages>({
+    images: [],
+    removeImageIds: [],
+  });
   const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({
     open: false,
     message: '',
@@ -175,6 +190,28 @@ const NewEventPage: React.FC = () => {
     });
   };
 
+  const handleImageUpload = (result: { fileName: string; name: string; fileUrl: string }) => {
+    setImages(prev => ({
+      ...prev,
+      images: [...prev.images, result],
+    }));
+  };
+
+  const handleImageRemove = (index: number) => {
+    setImages(prev => ({
+      ...prev,
+      images: prev.images.filter((_, i) => i !== index),
+    }));
+  };
+
+  const handleUploadError = (error: string) => {
+    setSnackbar({
+      open: true,
+      message: `Upload failed: ${error}`,
+      severity: 'error',
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -184,6 +221,7 @@ const NewEventPage: React.FC = () => {
         ...formData,
         startDate: new Date(formData.startDate),
         endDate: new Date(formData.endDate),
+        eventImages: images.images.length > 0 ? images.images : undefined,
       };
 
       const result = await createEvent(eventData);
@@ -762,6 +800,64 @@ const NewEventPage: React.FC = () => {
                     label={<Typography sx={{ color: darkTheme.textSecondary }}>Requires Booking</Typography>}
                   />
                 </Box>
+              </CardContent>
+            </Card>
+
+            {/* Event Images */}
+            <Card sx={{ backgroundColor: darkTheme.surface, borderRadius: '8px', border: `1px solid ${darkTheme.border}` }}>
+              <CardContent sx={{ p: 4 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+                  <AddPhotoIcon sx={{ fontSize: 20, color: darkTheme.primary }} />
+                  <Typography
+                    sx={{
+                      fontSize: '14px',
+                      fontWeight: 600,
+                      color: darkTheme.text,
+                      textTransform: 'uppercase',
+                      letterSpacing: '1px',
+                    }}
+                  >
+                    Event Images
+                  </Typography>
+                </Box>
+
+                {/* Existing Images */}
+                {images.images.length > 0 && (
+                  <Box sx={{ mb: 3 }}>
+                    <Typography sx={{ fontSize: '12px', color: darkTheme.textSecondary, mb: 2 }}>
+                      Event Images ({images.images.length})
+                    </Typography>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                      {images.images.map((image, index) => (
+                        <UploadedFileDisplay
+                          key={`${image.fileUrl}-${index}`}
+                          fileName={image.fileName}
+                          name={image.name}
+                          fileUrl={image.fileUrl}
+                          onRemove={() => handleImageRemove(index)}
+                          disabled={loading}
+                        />
+                      ))}
+                    </Box>
+                  </Box>
+                )}
+
+                {/* Upload New Images */}
+                <Box sx={{ mb: 3 }}>
+                  <FileUpload
+                    onUploadComplete={handleImageUpload}
+                    onUploadError={handleUploadError}
+                    disabled={loading}
+                    maxSize={10}
+                    accept=".jpg,.jpeg,.png,.gif,.webp"
+                    multiple={true}
+                    maxFiles={5}
+                  />
+                </Box>
+
+                <Typography sx={{ fontSize: '12px', color: darkTheme.textSecondary }}>
+                  Upload up to 5 images showcasing your event. Recommended size: 1200x800px or larger. Supports JPG, PNG, WEBP and GIF formats.
+                </Typography>
               </CardContent>
             </Card>
 

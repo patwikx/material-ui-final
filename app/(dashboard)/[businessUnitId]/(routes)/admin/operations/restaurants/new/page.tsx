@@ -28,14 +28,15 @@ import {
   Close as CloseIcon,
   Visibility as VisibilityIcon,
   Star as StarIcon,
-  Restaurant as RestaurantIcon,
   Business,
+  AddPhotoAlternate as AddPhotoIcon,
 } from '@mui/icons-material';
 import { useRouter } from 'next/navigation';
 import { RestaurantType } from '@prisma/client';
 import { BusinessUnitData, getBusinessUnits } from '@/lib/actions/business-units';
 import { createRestaurant, CreateRestaurantData } from '@/lib/actions/resto-management';
 import { useBusinessUnit } from '@/context/business-unit-context';
+import { FileUpload, UploadedFileDisplay } from '@/components/file-upload';
 
 // Enhanced dark theme matching BusinessUnitSwitcher aesthetic
 const darkTheme = {
@@ -94,6 +95,15 @@ interface RestaurantFormData {
   dressCode: string;
 }
 
+interface RestaurantImages {
+  images: Array<{ 
+    fileName: string; 
+    name: string; 
+    fileUrl: string;
+  }>;
+  removeImageIds: string[];
+}
+
 const restaurantTypes: { value: RestaurantType; label: string }[] = [
   { value: 'FINE_DINING', label: 'Fine Dining' },
   { value: 'CASUAL_DINING', label: 'Casual Dining' },
@@ -149,6 +159,10 @@ const NewRestaurantPage: React.FC = () => {
     metaDescription: null,
     dressCode: '',
   });
+  const [images, setImages] = useState<RestaurantImages>({
+    images: [],
+    removeImageIds: [],
+  });
   const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({
     open: false,
     message: '',
@@ -190,6 +204,28 @@ const NewRestaurantPage: React.FC = () => {
       }
       
       return updated;
+    });
+  };
+
+  const handleImageUpload = (result: { fileName: string; name: string; fileUrl: string }) => {
+    setImages(prev => ({
+      ...prev,
+      images: [...prev.images, result],
+    }));
+  };
+
+  const handleImageRemove = (index: number) => {
+    setImages(prev => ({
+      ...prev,
+      images: prev.images.filter((_, i) => i !== index),
+    }));
+  };
+
+  const handleUploadError = (error: string) => {
+    setSnackbar({
+      open: true,
+      message: `Upload failed: ${error}`,
+      severity: 'error',
     });
   };
 
@@ -261,6 +297,7 @@ const NewRestaurantPage: React.FC = () => {
         sortOrder: formData.sortOrder,
         metaTitle: formData.metaTitle || null,
         metaDescription: formData.metaDescription || null,
+        restaurantImages: images.images.length > 0 ? images.images : undefined,
       };
 
       const result = await createRestaurant(restaurantData);
@@ -810,6 +847,64 @@ const NewRestaurantPage: React.FC = () => {
                     }}
                   />
                 </Box>
+              </CardContent>
+            </Card>
+
+            {/* Restaurant Images */}
+            <Card sx={{ backgroundColor: darkTheme.surface, borderRadius: '8px', border: `1px solid ${darkTheme.border}` }}>
+              <CardContent sx={{ p: 4 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+                  <AddPhotoIcon sx={{ fontSize: 20, color: darkTheme.primary }} />
+                  <Typography
+                    sx={{
+                      fontSize: '14px',
+                      fontWeight: 600,
+                      color: darkTheme.text,
+                      textTransform: 'uppercase',
+                      letterSpacing: '1px',
+                    }}
+                  >
+                    Restaurant Images
+                  </Typography>
+                </Box>
+
+                {/* Existing Images */}
+                {images.images.length > 0 && (
+                  <Box sx={{ mb: 3 }}>
+                    <Typography sx={{ fontSize: '12px', color: darkTheme.textSecondary, mb: 2 }}>
+                      Restaurant Images ({images.images.length})
+                    </Typography>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                      {images.images.map((image, index) => (
+                        <UploadedFileDisplay
+                          key={`${image.fileUrl}-${index}`}
+                          fileName={image.fileName}
+                          name={image.name}
+                          fileUrl={image.fileUrl}
+                          onRemove={() => handleImageRemove(index)}
+                          disabled={loading}
+                        />
+                      ))}
+                    </Box>
+                  </Box>
+                )}
+
+                {/* Upload New Images */}
+                <Box sx={{ mb: 3 }}>
+                  <FileUpload
+                    onUploadComplete={handleImageUpload}
+                    onUploadError={handleUploadError}
+                    disabled={loading}
+                    maxSize={10}
+                    accept=".jpg,.jpeg,.png,.gif,.webp"
+                    multiple={true}
+                    maxFiles={5}
+                  />
+                </Box>
+
+                <Typography sx={{ fontSize: '12px', color: darkTheme.textSecondary }}>
+                  Upload up to 5 images showcasing your restaurant. Recommended size: 1200x800px or larger. Supports JPG, PNG, WEBP and GIF formats.
+                </Typography>
               </CardContent>
             </Card>
 

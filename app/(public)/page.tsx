@@ -35,9 +35,6 @@ const Home: React.FC = async () => {
     
   ]);
 
-console.log('Events data from server:', eventsData); // Add this line
-    console.log('Events count:', eventsData?.length); // Add this line
-
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <Box component="main" sx={{ flexGrow: 1, overflowX: 'hidden'}}>

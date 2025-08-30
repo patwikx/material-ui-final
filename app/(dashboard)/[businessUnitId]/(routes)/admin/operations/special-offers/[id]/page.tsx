@@ -25,6 +25,8 @@ import {
   Visibility as VisibilityIcon,
   Star as StarIcon,
   PushPin as PushPinIcon,
+  Photo as PhotoIcon,
+  AddPhotoAlternate as AddPhotoIcon,
 } from '@mui/icons-material';
 import { useRouter, useParams } from 'next/navigation';
 import { OfferType, OfferStatus } from '@prisma/client';
@@ -36,6 +38,7 @@ import {
 import { getBusinessUnits, BusinessUnitData } from '@/lib/actions/business-units';
 import { SpecialOfferData } from '@/lib/actions/special-offers';
 import { useBusinessUnit } from '@/context/business-unit-context';
+import { FileUpload, UploadedFileDisplay } from '@/components/file-upload';
 
 // Enhanced dark theme matching BusinessUnitSwitcher aesthetic
 const darkTheme = {
@@ -77,6 +80,16 @@ interface SpecialOfferFormData {
   isFeatured: boolean;
   isPinned: boolean;
   sortOrder: number;
+}
+
+interface OfferImages {
+  images: Array<{ 
+    fileName: string; 
+    name: string; 
+    fileUrl: string;
+    imageId?: string;
+  }>;
+  removeImageIds: string[];
 }
 
 const offerTypes: { value: OfferType; label: string }[] = [
@@ -126,6 +139,10 @@ const EditSpecialOfferPage: React.FC = () => {
     isPinned: false,
     sortOrder: 0,
   });
+  const [images, setImages] = useState<OfferImages>({
+    images: [],
+    removeImageIds: [],
+  });
   const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({
     open: false,
     message: '',
@@ -165,6 +182,21 @@ const EditSpecialOfferPage: React.FC = () => {
             isPinned: offerData.isPinned,
             sortOrder: offerData.sortOrder,
           });
+
+          // Initialize existing offer images with proper ID tracking
+          if (offerData.images && offerData.images.length > 0) {
+            const existingImages = offerData.images.map(img => ({
+              fileName: img.image.originalUrl.split('/').pop() || 'image',
+              name: img.image.title || img.image.altText || 'Offer Image',
+              fileUrl: img.image.originalUrl,
+              imageId: img.image.id,
+            }));
+            
+            setImages(prev => ({
+              ...prev,
+              images: existingImages,
+            }));
+          }
         } else {
           setSnackbar({
             open: true,
@@ -211,16 +243,65 @@ const EditSpecialOfferPage: React.FC = () => {
     });
   };
 
+  const handleImageUpload = (result: { fileName: string; name: string; fileUrl: string }) => {
+    setImages(prev => ({
+      ...prev,
+      images: [...prev.images, result],
+    }));
+  };
+
+  const handleImageRemove = (index: number) => {
+    const imageToRemove = images.images[index];
+    
+    // If this is an existing image (has an imageId), add it to removeImageIds
+    if (imageToRemove.imageId) {
+      setImages(prev => ({
+        ...prev,
+        removeImageIds: [...prev.removeImageIds, imageToRemove.imageId!],
+      }));
+    }
+
+    // Remove from display
+    setImages(prev => ({
+      ...prev,
+      images: prev.images.filter((_, i) => i !== index),
+    }));
+  };
+
+  const handleUploadError = (error: string) => {
+    setSnackbar({
+      open: true,
+      message: `Upload failed: ${error}`,
+      severity: 'error',
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
 
     try {
+      // Filter out new images (ones that weren't in the original offer)
+      const newImages = images.images
+        .filter(img => {
+          if (!offer?.images) return true;
+          return !offer.images.some(existingImg => 
+            existingImg.image.originalUrl === img.fileUrl
+          );
+        })
+        .filter(img => img.fileUrl !== null)
+        .map(img => ({
+          ...img,
+          fileUrl: img.fileUrl as string
+        }));
+
       const offerData: UpdateSpecialOfferData = {
         id: offerId,
         ...formData,
         validFrom: new Date(formData.validFrom),
         validTo: new Date(formData.validTo),
+        offerImages: newImages.length > 0 ? newImages : undefined,
+        removeImageIds: images.removeImageIds.length > 0 ? images.removeImageIds : undefined,
       };
 
       const result = await updateSpecialOffer(offerData);
@@ -757,6 +838,64 @@ const EditSpecialOfferPage: React.FC = () => {
                     }}
                   />
                 </Box>
+              </CardContent>
+            </Card>
+
+            {/* Offer Images */}
+            <Card sx={{ backgroundColor: darkTheme.surface, borderRadius: '8px', border: `1px solid ${darkTheme.border}` }}>
+              <CardContent sx={{ p: 4 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+                  <AddPhotoIcon sx={{ fontSize: 20, color: darkTheme.primary }} />
+                  <Typography
+                    sx={{
+                      fontSize: '14px',
+                      fontWeight: 600,
+                      color: darkTheme.text,
+                      textTransform: 'uppercase',
+                      letterSpacing: '1px',
+                    }}
+                  >
+                    Offer Images
+                  </Typography>
+                </Box>
+
+                {/* Existing Images */}
+                {images.images.length > 0 && (
+                  <Box sx={{ mb: 3 }}>
+                    <Typography sx={{ fontSize: '12px', color: darkTheme.textSecondary, mb: 2 }}>
+                      Offer Images ({images.images.length})
+                    </Typography>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                      {images.images.map((image, index) => (
+                        <UploadedFileDisplay
+                          key={`${image.fileUrl}-${index}`}
+                          fileName={image.fileName}
+                          name={image.name}
+                          fileUrl={image.fileUrl}
+                          onRemove={() => handleImageRemove(index)}
+                          disabled={saving}
+                        />
+                      ))}
+                    </Box>
+                  </Box>
+                )}
+
+                {/* Upload New Images */}
+                <Box sx={{ mb: 3 }}>
+                  <FileUpload
+                    onUploadComplete={handleImageUpload}
+                    onUploadError={handleUploadError}
+                    disabled={saving}
+                    maxSize={10}
+                    accept=".jpg,.jpeg,.png,.gif,.webp"
+                    multiple={true}
+                    maxFiles={5}
+                  />
+                </Box>
+
+                <Typography sx={{ fontSize: '12px', color: darkTheme.textSecondary }}>
+                  Upload up to 5 images showcasing your special offer. Recommended size: 1200x800px or larger. Supports JPG, PNG, WEBP and GIF formats.
+                </Typography>
               </CardContent>
             </Card>
 
