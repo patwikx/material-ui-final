@@ -758,6 +758,8 @@ const EditHeroPage: React.FC = () => {
                             onUploadError={handleUploadError}
                             accept=".jpg,.jpeg,.png,.gif,.webp"
                             maxSize={16}
+                              multiple={true}        // Enable multiple file selection
+                              maxFiles={5} 
                           />
                         )}
                       </Box>

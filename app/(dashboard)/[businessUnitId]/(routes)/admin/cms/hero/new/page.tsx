@@ -726,6 +726,8 @@ const { businessUnitId } = useBusinessUnit();
                             onUploadError={(message) => setSnackbar({ open: true, message, severity: 'error' })}
                             accept=".jpg,.jpeg,.png,.gif,.webp"
                             maxSize={16}
+                              multiple={true}        // Enable multiple file selection
+                            maxFiles={5} 
                           />
                         )}
                       </Box>

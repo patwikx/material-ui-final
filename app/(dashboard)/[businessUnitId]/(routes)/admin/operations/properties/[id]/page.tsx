@@ -129,6 +129,7 @@ const EditBusinessUnitPage: React.FC = () => {
   const params = useParams();
   const businessUnitId = params.id as string;
   const { businessUnitId: currentBusinessUnitId } = useBusinessUnit();
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { data: session, status } = useSession();
 
   const [tabValue, setTabValue] = useState(0);
@@ -238,7 +239,7 @@ useEffect(() => {
     } catch (error) {
       setSnackbar({
         open: true,
-        message: 'Failed to load business unit',
+        message: `Failed to load business unit ${error}`,
         severity: 'error',
       });
     } finally {
@@ -367,7 +368,7 @@ const handleSubmit = async (e: React.FormEvent) => {
   } catch (error) {
     setSnackbar({
       open: true,
-      message: 'An error occurred while updating business unit',
+      message: `An error occurred while updating business unit ${error}`,
       severity: 'error',
     });
   } finally {
@@ -1080,41 +1081,42 @@ const handleSubmit = async (e: React.FormEvent) => {
                     </Typography>
                   </Box>
 
-                  {/* Existing Images */}
-                  {images.images.length > 0 && (
-                    <Box sx={{ mb: 3 }}>
-                      <Typography sx={{ fontSize: '12px', color: darkTheme.textSecondary, mb: 2 }}>
-                        Property Images ({images.images.length})
-                      </Typography>
-                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                        {images.images.map((image, index) => (
-                          <UploadedFileDisplay
-                            key={`${image.fileUrl}-${index}`}
-                            fileName={image.fileName}
-                            name={image.name}
-                            fileUrl={image.fileUrl}
-                            onRemove={() => handleImageRemove(index)}
-                            disabled={saving}
-                          />
-                        ))}
-                      </Box>
-                    </Box>
-                  )}
+   {/* Existing Images */}
+    {images.images.length > 0 && (
+      <Box sx={{ mb: 3 }}>
+        <Typography sx={{ fontSize: '12px', color: darkTheme.textSecondary, mb: 2 }}>
+          Property Images ({images.images.length})
+        </Typography>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          {images.images.map((image, index) => (
+            <UploadedFileDisplay
+              key={`${image.fileUrl}-${index}`}
+              fileName={image.fileName}
+              name={image.name}
+              fileUrl={image.fileUrl}
+              onRemove={() => handleImageRemove(index)}
+              disabled={saving}
+            />
+          ))}
+        </Box>
+      </Box>
+    )}
+  {/* Upload New Images - Updated for multiple files */}
+    <Box sx={{ mb: 3 }}>
+      <FileUpload
+        onUploadComplete={handleImageUpload}
+        onUploadError={handleUploadError}
+        disabled={saving}
+        maxSize={10}
+        accept=".jpg,.jpeg,.png,.gif,.webp"
+        multiple={true}
+        maxFiles={5}
+      />
+    </Box>
 
-                  {/* Upload New Images */}
-                  <Box sx={{ mb: 3 }}>
-                    <FileUpload
-                      onUploadComplete={handleImageUpload}
-                      onUploadError={handleUploadError}
-                      disabled={saving}
-                      maxSize={10}
-                      accept=".jpg,.jpeg,.png,.gif"
-                    />
-                  </Box>
-
-                  <Typography sx={{ fontSize: '12px', color: darkTheme.textSecondary }}>
-                    Upload images showcasing your property. Recommended size: 1200x800px or larger. Supports JPG, PNG, and GIF formats.
-                  </Typography>
+              <Typography sx={{ fontSize: '12px', color: darkTheme.textSecondary }}>
+      Upload up to 5 images showcasing your property. Recommended size: 1200x800px or larger. Supports JPG, PNG, WEBP and GIF formats.
+    </Typography>
                 </CardContent>
               </Card>
 

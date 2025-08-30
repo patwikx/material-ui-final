@@ -39,7 +39,7 @@ const darkTheme = {
 interface UploadCompleteResult {
   fileName: string;
   name: string;
-  fileUrl: string; // Add fileUrl to the interface
+  fileUrl: string;
 }
 
 interface FileUploadProps {
@@ -49,6 +49,14 @@ interface FileUploadProps {
   maxSize?: number;
   accept?: string;
   className?: string;
+  multiple?: boolean;
+  maxFiles?: number;
+}
+
+interface UploadingFile {
+  file: File;
+  progress: number;
+  id: string;
 }
 
 export function FileUpload({
@@ -56,35 +64,62 @@ export function FileUpload({
   onUploadError,
   disabled = false,
   maxSize = 16,
-  accept = '.pdf,.doc,.docx,.xls,.xlsx,.txt,.jpg,.jpeg,.png,.gif',
+  accept = '.pdf,.doc,.docx,.xls,.xlsx,.txt,.jpg,.jpeg,.png,.gif,.webp',
   className,
+  multiple = false,
+  maxFiles = 5,
 }: FileUploadProps) {
   const [isDragOver, setIsDragOver] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadingFiles, setUploadingFiles] = useState<UploadingFile[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFileSelect = (file: File) => {
+  const handleFileSelect = (files: File[]) => {
     if (disabled) return;
 
-    if (file.size > maxSize * 1024 * 1024) {
-      onUploadError(`File size exceeds ${maxSize}MB limit`);
+    // Check if adding these files would exceed the max files limit
+    if (uploadingFiles.length + files.length > maxFiles) {
+      onUploadError(`Cannot upload more than ${maxFiles} files at once`);
       return;
     }
 
-    uploadFile(file);
+    // Validate file sizes
+    const oversizedFiles = files.filter(file => file.size > maxSize * 1024 * 1024);
+    if (oversizedFiles.length > 0) {
+      onUploadError(`${oversizedFiles.length} file(s) exceed ${maxSize}MB limit`);
+      return;
+    }
+
+    // Create uploading file objects
+    const newUploadingFiles = files.map(file => ({
+      file,
+      progress: 0,
+      id: Math.random().toString(36).substring(7),
+    }));
+
+    setUploadingFiles(prev => [...prev, ...newUploadingFiles]);
+
+    // Upload files sequentially to avoid overwhelming the server
+    uploadFilesSequentially(newUploadingFiles);
   };
 
-  const uploadFile = async (file: File) => {
-    setIsUploading(true);
-    setUploadProgress(0);
+  const uploadFilesSequentially = async (filesToUpload: UploadingFile[]) => {
+    for (const uploadingFile of filesToUpload) {
+      await uploadFile(uploadingFile);
+    }
+  };
 
+  const uploadFile = async (uploadingFile: UploadingFile) => {
     try {
       const formData = new FormData();
-      formData.append('file', file);
+      formData.append('file', uploadingFile.file);
 
+      // Create progress tracking interval
       const progressInterval = setInterval(() => {
-        setUploadProgress((prev) => Math.min(prev + 10, 90));
+        setUploadingFiles(prev => prev.map(file => 
+          file.id === uploadingFile.id 
+            ? { ...file, progress: Math.min(file.progress + 10, 90) }
+            : file
+        ));
       }, 200);
 
       const response = await fetch('/api/upload', {
@@ -93,7 +128,13 @@ export function FileUpload({
       });
 
       clearInterval(progressInterval);
-      setUploadProgress(100);
+
+      // Set progress to 100%
+      setUploadingFiles(prev => prev.map(file => 
+        file.id === uploadingFile.id 
+          ? { ...file, progress: 100 }
+          : file
+      ));
 
       const result = await response.json();
 
@@ -102,20 +143,24 @@ export function FileUpload({
       }
       
       if (result.success && result.fileName && result.fileUrl) {
-        // Pass the complete response including fileUrl
+        // Call completion handler for this file
         onUploadComplete({
           fileName: result.fileName,
-          name: result.originalName || file.name,
-          fileUrl: result.fileUrl, // Include the public URL
+          name: result.originalName || uploadingFile.file.name,
+          fileUrl: result.fileUrl,
         });
+
+        // Remove this file from uploading list after a short delay
+        setTimeout(() => {
+          setUploadingFiles(prev => prev.filter(file => file.id !== uploadingFile.id));
+        }, 1000);
       } else {
         throw new Error(result.error || 'Upload failed: Invalid server response');
       }
     } catch (error) {
-      onUploadError(error instanceof Error ? error.message : 'Upload failed');
-    } finally {
-      setIsUploading(false);
-      setUploadProgress(0);
+      // Remove failed upload from list
+      setUploadingFiles(prev => prev.filter(file => file.id !== uploadingFile.id));
+      onUploadError(`Failed to upload ${uploadingFile.file.name}: ${error instanceof Error ? error.message : 'Upload failed'}`);
     }
   };
 
@@ -133,8 +178,12 @@ export function FileUpload({
     e.preventDefault();
     setIsDragOver(false);
     if (disabled) return;
+    
     const files = Array.from(e.dataTransfer.files);
-    if (files.length > 0) handleFileSelect(files[0]);
+    if (files.length > 0) {
+      const filesToUpload = multiple ? files.slice(0, maxFiles) : [files[0]];
+      handleFileSelect(filesToUpload);
+    }
   };
 
   const handleClick = () => {
@@ -143,8 +192,17 @@ export function FileUpload({
 
   const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    if (files.length > 0) handleFileSelect(files[0]);
+    if (files.length > 0) {
+      const filesToUpload = multiple ? files.slice(0, maxFiles) : [files[0]];
+      handleFileSelect(filesToUpload);
+    }
   };
+
+  const cancelUpload = (fileId: string) => {
+    setUploadingFiles(prev => prev.filter(file => file.id !== fileId));
+  };
+
+  const isUploading = uploadingFiles.length > 0;
 
   return (
     <Box
@@ -153,6 +211,7 @@ export function FileUpload({
         width: '100%',
       }}
     >
+      {/* Upload Area */}
       <Box
         sx={{
           position: 'relative',
@@ -165,7 +224,7 @@ export function FileUpload({
           cursor: disabled ? 'not-allowed' : 'pointer',
           transition: 'all 0.3s ease',
           opacity: disabled ? 0.5 : 1,
-          pointerEvents: isUploading ? 'none' : 'auto',
+          pointerEvents: disabled ? 'none' : 'auto',
           '&:hover': {
             borderColor: disabled ? darkTheme.border : darkTheme.primary,
           }
@@ -179,64 +238,119 @@ export function FileUpload({
           ref={fileInputRef}
           type="file"
           accept={accept}
+          multiple={multiple}
           onChange={handleFileInputChange}
           style={{ display: 'none' }}
           disabled={disabled}
         />
-        {isUploading ? (
-          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
-            <Loader2
-              sx={{
-                width: 32,
-                height: 32,
-                animation: 'spin 1s linear infinite',
-                color: darkTheme.primary,
-              }}
-            />
-            <Box sx={{ width: '100%', maxWidth: 250 }}>
-              <Typography sx={{ fontSize: '0.875rem', fontWeight: 600, color: darkTheme.text, mb: 1 }}>
-                Uploading...
-              </Typography>
-              <LinearProgress
-                variant="determinate"
-                value={uploadProgress}
-                sx={{
-                  height: 8,
-                  borderRadius: 4,
-                  backgroundColor: darkTheme.border,
-                  '& .MuiLinearProgress-bar': {
-                    backgroundColor: darkTheme.primary,
-                  },
-                }}
-              />
-              <Typography sx={{ fontSize: '0.75rem', color: darkTheme.textSecondary, mt: 1 }}>
-                {uploadProgress}%
-              </Typography>
-            </Box>
+
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+          <UploadIcon sx={{ width: 32, height: 32, color: darkTheme.textSecondary, fontSize: 32 }} />
+          <Box sx={{ mt: 2 }}>
+            <Typography sx={{ fontSize: '0.875rem', fontWeight: 600, color: darkTheme.text, mb: 1 }}>
+              {multiple 
+                ? `Drop up to ${maxFiles} files here or click to browse`
+                : 'Drop files here or click to browse'
+              }
+            </Typography>
+            <Typography sx={{ fontSize: '0.75rem', color: darkTheme.textSecondary }}>
+              Maximum file size: {maxSize}MB
+              {multiple && ` • Up to ${maxFiles} files`}
+            </Typography>
           </Box>
-        ) : (
-          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
-            <UploadIcon sx={{ width: 32, height: 32, color: darkTheme.textSecondary, fontSize: 32 }} />
-            <Box sx={{ mt: 2 }}>
-              <Typography sx={{ fontSize: '0.875rem', fontWeight: 600, color: darkTheme.text, mb: 1 }}>
-                Drop files here or click to browse
-              </Typography>
-              <Typography sx={{ fontSize: '0.75rem', color: darkTheme.textSecondary }}>
-                Maximum file size: {maxSize}MB
-              </Typography>
-            </Box>
-          </Box>
-        )}
+        </Box>
       </Box>
+
+      {/* Uploading Files Progress */}
+      {isUploading && (
+        <Box sx={{ mt: 3 }}>
+          <Typography sx={{ fontSize: '0.875rem', fontWeight: 600, color: darkTheme.text, mb: 2 }}>
+            Uploading {uploadingFiles.length} file(s)...
+          </Typography>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            {uploadingFiles.map((uploadingFile) => (
+              <Box
+                key={uploadingFile.id}
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  p: 2,
+                  border: '1px solid',
+                  borderColor: darkTheme.border,
+                  backgroundColor: darkTheme.surface,
+                  borderRadius: '8px',
+                }}
+              >
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flex: 1, minWidth: 0 }}>
+                  <Loader2
+                    sx={{
+                      width: 20,
+                      height: 20,
+                      animation: 'spin 1s linear infinite',
+                      color: darkTheme.primary,
+                      flexShrink: 0,
+                    }}
+                  />
+                  <Box sx={{ flex: 1, minWidth: 0 }}>
+                    <Typography 
+                      sx={{ 
+                        fontSize: '0.875rem', 
+                        fontWeight: 500, 
+                        color: darkTheme.text,
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                        mb: 1
+                      }}
+                    >
+                      {uploadingFile.file.name}
+                    </Typography>
+                    <LinearProgress
+                      variant="determinate"
+                      value={uploadingFile.progress}
+                      sx={{
+                        height: 6,
+                        borderRadius: 3,
+                        backgroundColor: darkTheme.border,
+                        '& .MuiLinearProgress-bar': {
+                          backgroundColor: darkTheme.primary,
+                        },
+                      }}
+                    />
+                    <Typography sx={{ fontSize: '0.75rem', color: darkTheme.textSecondary, mt: 0.5 }}>
+                      {uploadingFile.progress}%
+                    </Typography>
+                  </Box>
+                </Box>
+                <IconButton
+                  onClick={() => cancelUpload(uploadingFile.id)}
+                  sx={{
+                    color: darkTheme.textSecondary,
+                    '&:hover': {
+                      color: darkTheme.error,
+                      backgroundColor: 'transparent',
+                    },
+                    flexShrink: 0,
+                    ml: 2,
+                  }}
+                >
+                  <CloseIcon sx={{ width: 16, height: 16 }} />
+                </IconButton>
+              </Box>
+            ))}
+          </Box>
+        </Box>
+      )}
     </Box>
   );
 }
 
-// MODIFIED: The display component now receives the public URL as a prop
+// Keep the UploadedFileDisplay component unchanged
 interface UploadedFileDisplayProps {
   fileName: string;
   name: string;
-  fileUrl: string | null; // This prop now contains the direct public URL
+  fileUrl: string | null;
   onRemove: () => void;
   disabled?: boolean;
 }
@@ -252,7 +366,6 @@ export function UploadedFileDisplay({
   const isVideo = ['mp4', 'webm', 'mov'].includes(fileExtension);
 
   const renderPreview = () => {
-    // FIX: Directly use the fileUrl prop
     if (isImage && fileUrl) {
       return (
         <Box sx={{ position: 'relative', width: 64, height: 64, flexShrink: 0, mr: 2 }}>
@@ -260,7 +373,6 @@ export function UploadedFileDisplay({
         </Box>
       );
     }
-    // FIX: Directly use the fileUrl prop for the video icon preview
     if (isVideo && fileUrl) {
       return (
         <Box sx={{ position: 'relative', width: 64, height: 64, flexShrink: 0, mr: 2 }}>
