@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
+import { useRouter, useParams } from 'next/navigation';
 import {
   Box,
   Container,
@@ -19,6 +21,7 @@ import {
   Switch,
   FormControlLabel,
   Tooltip,
+  CircularProgress,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -35,7 +38,6 @@ import {
   ChevronRightTwoTone,
   Mouse as ClickIcon,
 } from '@mui/icons-material';
-import { useRouter } from 'next/navigation';
 import { HeroData } from '@/lib/actions/heroes';
 import { deleteHeroSlide, toggleHeroFeatured, toggleHeroStatus } from '@/lib/cms-actions/hero-management';
 import { useBusinessUnit } from '@/context/business-unit-context';
@@ -58,6 +60,8 @@ const darkTheme = {
   errorBg: 'rgba(239, 68, 68, 0.1)',
   warning: '#f59e0b',
   warningBg: 'rgba(245, 158, 11, 0.1)',
+  // FIX: Added the missing property
+  errorHover: '#b91c1c',
 };
 
 interface HeroListPageProps {
@@ -72,11 +76,7 @@ const HeroListPage: React.FC<HeroListPageProps> = ({ initialHeroes }) => {
     open: false,
     hero: null,
   });
-  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({
-    open: false,
-    message: '',
-    severity: 'success',
-  });
+  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' } | null>(null);
   const [loading, setLoading] = useState<string | null>(null);
 
   const handleDelete = async () => {
@@ -246,7 +246,7 @@ const HeroListPage: React.FC<HeroListPageProps> = ({ initialHeroes }) => {
             
             <Button
               startIcon={<AddIcon />}
-              onClick={() => router.push(`/${businessUnitId}/admin/cms/hero/new`)}
+              onClick={() => router.push(`/admin/cms/hero/new`)}
               sx={{
                 backgroundColor: darkTheme.primary,
                 color: 'white',
@@ -390,7 +390,7 @@ const HeroListPage: React.FC<HeroListPageProps> = ({ initialHeroes }) => {
             </Typography>
             <Button
               startIcon={<AddIcon />}
-              onClick={() => router.push(`/${businessUnitId}/admin/cms/hero/new`)}
+              onClick={() => router.push(`/admin/cms/hero/new`)}
               sx={{
                 backgroundColor: darkTheme.primary,
                 color: 'white',
@@ -444,22 +444,33 @@ const HeroListPage: React.FC<HeroListPageProps> = ({ initialHeroes }) => {
                       }}
                     >
                       {hero.backgroundImage ? (
-                        <Box
-                          component="img"
-                          src={hero.backgroundImage}
-                          alt={hero.altText || hero.title}
-                          sx={{
-                            width: '100%',
-                            height: '100%',
-                            objectFit: 'cover',
-                          }}
-                        />
-                      ) : (
-                        <MediaIcon sx={{ 
-                          fontSize: '24px', 
-                          color: darkTheme.textSecondary 
-                        }} />
-                      )}
+  <Box
+    component="img"
+    src={hero.backgroundImage}
+    alt={hero.altText || hero.title || ''} // FIX: Added a final fallback of an empty string
+    sx={{
+      width: '100%',
+      height: '100%',
+      objectFit: 'cover',
+    }}
+  />
+) : hero.backgroundVideo ? (
+  <Box // FIX: Conditionally render the video preview as an img
+    component="img"
+    src={hero.backgroundVideo} // This will be the video thumbnail URL if available
+    alt={hero.altText || hero.title || ''} // FIX: Added a final fallback
+    sx={{
+      width: '100%',
+      height: '100%',
+      objectFit: 'cover',
+    }}
+  />
+) : (
+  <MediaIcon sx={{
+    fontSize: '24px',
+    color: darkTheme.textSecondary
+  }} />
+)}
                     </Box>
 
                     {/* Content - BusinessUnit style layout */}
@@ -525,7 +536,6 @@ const HeroListPage: React.FC<HeroListPageProps> = ({ initialHeroes }) => {
                         </Box>
                       </Box>
 
-                      {/* Subtitle */}
                       {hero.subtitle && (
                         <Typography
                           sx={{
@@ -566,68 +576,7 @@ const HeroListPage: React.FC<HeroListPageProps> = ({ initialHeroes }) => {
                             </Typography>
                           </Box>
                         ))}
-                        
-                        {/* Updated date */}
-                        <Box sx={{ ml: 'auto', display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                          <Typography 
-                            sx={{ 
-                              fontSize: '12px',
-                              color: darkTheme.textSecondary,
-                              fontWeight: 500,
-                            }}
-                          >
-                            Updated {formatDate(hero.updatedAt)}
-                          </Typography>
-                        </Box>
                       </Box>
-
-                      {/* Target Pages */}
-                      {hero.targetPages.length > 0 && (
-                        <Box sx={{ mt: 1.5 }}>
-                          <Stack direction="row" spacing={0.5} sx={{ flexWrap: 'wrap', gap: 0.5 }}>
-                            <Typography 
-                              sx={{ 
-                                fontSize: '11px',
-                                color: darkTheme.textSecondary,
-                                fontWeight: 600,
-                                textTransform: 'uppercase',
-                                letterSpacing: '0.5px',
-                                alignSelf: 'center',
-                                mr: 1,
-                              }}
-                            >
-                              Pages:
-                            </Typography>
-                            {hero.targetPages.slice(0, 3).map((page) => (
-                              <Chip
-                                key={page}
-                                label={page}
-                                size="small"
-                                sx={{ 
-                                  fontSize: '10px', 
-                                  height: 20,
-                                  backgroundColor: darkTheme.selectedBg,
-                                  color: darkTheme.primary,
-                                  fontWeight: 500,
-                                  '& .MuiChip-label': { px: 1 },
-                                }}
-                              />
-                            ))}
-                            {hero.targetPages.length > 3 && (
-                              <Typography 
-                                sx={{ 
-                                  fontSize: '11px',
-                                  color: darkTheme.textSecondary,
-                                  alignSelf: 'center',
-                                  fontWeight: 500,
-                                }}
-                              >
-                                +{hero.targetPages.length - 3} more
-                              </Typography>
-                            )}
-                          </Stack>
-                        </Box>
-                      )}
                     </Box>
 
                     {/* Actions - BusinessUnit style button group */}
@@ -677,7 +626,7 @@ const HeroListPage: React.FC<HeroListPageProps> = ({ initialHeroes }) => {
 
                       <Tooltip title="Edit hero slide">
                         <IconButton
-                          onClick={() => router.push(`/${businessUnitId}/admin/cms/hero/${hero.id}`)}
+                          onClick={() => router.push(`/admin/cms/hero/${hero.id}`)}
                           sx={{ 
                             color: darkTheme.textSecondary,
                             '&:hover': {
@@ -695,6 +644,7 @@ const HeroListPage: React.FC<HeroListPageProps> = ({ initialHeroes }) => {
                       <Tooltip title="Delete hero slide">
                         <IconButton
                           onClick={() => setDeleteDialog({ open: true, hero })}
+                          disabled={loading === 'delete'}
                           sx={{ 
                             color: darkTheme.textSecondary,
                             '&:hover': {
@@ -705,21 +655,9 @@ const HeroListPage: React.FC<HeroListPageProps> = ({ initialHeroes }) => {
                             height: 32,
                           }}
                         >
-                          <DeleteIcon sx={{ fontSize: 16 }} />
+                          {loading === 'delete' ? <CircularProgress size={16} color="inherit" /> : <DeleteIcon sx={{ fontSize: 16 }} />}
                         </IconButton>
                       </Tooltip>
-
-                      <ChevronRightTwoTone 
-                        sx={{ 
-                          ml: 1,
-                          fontSize: '16px',
-                          color: darkTheme.textSecondary,
-                          cursor: 'pointer',
-                          transition: 'color 0.2s ease',
-                          '&:hover': { color: darkTheme.primary },
-                        }}
-                        onClick={() => router.push(`/${businessUnitId}/admin/cms/hero/${hero.id}`)}
-                      />
                     </Box>
                   </Box>
                 </Card>
@@ -791,42 +729,43 @@ const HeroListPage: React.FC<HeroListPageProps> = ({ initialHeroes }) => {
                 fontWeight: 600,
                 textTransform: 'none',
                 '&:hover': { 
-                  backgroundColor: '#dc2626',
+                  backgroundColor: darkTheme.errorHover,
                 },
                 '&:disabled': {
                   backgroundColor: darkTheme.textSecondary,
                 },
               }}
             >
-              {loading === 'delete' ? 'Deleting...' : 'Delete'}
+              {loading === 'delete' ? <CircularProgress size={16} color="inherit" /> : 'Delete'}
             </Button>
           </DialogActions>
         </Dialog>
 
         {/* Enhanced Snackbar */}
         <Snackbar
-          open={snackbar.open}
+          open={snackbar !== null}
           autoHideDuration={6000}
-          onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
+          onClose={() => setSnackbar(null)}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
         >
           <Alert
-            onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
-            severity={snackbar.severity}
+            onClose={() => setSnackbar(null)}
+            severity={snackbar?.severity}
             sx={{ 
               width: '100%',
-              backgroundColor: snackbar.severity === 'success' ? darkTheme.successBg : darkTheme.errorBg,
-              borderColor: snackbar.severity === 'success' ? darkTheme.success : darkTheme.error,
+              backgroundColor: snackbar?.severity === 'success' ? darkTheme.successBg : darkTheme.errorBg,
+              borderColor: snackbar?.severity === 'success' ? darkTheme.success : darkTheme.error,
               border: `1px solid`,
               borderRadius: '8px',
-              color: snackbar.severity === 'success' ? darkTheme.success : darkTheme.error,
+              color: snackbar?.severity === 'success' ? darkTheme.success : darkTheme.error,
               fontSize: '12px',
               fontWeight: 600,
               '& .MuiAlert-icon': { 
-                color: snackbar.severity === 'success' ? darkTheme.success : darkTheme.error 
-              }
+                color: snackbar?.severity === 'success' ? darkTheme.success : darkTheme.error 
+              },
             }}
           >
-            {snackbar.message}
+            {snackbar?.message}
           </Alert>
         </Snackbar>
       </Container>
