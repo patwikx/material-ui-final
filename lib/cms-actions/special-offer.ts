@@ -6,6 +6,7 @@ import { prisma } from '../prisma';
 import { auth } from '@/auth';
 
 import { revalidatePath } from 'next/cache';
+import { cache } from 'react';
 
 export interface ActionResult {
   success: boolean;
@@ -74,9 +75,14 @@ function getImageMimeType(fileName: string): string {
   }
 }
 
-export async function getAllSpecialOffers(): Promise<SpecialOfferData[]> {
+export const getAllSpecialOffers = cache(async (
+  businessUnitId?: string,
+): Promise<SpecialOfferData[]> => {
   try {
     const offers = await prisma.specialOffer.findMany({
+  where: {
+    ...(businessUnitId && { businessUnitId})
+  },
       include: {
         businessUnit: {
           select: {
@@ -144,7 +150,7 @@ export async function getAllSpecialOffers(): Promise<SpecialOfferData[]> {
     console.error('Error fetching all special offers:', error);
     return [];
   }
-}
+})
 
 export async function getSpecialOfferById(id: string): Promise<SpecialOfferData | null> {
   try {

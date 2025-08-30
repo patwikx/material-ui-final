@@ -220,7 +220,7 @@ const EventListPage: React.FC<EventListPageProps> = ({ initialEvents }) => {
             </Box>
             <Button
               startIcon={<AddIcon />}
-              onClick={() => router.push(`/${businessUnitId}/admin/cms/events/new`)}
+              onClick={() => router.push(`/${businessUnitId}/admin/operations/events/new`)}
               sx={{
                 backgroundColor: darkTheme.primary,
                 color: 'white',

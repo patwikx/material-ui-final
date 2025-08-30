@@ -286,7 +286,7 @@ const SpecialOfferListPage: React.FC<SpecialOfferListPageProps> = ({ initialOffe
             </Box>
             <Button
               startIcon={<AddIcon />}
-              onClick={() => router.push(`/${businessUnitId}/admin/cms/special-offers/new`)}
+              onClick={() => router.push(`/${businessUnitId}/admin/operations/special-offers/new`)}
               sx={{
                 backgroundColor: darkTheme.primary,
                 color: 'white',
@@ -356,7 +356,7 @@ const SpecialOfferListPage: React.FC<SpecialOfferListPageProps> = ({ initialOffe
             </Typography>
             <Button
               startIcon={<AddIcon />}
-              onClick={() => router.push(`/${businessUnitId}/admin/cms/special-offers/new`)}
+              onClick={() => router.push(`/${businessUnitId}/admin/operations/special-offers/new`)}
               sx={{
                 backgroundColor: darkTheme.primary,
                 color: 'white',
@@ -614,7 +614,7 @@ const SpecialOfferListPage: React.FC<SpecialOfferListPageProps> = ({ initialOffe
                       </Box>
                       <Box sx={{ display: 'flex', gap: 1 }}>
                         <IconButton
-                          onClick={() => router.push(`/${businessUnitId}/admin/cms/special-offers/${offer.id}`)}
+                          onClick={() => router.push(`/${businessUnitId}/admin/operations/special-offers/${offer.id}`)}
                           sx={{
                             color: darkTheme.textSecondary,
                             '&:hover': {
