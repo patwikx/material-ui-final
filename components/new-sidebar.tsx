@@ -131,7 +131,7 @@ const bottomNavigation: NavItem[] = [
     title: "Admin & Settings",
     icon: Settings,
     children: [
-      { title: "Business Units", href: "/admin/business-units", icon: Building2 },
+      { title: "Business Units", href: "/admin/operations/properties", icon: Building2 },
       { title: "Users & Roles", href: "/admin/users", icon: Users },
       { title: "System", href: "/admin/system", icon: Settings },
     ],

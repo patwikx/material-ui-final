@@ -2,7 +2,6 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import Link from 'next/link';
 import { useRouter, useParams } from 'next/navigation';
 import {
   Box,
@@ -38,6 +37,7 @@ import {
 } from '@mui/icons-material';
 import { getHeroById, updateHeroSlide } from '@/lib/cms-actions/hero-management';
 import { FileUpload, UploadedFileDisplay } from '@/components/file-upload';
+import { useBusinessUnit } from '@/context/business-unit-context';
 
 // Dark theme colors matching the sidebar
 const darkTheme = {
@@ -100,6 +100,7 @@ interface UploadCompleteResult {
 const EditHeroPage: React.FC = () => {
   const router = useRouter();
   const params = useParams();
+  const { businessUnitId } = useBusinessUnit();
   const heroId = params.id as string;
 
   const [loading, setLoading] = useState(true);
@@ -231,7 +232,7 @@ const EditHeroPage: React.FC = () => {
             message: 'Hero slide not found',
             severity: 'error',
           });
-          router.push('/admin/cms/hero-slides');
+          router.push(`${businessUnitId}/admin/cms/hero`);
         }
       } catch (error) {
         setSnackbar({
@@ -409,8 +410,7 @@ const EditHeroPage: React.FC = () => {
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 4 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
               <IconButton 
-                component={Link} 
-                href="/admin/cms/hero-slides"
+               onClick={() => router.push(`/${businessUnitId}/admin/cms/hero`)}
                 sx={{ 
                   color: darkTheme.textSecondary,
                   '&:hover': { 

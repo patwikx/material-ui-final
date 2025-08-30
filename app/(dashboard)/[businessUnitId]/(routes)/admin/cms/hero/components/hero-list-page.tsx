@@ -625,8 +625,7 @@ const HeroListPage: React.FC<HeroListPageProps> = ({ initialHeroes }) => {
 
                       <Tooltip title="Edit hero slide">
                         <IconButton
-                          component={Link}
-                          href={`/admin/cms/hero/${hero.id}`}
+                             onClick={() => router.push(`/${businessUnitId}/admin/cms/hero/${hero.id}`)}
                           sx={{ 
                             color: darkTheme.textSecondary,
                             '&:hover': {
