@@ -60,7 +60,6 @@ const cardVariants = {
 };
 
 const Events: React.FC<EventsProps> = ({ events }) => {
-  console.log('Events prop received:', events);
   
   const formatDate = (date: Date): string => {
     return date.toLocaleDateString('en-US', {

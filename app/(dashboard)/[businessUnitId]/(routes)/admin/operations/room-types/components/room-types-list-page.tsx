@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Container,
@@ -8,35 +8,45 @@ import {
   Button,
   Card,
   CardContent,
-  Stack,
   Chip,
   IconButton,
   Dialog,
-  DialogTitle,
-  DialogContent,
   DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
   Alert,
   Snackbar,
-  Switch,
-  FormControlLabel,
+  TextField,
+  InputAdornment,
+  MenuItem,
+  Select,
+  FormControl,
+  InputLabel,
+  CircularProgress,
   Tooltip,
+  Divider,
+  Stack,
 } from '@mui/material';
 import {
   Add as AddIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
-  Category as CategoryIcon,
+  Search as SearchIcon,
   People as PeopleIcon,
-  ChevronRightTwoTone,
-  Visibility as VisibilityIcon,
-  VisibilityOff as VisibilityOffIcon,
+  ToggleOn as ToggleOnIcon,
+  ToggleOff as ToggleOffIcon,
+  AttachMoney as MoneyIcon,
+  Business as BusinessIcon,
+  Bed as BedIcon,
+  AspectRatio as SizeIcon,
+  Star as AmenityIcon,
 } from '@mui/icons-material';
 import { useRouter } from 'next/navigation';
 import { deleteRoomType, RoomTypeData, toggleRoomTypeStatus } from '@/lib/actions/room-type-management';
 import { RoomType } from '@prisma/client';
 import { useBusinessUnit } from '@/context/business-unit-context';
 
-// Enhanced dark theme matching BusinessUnitSwitcher aesthetic
 const darkTheme = {
   background: '#0a0e13',
   surface: '#1a1f29',
@@ -64,7 +74,16 @@ interface RoomTypeListPageProps {
 const RoomTypeListPage: React.FC<RoomTypeListPageProps> = ({ initialRoomTypes }) => {
   const router = useRouter();
   const { businessUnitId } = useBusinessUnit();
+  
   const [roomTypes, setRoomTypes] = useState<RoomTypeData[]>(initialRoomTypes);
+  const [filteredRoomTypes, setFilteredRoomTypes] = useState<RoomTypeData[]>(initialRoomTypes);
+  const [loading, setLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [typeFilter, setTypeFilter] = useState<RoomType | 'all'>('all');
+  const [activeFilter, setActiveFilter] = useState<'all' | 'active' | 'inactive'>('all');
+  const [businessUnitFilter, setBusinessUnitFilter] = useState<string>('all');
+  const [occupancyFilter, setOccupancyFilter] = useState<string>('all');
+  
   const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; roomType: RoomTypeData | null }>({
     open: false,
     roomType: null,
@@ -74,12 +93,59 @@ const RoomTypeListPage: React.FC<RoomTypeListPageProps> = ({ initialRoomTypes })
     message: '',
     severity: 'success',
   });
-  const [loading, setLoading] = useState<string | null>(null);
+
+  // Filter and search logic
+  useEffect(() => {
+    let filtered = roomTypes;
+
+    // Search filter
+    if (searchTerm) {
+      filtered = filtered.filter(roomType =>
+        roomType.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        roomType.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        roomType.businessUnit.displayName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        roomType.amenities.some(amenity => amenity.toLowerCase().includes(searchTerm.toLowerCase()))
+      );
+    }
+
+    // Type filter
+    if (typeFilter !== 'all') {
+      filtered = filtered.filter(roomType => roomType.type === typeFilter);
+    }
+
+    // Active filter
+    if (activeFilter === 'active') {
+      filtered = filtered.filter(roomType => roomType.isActive);
+    } else if (activeFilter === 'inactive') {
+      filtered = filtered.filter(roomType => !roomType.isActive);
+    }
+
+    // Business unit filter
+    if (businessUnitFilter !== 'all') {
+      filtered = filtered.filter(roomType => roomType.businessUnit.id === businessUnitFilter);
+    }
+
+    // Occupancy filter
+    if (occupancyFilter !== 'all') {
+      const occupancy = parseInt(occupancyFilter);
+      filtered = filtered.filter(roomType => roomType.maxOccupancy === occupancy);
+    }
+
+    setFilteredRoomTypes(filtered);
+  }, [roomTypes, searchTerm, typeFilter, activeFilter, businessUnitFilter, occupancyFilter]);
+
+  // Get unique values for filters
+  const uniqueBusinessUnits = Array.from(
+    new Map(roomTypes.map(rt => [rt.businessUnit.id, rt.businessUnit])).values()
+  );
+  const uniqueOccupancies = Array.from(
+    new Set(roomTypes.map(rt => rt.maxOccupancy))
+  ).sort((a, b) => a - b);
 
   const handleDelete = async () => {
     if (!deleteDialog.roomType) return;
 
-    setLoading('delete');
+    setLoading(true);
     try {
       const result = await deleteRoomType(deleteDialog.roomType.id);
       if (result.success) {
@@ -96,20 +162,21 @@ const RoomTypeListPage: React.FC<RoomTypeListPageProps> = ({ initialRoomTypes })
           severity: 'error',
         });
       }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       setSnackbar({
         open: true,
-        message: 'An error occurred while deleting',
+        message: 'An error occurred while deleting room type',
         severity: 'error',
       });
     } finally {
-      setLoading(null);
+      setLoading(false);
       setDeleteDialog({ open: false, roomType: null });
     }
   };
 
   const handleToggleStatus = async (roomTypeId: string, currentStatus: boolean) => {
-    setLoading(roomTypeId);
+    setLoading(true);
     try {
       const result = await toggleRoomTypeStatus(roomTypeId, !currentStatus);
       if (result.success) {
@@ -118,7 +185,7 @@ const RoomTypeListPage: React.FC<RoomTypeListPageProps> = ({ initialRoomTypes })
         ));
         setSnackbar({
           open: true,
-          message: `Room type ${!currentStatus ? 'activated' : 'deactivated'} successfully`,
+          message: result.message,
           severity: 'success',
         });
       } else {
@@ -128,6 +195,7 @@ const RoomTypeListPage: React.FC<RoomTypeListPageProps> = ({ initialRoomTypes })
           severity: 'error',
         });
       }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       setSnackbar({
         open: true,
@@ -135,18 +203,8 @@ const RoomTypeListPage: React.FC<RoomTypeListPageProps> = ({ initialRoomTypes })
         severity: 'error',
       });
     } finally {
-      setLoading(null);
+      setLoading(false);
     }
-  };
-
-  const formatDate = (date: Date) => {
-    return new Intl.DateTimeFormat('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    }).format(new Date(date));
   };
 
   const formatCurrency = (amount: string, currency: string) => {
@@ -155,14 +213,14 @@ const RoomTypeListPage: React.FC<RoomTypeListPageProps> = ({ initialRoomTypes })
       currency: currency,
     }).format(Number(amount));
   };
-  
+
   const getRoomTypeColor = (type: RoomType): keyof typeof darkTheme => {
     const colorMap: Record<RoomType, keyof typeof darkTheme> = {
       'STANDARD': 'primary',
       'DELUXE': 'primary',
-      'SUITE': 'primary',
-      'VILLA': 'primary',
-      'PENTHOUSE': 'warning',
+      'SUITE': 'warning',
+      'VILLA': 'warning',
+      'PENTHOUSE': 'error',
       'FAMILY': 'success',
       'ACCESSIBLE': 'primary',
     };
@@ -173,14 +231,286 @@ const RoomTypeListPage: React.FC<RoomTypeListPageProps> = ({ initialRoomTypes })
     const bgMap: Record<RoomType, keyof typeof darkTheme> = {
       'STANDARD': 'selectedBg',
       'DELUXE': 'selectedBg',
-      'SUITE': 'selectedBg',
-      'VILLA': 'selectedBg',
-      'PENTHOUSE': 'warningBg',
+      'SUITE': 'warningBg',
+      'VILLA': 'warningBg',
+      'PENTHOUSE': 'errorBg',
       'FAMILY': 'successBg',
       'ACCESSIBLE': 'selectedBg',
     };
     return bgMap[type] || 'surfaceHover';
   };
+
+  const roomTypeOptions = [
+    { value: 'STANDARD', label: 'Standard' },
+    { value: 'DELUXE', label: 'Deluxe' },
+    { value: 'SUITE', label: 'Suite' },
+    { value: 'VILLA', label: 'Villa' },
+    { value: 'PENTHOUSE', label: 'Penthouse' },
+    { value: 'FAMILY', label: 'Family' },
+    { value: 'ACCESSIBLE', label: 'Accessible' },
+  ];
+
+  const RoomTypeCard = ({ roomType }: { roomType: RoomTypeData }) => (
+    <Card 
+      sx={{ 
+        backgroundColor: darkTheme.surface,
+        borderRadius: '12px',
+        border: `1px solid ${darkTheme.border}`,
+        transition: 'all 0.2s ease-in-out',
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        '&:hover': {
+          backgroundColor: darkTheme.surfaceHover,
+          transform: 'translateY(-2px)',
+          boxShadow: '0 8px 25px rgba(0,0,0,0.3)',
+        },
+      }}
+    >
+      <CardContent sx={{ p: 3, flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+        {/* Header */}
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+          <Box sx={{ flexGrow: 1 }}>
+            <Typography variant="h6" sx={{ 
+              color: darkTheme.text, 
+              fontWeight: 700,
+              fontSize: '1.1rem',
+              mb: 0.5,
+            }}>
+              {roomType.name}
+            </Typography>
+            {roomType.description && (
+              <Typography sx={{ 
+                color: darkTheme.textSecondary, 
+                fontSize: '0.9rem',
+                mb: 1,
+                display: '-webkit-box',
+                WebkitLineClamp: 2,
+                WebkitBoxOrient: 'vertical',
+                overflow: 'hidden',
+              }}>
+                {roomType.description}
+              </Typography>
+            )}
+          </Box>
+          
+          {/* Status Badges */}
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, alignItems: 'flex-end' }}>
+            <Chip
+              label={roomType.type.replace('_', ' ')}
+              size="small"
+              sx={{
+                backgroundColor: darkTheme[getRoomTypeBg(roomType.type)],
+                color: darkTheme[getRoomTypeColor(roomType.type)],
+                border: `1px solid ${darkTheme[getRoomTypeColor(roomType.type)]}`,
+                fontSize: '11px',
+                fontWeight: 600,
+                height: '24px',
+                textTransform: 'capitalize',
+              }}
+            />
+            <Chip
+              label={roomType.isActive ? 'Active' : 'Inactive'}
+              size="small"
+              sx={{
+                backgroundColor: roomType.isActive ? darkTheme.successBg : darkTheme.errorBg,
+                color: roomType.isActive ? darkTheme.success : darkTheme.error,
+                border: `1px solid ${roomType.isActive ? darkTheme.success : darkTheme.error}`,
+                fontSize: '11px',
+                fontWeight: 600,
+                height: '24px',
+              }}
+            />
+          </Box>
+        </Box>
+
+        {/* Price */}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
+          <MoneyIcon sx={{ color: darkTheme.success, fontSize: 20 }} />
+          <Typography variant="h4" sx={{ 
+            color: darkTheme.success, 
+            fontWeight: 800,
+            fontSize: '1.8rem',
+          }}>
+            {formatCurrency(roomType.baseRate, roomType.currency)}
+          </Typography>
+          <Typography sx={{ color: darkTheme.textSecondary, fontSize: '0.9rem' }}>
+            per night
+          </Typography>
+        </Box>
+
+        {/* Room Details */}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+          <BusinessIcon sx={{ color: darkTheme.primary, fontSize: 18 }} />
+          <Typography sx={{ 
+            color: darkTheme.text, 
+            fontWeight: 600,
+            fontSize: '0.95rem',
+          }}>
+            {roomType.businessUnit.displayName}
+          </Typography>
+        </Box>
+
+        {/* Capacity & Details */}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+          <PeopleIcon sx={{ color: darkTheme.primary, fontSize: 18 }} />
+          <Typography sx={{ 
+            color: darkTheme.textSecondary, 
+            fontSize: '0.85rem',
+          }}>
+            Max {roomType.maxOccupancy} guests
+          </Typography>
+          {roomType._count.rooms > 0 && (
+            <>
+              <Typography sx={{ color: darkTheme.textSecondary }}>•</Typography>
+              <Typography sx={{ 
+                color: darkTheme.textSecondary, 
+                fontSize: '0.85rem',
+              }}>
+                {roomType._count.rooms} rooms
+              </Typography>
+            </>
+          )}
+        </Box>
+
+        {/* Room Configuration */}
+        {(roomType.bedConfiguration || roomType.roomSize) && (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2, flexWrap: 'wrap' }}>
+            {roomType.bedConfiguration && (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                <BedIcon sx={{ color: darkTheme.primary, fontSize: 16 }} />
+                <Typography sx={{ 
+                  color: darkTheme.textSecondary, 
+                  fontSize: '0.8rem',
+                }}>
+                  {roomType.bedConfiguration}
+                </Typography>
+              </Box>
+            )}
+            {roomType.roomSize && (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                <SizeIcon sx={{ color: darkTheme.primary, fontSize: 16 }} />
+                <Typography sx={{ 
+                  color: darkTheme.textSecondary, 
+                  fontSize: '0.8rem',
+                }}>
+                  {roomType.roomSize} sqm
+                </Typography>
+              </Box>
+            )}
+          </Box>
+        )}
+
+        {/* Amenities */}
+        {roomType.amenities.length > 0 && (
+          <>
+            <Divider sx={{ backgroundColor: darkTheme.border, mb: 2 }} />
+            <Box sx={{ mb: 2 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 1 }}>
+                <AmenityIcon sx={{ color: darkTheme.primary, fontSize: 16 }} />
+                <Typography sx={{ 
+                  color: darkTheme.textSecondary, 
+                  fontSize: '0.8rem',
+                  fontWeight: 600,
+                }}>
+                  AMENITIES
+                </Typography>
+              </Box>
+              <Stack direction="row" spacing={0.5} sx={{ flexWrap: 'wrap', gap: 0.5 }}>
+                {roomType.amenities.slice(0, 4).map((amenity, index) => (
+                  <Chip
+                    key={index}
+                    label={amenity}
+                    size="small"
+                    sx={{
+                      fontSize: '10px',
+                      height: 20,
+                      backgroundColor: darkTheme.selectedBg,
+                      color: darkTheme.primary,
+                      fontWeight: 500,
+                      '& .MuiChip-label': { px: 1 },
+                    }}
+                  />
+                ))}
+                {roomType.amenities.length > 4 && (
+                  <Chip
+                    label={`+${roomType.amenities.length - 4} more`}
+                    size="small"
+                    sx={{
+                      fontSize: '10px',
+                      height: 20,
+                      backgroundColor: darkTheme.warningBg,
+                      color: darkTheme.warning,
+                      fontWeight: 500,
+                      '& .MuiChip-label': { px: 1 },
+                    }}
+                  />
+                )}
+              </Stack>
+            </Box>
+          </>
+        )}
+
+        {/* Actions */}
+        <Box sx={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center',
+          mt: 'auto',
+          pt: 2,
+        }}>
+          <Box sx={{ display: 'flex', gap: 0.5 }}>
+            <Tooltip title="View & Edit">
+              <IconButton
+                onClick={() => router.push(`/${businessUnitId}/admin/operations/room-types/${roomType.id}`)}
+                size="small"
+                sx={{
+                  color: darkTheme.primary,
+                  backgroundColor: darkTheme.selectedBg,
+                  '&:hover': { backgroundColor: darkTheme.primary, color: 'white' },
+                }}
+              >
+                <EditIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          </Box>
+
+          <Box sx={{ display: 'flex', gap: 0.5 }}>
+            <Tooltip title={roomType.isActive ? "Deactivate" : "Activate"}>
+              <IconButton
+                onClick={() => handleToggleStatus(roomType.id, roomType.isActive)}
+                size="small"
+                sx={{
+                  color: roomType.isActive ? darkTheme.warning : darkTheme.success,
+                  backgroundColor: roomType.isActive ? darkTheme.warningBg : darkTheme.successBg,
+                  '&:hover': { 
+                    backgroundColor: roomType.isActive ? darkTheme.warning : darkTheme.success,
+                    color: 'white',
+                  },
+                }}
+              >
+                {roomType.isActive ? <ToggleOffIcon fontSize="small" /> : <ToggleOnIcon fontSize="small" />}
+              </IconButton>
+            </Tooltip>
+            
+            <Tooltip title="Delete">
+              <IconButton
+                onClick={() => setDeleteDialog({ open: true, roomType })}
+                size="small"
+                sx={{
+                  color: darkTheme.error,
+                  backgroundColor: darkTheme.errorBg,
+                  '&:hover': { backgroundColor: darkTheme.error, color: 'white' },
+                }}
+              >
+                <DeleteIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          </Box>
+        </Box>
+      </CardContent>
+    </Card>
+  );
 
   return (
     <Box
@@ -193,27 +523,26 @@ const RoomTypeListPage: React.FC<RoomTypeListPageProps> = ({ initialRoomTypes })
       <Container maxWidth="xl" sx={{ py: 4 }}>
         {/* Header */}
         <Box sx={{ mb: 6 }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 4 }}>
-            <Box sx={{ flex: 1 }}>
-              <Typography
-                sx={{
-                  fontSize: '14px',
-                  fontWeight: 600,
-                  color: darkTheme.textSecondary,
-                  textTransform: 'uppercase',
-                  letterSpacing: '1px',
-                  mb: 1,
-                }}
-              >
-                Operations Management
-              </Typography>
+          <Typography
+            sx={{
+              fontSize: '14px',
+              fontWeight: 600,
+              color: darkTheme.textSecondary,
+              textTransform: 'uppercase',
+              letterSpacing: '1px',
+              mb: 1,
+            }}
+          >
+            Operations Management
+          </Typography>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', mb: 2 }}>
+            <Box>
               <Typography
                 sx={{
                   fontWeight: 700,
                   fontSize: { xs: '2rem', md: '3rem' },
                   color: darkTheme.text,
                   lineHeight: 1.2,
-                  mb: 2,
                 }}
               >
                 Room Types Management
@@ -227,12 +556,13 @@ const RoomTypeListPage: React.FC<RoomTypeListPageProps> = ({ initialRoomTypes })
                   fontWeight: 400,
                 }}
               >
-                Manage room categories and pricing across all properties.
+                Manage room categories and pricing across all properties
               </Typography>
             </Box>
             <Button
-              startIcon={<AddIcon />}
               onClick={() => router.push(`/${businessUnitId}/admin/operations/room-types/new`)}
+              variant="contained"
+              startIcon={<AddIcon />}
               sx={{
                 backgroundColor: darkTheme.primary,
                 color: 'white',
@@ -242,275 +572,230 @@ const RoomTypeListPage: React.FC<RoomTypeListPageProps> = ({ initialRoomTypes })
                 fontWeight: 600,
                 textTransform: 'none',
                 borderRadius: '8px',
-                minWidth: 'auto',
                 '&:hover': {
                   backgroundColor: darkTheme.primaryHover,
                 },
               }}
             >
-              Create New Room Type
+              Add Room Type
             </Button>
           </Box>
         </Box>
 
-        {/* Room Type Cards */}
-        {roomTypes.length === 0 ? (
-          <Box
-            sx={{
-              backgroundColor: darkTheme.surface,
-              borderRadius: '8px',
-              border: `1px solid ${darkTheme.border}`,
-              p: 6,
-              textAlign: 'center',
-            }}
-          >
-            <Box
-              sx={{
-                width: 64,
-                height: 64,
-                backgroundColor: darkTheme.selectedBg,
-                borderRadius: '12px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                mx: 'auto',
-                mb: 3,
-              }}
-            >
-              <CategoryIcon sx={{ fontSize: 32, color: darkTheme.primary }} />
-            </Box>
-            <Typography
-              sx={{
-                fontSize: '14px',
-                fontWeight: 600,
-                color: darkTheme.text,
-                lineHeight: 1.2,
-                mb: 1,
-              }}
-            >
-              No room types found
-            </Typography>
-            <Typography
-              sx={{
-                fontSize: '12px',
-                color: darkTheme.textSecondary,
-                lineHeight: 1.2,
-              }}
-            >
-              Create your first room type to get started
-            </Typography>
-          </Box>
-        ) : (
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            {roomTypes.map((roomType) => (
-              <Card
-                key={roomType.id}
+        {/* Filters and Search */}
+        <Card sx={{ backgroundColor: darkTheme.surface, borderRadius: '8px', border: `1px solid ${darkTheme.border}`, mb: 4 }}>
+          <CardContent sx={{ p: 3 }}>
+            <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
+              <TextField
+                placeholder="Search room types..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <SearchIcon sx={{ color: darkTheme.textSecondary }} />
+                    </InputAdornment>
+                  ),
+                }}
                 sx={{
-                  backgroundColor: darkTheme.surface,
-                  borderRadius: '8px',
-                  border: `1px solid ${darkTheme.border}`,
-                  overflow: 'hidden',
-                  transition: 'all 0.2s ease',
-                  '&:hover': {
-                    backgroundColor: darkTheme.surfaceHover,
-                    borderColor: darkTheme.primary,
+                  flex: 1,
+                  minWidth: 250,
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: '8px',
+                    backgroundColor: darkTheme.background,
+                    color: darkTheme.text,
+                    '& fieldset': { borderColor: darkTheme.border },
+                    '&:hover fieldset': { borderColor: darkTheme.primary },
+                    '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
                   },
                 }}
-              >
-                <CardContent sx={{ p: 3, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  {/* Room Type Info */}
-                  <Box sx={{ flex: 1, minWidth: 0 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
-                      <Typography
-                        sx={{
-                          fontWeight: 700,
-                          color: darkTheme.text,
-                          fontSize: '1.25rem',
-                        }}
-                      >
-                        {roomType.name}
-                      </Typography>
-                      <Chip
-                        label={roomType.type.replace('_', ' ')}
-                        size="small"
-                        sx={{
-                          height: 24,
-                          fontSize: '11px',
-                          textTransform: 'capitalize',
-                          backgroundColor: darkTheme[getRoomTypeBg(roomType.type)],
-                          color: darkTheme[getRoomTypeColor(roomType.type)],
-                          fontWeight: 600,
-                        }}
-                      />
-                      <Chip
-                        label={roomType.isActive ? 'Active' : 'Inactive'}
-                        size="small"
-                        icon={roomType.isActive ? <VisibilityIcon sx={{ fontSize: 12 }} /> : <VisibilityOffIcon sx={{ fontSize: 12 }} />}
-                        sx={{
-                          height: 24,
-                          fontSize: '11px',
-                          backgroundColor: roomType.isActive ? darkTheme.successBg : darkTheme.errorBg,
-                          color: roomType.isActive ? darkTheme.success : darkTheme.error,
-                          fontWeight: 600,
-                          '& .MuiChip-icon': {
-                            color: roomType.isActive ? darkTheme.success : darkTheme.error
-                          },
-                        }}
-                      />
-                    </Box>
+              />
+              
+              <FormControl sx={{ minWidth: 120 }}>
+                <InputLabel sx={{ color: darkTheme.textSecondary }}>Type</InputLabel>
+                <Select
+                  value={typeFilter}
+                  onChange={(e) => setTypeFilter(e.target.value as typeof typeFilter)}
+                  label="Type"
+                  sx={{
+                    borderRadius: '8px',
+                    backgroundColor: darkTheme.background,
+                    color: darkTheme.text,
+                    '& .MuiOutlinedInput-notchedOutline': { borderColor: darkTheme.border },
+                    '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: darkTheme.primary },
+                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: darkTheme.primary },
+                  }}
+                  MenuProps={{
+                    sx: {
+                      '& .MuiPaper-root': {
+                        backgroundColor: darkTheme.surface,
+                        border: `1px solid ${darkTheme.border}`,
+                      },
+                      '& .MuiMenuItem-root': {
+                        color: darkTheme.text,
+                        '&:hover': { backgroundColor: darkTheme.surfaceHover },
+                        '&.Mui-selected': { backgroundColor: darkTheme.selected },
+                      },
+                    },
+                  }}
+                >
+                  <MenuItem value="all">All Types</MenuItem>
+                  {roomTypeOptions.map(type => (
+                    <MenuItem key={type.value} value={type.value}>
+                      {type.label}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
 
-                    <Typography
-                      sx={{
-                        color: darkTheme.textSecondary,
-                        mb: 2,
-                        display: '-webkit-box',
-                        WebkitLineClamp: 2,
-                        WebkitBoxOrient: 'vertical',
-                        overflow: 'hidden',
-                        fontSize: '0.875rem'
-                      }}
-                    >
-                      {roomType.description}
-                    </Typography>
+              <FormControl sx={{ minWidth: 120 }}>
+                <InputLabel sx={{ color: darkTheme.textSecondary }}>Status</InputLabel>
+                <Select
+                  value={activeFilter}
+                  onChange={(e) => setActiveFilter(e.target.value as typeof activeFilter)}
+                  label="Status"
+                  sx={{
+                    borderRadius: '8px',
+                    backgroundColor: darkTheme.background,
+                    color: darkTheme.text,
+                    '& .MuiOutlinedInput-notchedOutline': { borderColor: darkTheme.border },
+                    '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: darkTheme.primary },
+                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: darkTheme.primary },
+                  }}
+                  MenuProps={{
+                    sx: {
+                      '& .MuiPaper-root': {
+                        backgroundColor: darkTheme.surface,
+                        border: `1px solid ${darkTheme.border}`,
+                      },
+                      '& .MuiMenuItem-root': {
+                        color: darkTheme.text,
+                        '&:hover': { backgroundColor: darkTheme.surfaceHover },
+                        '&.Mui-selected': { backgroundColor: darkTheme.selected },
+                      },
+                    },
+                  }}
+                >
+                  <MenuItem value="all">All Status</MenuItem>
+                  <MenuItem value="active">Active Only</MenuItem>
+                  <MenuItem value="inactive">Inactive Only</MenuItem>
+                </Select>
+              </FormControl>
 
-                    {/* Room Type Details */}
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap', mt: 1 }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                        <PeopleIcon sx={{ fontSize: 14, color: darkTheme.textSecondary }} />
-                        <Typography variant="caption" sx={{ color: darkTheme.textSecondary, fontWeight: 500 }}>
-                          Max {roomType.maxOccupancy} guests
-                        </Typography>
-                      </Box>
-                      {roomType.bedConfiguration && (
-                        <Typography variant="caption" sx={{ color: darkTheme.textSecondary, fontWeight: 500 }}>
-                          • {roomType.bedConfiguration}
-                        </Typography>
-                      )}
-                      {roomType.roomSize && (
-                        <Typography variant="caption" sx={{ color: darkTheme.textSecondary, fontWeight: 500 }}>
-                          • {roomType.roomSize} sqm
-                        </Typography>
-                      )}
-                      <Typography variant="caption" sx={{ color: darkTheme.textSecondary, fontWeight: 500 }}>
-                        • {roomType._count.rooms} rooms available
-                      </Typography>
-                    </Box>
-                    {roomType.amenities.length > 0 && (
-                      <Stack direction="row" spacing={0.5} sx={{ mt: 1, flexWrap: 'wrap', gap: 0.5 }}>
-                        <Typography
-                          sx={{
-                            fontSize: '11px',
-                            color: darkTheme.textSecondary,
-                            fontWeight: 600,
-                            textTransform: 'uppercase',
-                            letterSpacing: '0.5px',
-                            alignSelf: 'center',
-                            mr: 1,
-                          }}
-                        >
-                          Amenities:
-                        </Typography>
-                        {roomType.amenities.map((amenity, index) => (
-                          <Chip
-                            key={index}
-                            label={amenity}
-                            size="small"
-                            sx={{
-                              fontSize: '10px',
-                              height: 20,
-                              backgroundColor: darkTheme.selectedBg,
-                              color: darkTheme.primary,
-                              fontWeight: 500,
-                              '& .MuiChip-label': { px: 1 },
-                            }}
-                          />
-                        ))}
-                      </Stack>
-                    )}
-                  </Box>
+              <FormControl sx={{ minWidth: 180 }}>
+                <InputLabel sx={{ color: darkTheme.textSecondary }}>Business Unit</InputLabel>
+                <Select
+                  value={businessUnitFilter}
+                  onChange={(e) => setBusinessUnitFilter(e.target.value)}
+                  label="Business Unit"
+                  sx={{
+                    borderRadius: '8px',
+                    backgroundColor: darkTheme.background,
+                    color: darkTheme.text,
+                    '& .MuiOutlinedInput-notchedOutline': { borderColor: darkTheme.border },
+                    '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: darkTheme.primary },
+                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: darkTheme.primary },
+                  }}
+                  MenuProps={{
+                    sx: {
+                      '& .MuiPaper-root': {
+                        backgroundColor: darkTheme.surface,
+                        border: `1px solid ${darkTheme.border}`,
+                      },
+                      '& .MuiMenuItem-root': {
+                        color: darkTheme.text,
+                        '&:hover': { backgroundColor: darkTheme.surfaceHover },
+                        '&.Mui-selected': { backgroundColor: darkTheme.selected },
+                      },
+                    },
+                  }}
+                >
+                  <MenuItem value="all">All Units</MenuItem>
+                  {uniqueBusinessUnits.map(unit => (
+                    <MenuItem key={unit.id} value={unit.id}>
+                      {unit.displayName}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
 
-                  {/* Actions */}
-                  <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 2, ml: 2, flexShrink: 0 }}>
-                    <Box sx={{ textAlign: 'right' }}>
-                      <Typography sx={{ fontWeight: 700, color: darkTheme.text, fontSize: '1.5rem', mb: 0.5 }}>
-                        {formatCurrency(roomType.baseRate, roomType.currency)}
-                      </Typography>
-                      <Typography sx={{ color: darkTheme.textSecondary, fontSize: '0.875rem' }}>
-                        per night
-                      </Typography>
-                    </Box>
-                    <Box sx={{ display: 'flex', gap: 1 }}>
-                      <FormControlLabel
-                        control={
-                          <Switch
-                            checked={roomType.isActive}
-                            onChange={() => handleToggleStatus(roomType.id, roomType.isActive)}
-                            disabled={loading === roomType.id}
-                            size="small"
-                            sx={{
-                              '& .MuiSwitch-switchBase.Mui-checked': {
-                                color: darkTheme.success,
-                                '&:hover': { backgroundColor: 'rgba(16, 185, 129, 0.04)' },
-                              },
-                              '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-                                backgroundColor: darkTheme.success,
-                              },
-                              '& .MuiSwitch-track': {
-                                backgroundColor: darkTheme.border,
-                              },
-                            }}
-                          />
-                        }
-                        label=""
-                        sx={{ mr: 0 }}
-                      />
-                      <Tooltip title="Edit room type">
-                        <IconButton
-                          onClick={() => router.push(`/${businessUnitId}/admin/operations/room-types/${roomType.id}`)}
-                          sx={{
-                            color: darkTheme.textSecondary,
-                            '&:hover': {
-                              backgroundColor: darkTheme.selectedBg,
-                              color: darkTheme.primary,
-                            },
-                            width: 32,
-                            height: 32,
-                          }}
-                        >
-                          <EditIcon sx={{ fontSize: 16 }} />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="Delete room type">
-                        <IconButton
-                          onClick={() => setDeleteDialog({ open: true, roomType })}
-                          sx={{
-                            color: darkTheme.textSecondary,
-                            '&:hover': {
-                              backgroundColor: darkTheme.errorBg,
-                              color: darkTheme.error,
-                            },
-                            width: 32,
-                            height: 32,
-                          }}
-                        >
-                          <DeleteIcon sx={{ fontSize: 16 }} />
-                        </IconButton>
-                      </Tooltip>
-                      <ChevronRightTwoTone
-                        sx={{
-                          ml: 1,
-                          fontSize: '16px',
-                          color: darkTheme.textSecondary,
-                          cursor: 'pointer',
-                          transition: 'color 0.2s ease',
-                          '&:hover': { color: darkTheme.primary },
-                        }}
-                        onClick={() => router.push(`/${businessUnitId}/admin/operations/room-types/${roomType.id}`)}
-                      />
-                    </Box>
-                  </Box>
-                </CardContent>
-              </Card>
+              <FormControl sx={{ minWidth: 120 }}>
+                <InputLabel sx={{ color: darkTheme.textSecondary }}>Occupancy</InputLabel>
+                <Select
+                  value={occupancyFilter}
+                  onChange={(e) => setOccupancyFilter(e.target.value)}
+                  label="Occupancy"
+                  sx={{
+                    borderRadius: '8px',
+                    backgroundColor: darkTheme.background,
+                    color: darkTheme.text,
+                    '& .MuiOutlinedInput-notchedOutline': { borderColor: darkTheme.border },
+                    '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: darkTheme.primary },
+                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: darkTheme.primary },
+                  }}
+                  MenuProps={{
+                    sx: {
+                      '& .MuiPaper-root': {
+                        backgroundColor: darkTheme.surface,
+                        border: `1px solid ${darkTheme.border}`,
+                      },
+                      '& .MuiMenuItem-root': {
+                        color: darkTheme.text,
+                        '&:hover': { backgroundColor: darkTheme.surfaceHover },
+                        '&.Mui-selected': { backgroundColor: darkTheme.selected },
+                      },
+                    },
+                  }}
+                >
+                  <MenuItem value="all">All Occupancy</MenuItem>
+                  {uniqueOccupancies.map(occupancy => (
+                    <MenuItem key={occupancy} value={occupancy.toString()}>
+                      {occupancy} guests
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Box>
+          </CardContent>
+        </Card>
+
+        {/* Results Summary */}
+        <Box sx={{ mb: 3 }}>
+          <Typography sx={{ color: darkTheme.textSecondary, fontSize: '14px' }}>
+            Showing {filteredRoomTypes.length} of {roomTypes.length} room types
+          </Typography>
+        </Box>
+
+        {/* Cards Layout */}
+        {loading ? (
+          <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+            <CircularProgress sx={{ color: darkTheme.primary }} />
+          </Box>
+        ) : filteredRoomTypes.length === 0 ? (
+          <Card sx={{ 
+            backgroundColor: darkTheme.surface, 
+            borderRadius: '8px', 
+            border: `1px solid ${darkTheme.border}`,
+            textAlign: 'center',
+            py: 8,
+          }}>
+            <Typography sx={{ color: darkTheme.textSecondary, fontSize: '1.1rem' }}>
+              No room types found
+            </Typography>
+          </Card>
+        ) : (
+          <Box sx={{
+            display: 'grid',
+            gridTemplateColumns: {
+              xs: '1fr',
+              sm: 'repeat(2, 1fr)',
+              md: 'repeat(3, 1fr)',
+              lg: 'repeat(4, 1fr)',
+            },
+            gap: 3,
+          }}>
+            {filteredRoomTypes.map((roomType) => (
+              <RoomTypeCard key={roomType.id} roomType={roomType} />
             ))}
           </Box>
         )}
@@ -519,84 +804,36 @@ const RoomTypeListPage: React.FC<RoomTypeListPageProps> = ({ initialRoomTypes })
         <Dialog
           open={deleteDialog.open}
           onClose={() => setDeleteDialog({ open: false, roomType: null })}
-          maxWidth="sm"
-          fullWidth
           PaperProps={{
             sx: {
               backgroundColor: darkTheme.surface,
-              borderRadius: '8px',
+              color: darkTheme.text,
               border: `1px solid ${darkTheme.border}`,
             },
           }}
         >
-          <DialogTitle
-            sx={{
-              fontWeight: 600,
-              color: darkTheme.text,
-              fontSize: '14px',
-              textTransform: 'uppercase',
-              letterSpacing: '1px',
-            }}
-          >
-            Delete Room Type
-          </DialogTitle>
+          <DialogTitle sx={{ color: darkTheme.text }}>Delete Room Type</DialogTitle>
           <DialogContent>
-            <Typography
-              sx={{
-                fontSize: '12px',
-                color: darkTheme.textSecondary,
-                lineHeight: 1.6
-              }}
-            >
-              Are you sure you want to delete &quot;{deleteDialog.roomType?.name}&quot;? This action cannot be undone.
-            </Typography>
-            {deleteDialog.roomType && (
-              <Box sx={{ mt: 2, p: 2, backgroundColor: darkTheme.background, borderRadius: '8px', border: `1px solid ${darkTheme.border}` }}>
-                <Typography variant="body2" sx={{ fontWeight: 600, color: darkTheme.text }}>
-                  {deleteDialog.roomType.name}
-                </Typography>
-                <Typography variant="body2" sx={{ color: darkTheme.textSecondary }}>
-                  {deleteDialog.roomType.businessUnit.displayName} • {deleteDialog.roomType._count.rooms} rooms
-                </Typography>
-              </Box>
-            )}
+            <DialogContentText sx={{ color: darkTheme.textSecondary }}>
+              Are you sure you want to delete &quot;{deleteDialog.roomType?.name}&quot;? 
+              This action cannot be undone.
+            </DialogContentText>
           </DialogContent>
-          <DialogActions sx={{ p: 2, pt: 1 }}>
+          <DialogActions>
             <Button
               onClick={() => setDeleteDialog({ open: false, roomType: null })}
-              sx={{
-                color: darkTheme.textSecondary,
-                fontSize: '12px',
-                fontWeight: 600,
-                textTransform: 'none',
-                '&:hover': {
-                  backgroundColor: darkTheme.surfaceHover,
-                },
-              }}
+              sx={{ color: darkTheme.textSecondary }}
             >
               Cancel
             </Button>
             <Button
               onClick={handleDelete}
-              disabled={loading === 'delete'}
               sx={{
-                backgroundColor: darkTheme.error,
-                color: 'white',
-                px: 3,
-                py: 1,
-                fontSize: '12px',
-                fontWeight: 600,
-                textTransform: 'none',
-                borderRadius: '8px',
-                '&:hover': {
-                  backgroundColor: darkTheme.errorHover,
-                },
-                '&:disabled': {
-                  backgroundColor: darkTheme.textSecondary,
-                },
+                color: darkTheme.error,
+                '&:hover': { backgroundColor: darkTheme.errorBg },
               }}
             >
-              {loading === 'delete' ? 'Deleting...' : 'Delete'}
+              Delete
             </Button>
           </DialogActions>
         </Dialog>
@@ -620,7 +857,7 @@ const RoomTypeListPage: React.FC<RoomTypeListPageProps> = ({ initialRoomTypes })
               fontSize: '12px',
               fontWeight: 600,
               '& .MuiAlert-icon': {
-                color: snackbar.severity === 'success' ? darkTheme.success : darkTheme.error
+                color: snackbar.severity === 'success' ? darkTheme.success : darkTheme.error,
               }
             }}
           >

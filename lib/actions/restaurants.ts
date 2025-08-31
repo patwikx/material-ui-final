@@ -3,7 +3,7 @@
 import { PrismaClient } from '@prisma/client';
 import { cache } from 'react';
 import { RestaurantType } from '@prisma/client';
-import { notFound } from 'next/navigation';
+
 
 const prisma = new PrismaClient();
 

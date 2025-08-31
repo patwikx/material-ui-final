@@ -1862,8 +1862,8 @@ model RoomRate {
   baseRate Decimal @db.Decimal(10, 2)
   currency String  @default("PHP")
 
-  validFrom DateTime
-  validTo   DateTime
+  validFrom DateTime?
+  validTo   DateTime?
 
   monday    Boolean @default(true)
   tuesday   Boolean @default(true)
@@ -1881,8 +1881,9 @@ model RoomRate {
   extraPersonRate Decimal? @db.Decimal(10, 2)
   childRate       Decimal? @db.Decimal(10, 2)
 
-  isActive Boolean @default(true)
-  priority Int     @default(0)
+  isActive  Boolean @default(true)
+  isDefault Boolean @default(false)
+  priority  Int     @default(0)
 
   roomType RoomType_Model @relation(fields: [roomTypeId], references: [id])
 

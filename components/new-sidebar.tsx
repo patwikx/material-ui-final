@@ -33,6 +33,8 @@ import {
   UserStar,
   CircleQuestionMarkIcon,
   ImagePlay,
+  ChartLine,
+  CassetteTape,
 } from "lucide-react"
 
 import type { BusinessUnitItem } from "@/types/business-unit-types"
@@ -76,6 +78,8 @@ const navigation: NavItem[] = [
       { title: "Reservations", href: "/admin/operations/reservations", icon: CalendarCheck },
       { title: "Guests", href: "/admin/operations/guests", icon: Users },
       { title: "Rooms", href: "/admin/operations/rooms", icon: BedDouble },
+      { title: "Room Types", href: "/admin/operations/room-types", icon: CassetteTape },
+      { title: "Room Rates", href: "/admin/operations/room-rates", icon: ChartLine },
     ],
   },
   {
