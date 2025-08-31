@@ -441,6 +441,8 @@ model Image {
   restaurants   RestaurantImage[]
   events        EventImage[]
   menuItems     MenuItemImage[]
+  rooms         RoomImage[]
+  guests        GuestImage[]
 
   @@index([category, isActive])
   @@index([tags])
@@ -912,6 +914,7 @@ model Room {
   maintenanceLogs   MaintenanceLog[]
   incidentalCharges IncidentalCharge[]
   paymentSummaries  PaymentSummary[]
+  images            RoomImage[]
 
   @@unique([businessUnitId, roomNumber])
   @@index([businessUnitId, status])
@@ -971,6 +974,7 @@ model Guest {
 
   restaurantReservations RestaurantReservation[] @relation("GuestRestaurantReservations")
   eventBookings          EventBooking[]          @relation("GuestEventBookings")
+  images                 GuestImage[]
 
   @@unique([businessUnitId, email])
   @@index([businessUnitId, lastName])
@@ -3327,4 +3331,42 @@ model PromoUsage {
   @@index([reservationId])
   @@index([codeUsed])
   @@map("promo_usages")
+}
+
+model RoomImage {
+  id      String @id @default(uuid())
+  roomId  String
+  imageId String
+
+  context   String? // e.g., 'primary', 'gallery'
+  sortOrder Int     @default(0)
+  isPrimary Boolean @default(false)
+
+  room  Room  @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  image Image @relation(fields: [imageId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([roomId, imageId, context])
+  @@index([roomId, context, sortOrder])
+  @@map("room_images")
+}
+
+model GuestImage {
+  id      String @id @default(uuid())
+  guestId String
+  imageId String
+
+  context   String?
+  isPrimary Boolean @default(false)
+  sortOrder Int     @default(0)
+
+  guest Guest @relation(fields: [guestId], references: [id], onDelete: Cascade)
+  image Image @relation(fields: [imageId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([guestId, imageId])
+  @@index([guestId, context, sortOrder])
+  @@map("guest_images")
 }

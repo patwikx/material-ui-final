@@ -8,7 +8,6 @@ import {
   Button,
   Card,
   CardContent,
-  Stack,
   Chip,
   Dialog,
   DialogTitle,
@@ -17,6 +16,7 @@ import {
   Alert,
   Snackbar,
   Tooltip,
+  IconButton,
 } from '@mui/material';
 import {
   CheckCircle as CheckIcon,
@@ -25,7 +25,7 @@ import {
   Person as PersonIcon,
   Payment as PaymentIcon,
   CalendarToday as CalendarIcon,
-  ChevronRightTwoTone,
+  Edit as EditIcon,
   LocationCity,
   Warning as WarningIcon,
 } from '@mui/icons-material';
@@ -109,7 +109,7 @@ const ReservationListPage: React.FC<ReservationListPageProps> = ({ initialReserv
     } catch (error) {
       setSnackbar({
         open: true,
-        message: 'An unexpected error occurred while confirming reservation.',
+        message: `An unexpected error occurred while confirming reservation. ${error}`,
         severity: 'error',
       });
     } finally {
@@ -138,6 +138,7 @@ const ReservationListPage: React.FC<ReservationListPageProps> = ({ initialReserv
           severity: 'error',
         });
       }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       setSnackbar({
         open: true,
@@ -156,13 +157,6 @@ const ReservationListPage: React.FC<ReservationListPageProps> = ({ initialReserv
       month: 'short',
       day: 'numeric',
     }).format(new Date(date));
-  };
-
-  const formatCurrency = (amount: string, currency: string) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: currency,
-    }).format(Number(amount));
   };
 
   const getStatusColor = (status: ReservationStatus): keyof typeof darkTheme => {
@@ -417,96 +411,71 @@ const ReservationListPage: React.FC<ReservationListPageProps> = ({ initialReserv
                     </Box>
                   </Box>
 
-                  {/* Actions - Reversed order with improved sizing */}
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, ml: 2, flexShrink: 0 }}>
-                    <Stack direction="row" spacing={1}>
-                      {reservation.status === ReservationStatus.PENDING && (
-                        <Tooltip title="Confirm Reservation">
-                          <Button
-                            size="small"
-                            startIcon={<CheckIcon />}
-                            onClick={() => setActionDialog({ open: true, reservation, action: 'confirm' })}
-                            disabled={loadingId === reservation.id}
-                            sx={{
+                  {/* Streamlined Actions */}
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, ml: 2, flexShrink: 0 }}>
+                    {/* View & Edit - Primary Action */}
+                    <Tooltip title="View & Edit Reservation">
+                      <IconButton
+                        onClick={() => router.push(`/${businessUnitId}/admin/operations/reservations/${reservation.id}`)}
+                        sx={{
+                          color: darkTheme.primary,
+                          backgroundColor: darkTheme.selectedBg,
+                          '&:hover': {
+                            backgroundColor: darkTheme.primary,
+                            color: 'white',
+                          },
+                          width: 40,
+                          height: 40,
+                        }}
+                      >
+                        <EditIcon sx={{ fontSize: 20 }} />
+                      </IconButton>
+                    </Tooltip>
+
+                    {/* Confirm - Only for pending reservations */}
+                    {reservation.status === ReservationStatus.PENDING && (
+                      <Tooltip title="Confirm Reservation">
+                        <IconButton
+                          onClick={() => setActionDialog({ open: true, reservation, action: 'confirm' })}
+                          disabled={loadingId === reservation.id}
+                          sx={{
+                            color: darkTheme.success,
+                            backgroundColor: darkTheme.successBg,
+                            '&:hover': {
                               backgroundColor: darkTheme.success,
                               color: 'white',
-                              textTransform: 'none',
-                              fontSize: '12px',
-                              fontWeight: 600,
-                              borderRadius: '8px',
-                              minWidth: '100px',
-                              height: '36px',
-                              '&:hover': { backgroundColor: darkTheme.successBg, color: darkTheme.success },
-                              '&:disabled': { backgroundColor: darkTheme.surface, color: darkTheme.textSecondary },
-                            }}
-                          >
-                            Confirm
-                          </Button>
-                        </Tooltip>
-                      )}
-                      
-                      {/* View Details - Now first in order and bigger */}
-                      <Tooltip title="View Details">
-                        <Button
-                          variant="outlined"
-                          endIcon={<ChevronRightTwoTone sx={{ fontSize: 16 }} />}
-                          onClick={() => router.push(`/${businessUnitId}/admin/operations/reservations/${reservation.id}`)}
-                          sx={{
-                            borderColor: darkTheme.border,
-                            color: darkTheme.text,
-                            backgroundColor: darkTheme.surface,
-                            textTransform: 'none',
-                            fontSize: '12px',
-                            fontWeight: 600,
-                            borderRadius: '8px',
-                            minWidth: '120px',
-                            height: '36px',
-                            '&:hover': {
-                              backgroundColor: darkTheme.surfaceHover,
-                              borderColor: darkTheme.primary,
-                              color: darkTheme.primary,
                             },
+                            width: 38,
+                            height: 38,
                           }}
                         >
-                          View Details
-                        </Button>
+                          <CheckIcon sx={{ fontSize: 19 }} />
+                        </IconButton>
                       </Tooltip>
+                    )}
 
-                      {/* Cancel - Same size as View Details */}
-                      {(reservation.status === ReservationStatus.PENDING || reservation.status === ReservationStatus.CONFIRMED || reservation.status === ReservationStatus.PROVISIONAL) && (
-                        <Tooltip title="Cancel Reservation">
-                          <Button
-                            variant="outlined"
-                            startIcon={<CancelIcon />}
-                            onClick={() => setCancelAlert({ open: true, reservation })}
-                            disabled={loadingId === reservation.id}
-                            sx={{
-                              borderColor: darkTheme.error,
+                    {/* Cancel - Only for cancellable reservations */}
+                    {(reservation.status === ReservationStatus.PENDING || 
+                      reservation.status === ReservationStatus.CONFIRMED || 
+                      reservation.status === ReservationStatus.PROVISIONAL) && (
+                      <Tooltip title="Cancel Reservation">
+                        <IconButton
+                          onClick={() => setCancelAlert({ open: true, reservation })}
+                          disabled={loadingId === reservation.id}
+                          sx={{
+                            color: darkTheme.textSecondary,
+                            '&:hover': {
+                              backgroundColor: darkTheme.errorBg,
                               color: darkTheme.error,
-                              backgroundColor: darkTheme.surface,
-                              textTransform: 'none',
-                              fontSize: '12px',
-                              fontWeight: 600,
-                              borderRadius: '8px',
-                              minWidth: '120px',
-                              height: '36px',
-                              '&:hover': { 
-                                backgroundColor: darkTheme.errorBg,
-                                borderColor: darkTheme.errorHover,
-                                color: darkTheme.errorHover,
-                              },
-                              '&:disabled': { 
-                                backgroundColor: darkTheme.surface, 
-                                color: darkTheme.textSecondary,
-                                borderColor: darkTheme.border,
-                              },
-                            }}
-                          >
-                            Cancel
-                          </Button>
-                        </Tooltip>
-                      )}
-                    </Stack>
+                            },
+                            width: 38,
+                            height: 38,
+                          }}
+                        >
+                          <CancelIcon sx={{ fontSize: 19 }} />
+                        </IconButton>
+                      </Tooltip>
+                    )}
                   </Box>
                 </CardContent>
               </Card>

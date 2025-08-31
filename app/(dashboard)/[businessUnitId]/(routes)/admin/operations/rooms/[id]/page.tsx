@@ -18,11 +18,17 @@ import {
   Alert,
   Snackbar,
   IconButton,
+  CircularProgress,
+  Chip,
+  Stack,
 } from '@mui/material';
 import {
   ArrowBack as ArrowBackIcon,
   Save as SaveIcon,
   Hotel as HotelIcon,
+  Add as AddIcon,
+  Close as CloseIcon,
+  AddPhotoAlternate as AddPhotoIcon
 } from '@mui/icons-material';
 import { useRouter, useParams } from 'next/navigation';
 import { RoomStatus, HousekeepingStatus } from '@prisma/client';
@@ -30,8 +36,9 @@ import { getRoomById, RoomData, updateRoom, UpdateRoomData } from '@/lib/actions
 import { BusinessUnitData, getBusinessUnits } from '@/lib/actions/business-units';
 import { getRoomTypes, RoomTypeData } from '@/lib/actions/room-type-management';
 import { useBusinessUnit } from '@/context/business-unit-context';
+import Link from 'next/link';
+import { FileUpload, UploadedFileDisplay } from '@/components/file-upload';
 
-// Enhanced dark theme matching BusinessUnitSwitcher aesthetic
 const darkTheme = {
   background: '#0a0e13',
   surface: '#1a1f29',
@@ -61,9 +68,20 @@ interface RoomFormData {
   housekeeping: HousekeepingStatus;
   isActive: boolean;
   notes: string;
+  specialFeatures: string[]; // FIX: Added this property
   businessUnitId: string;
   roomTypeId: string;
   outOfOrderUntil: string;
+}
+
+interface RoomImages {
+  images: Array<{
+    fileName: string;
+    name: string;
+    fileUrl: string;
+    imageId?: string;
+  }>;
+  removeImageIds: string[];
 }
 
 const roomStatuses: { value: RoomStatus; label: string }[] = [
@@ -73,6 +91,12 @@ const roomStatuses: { value: RoomStatus; label: string }[] = [
   { value: 'OUT_OF_ORDER', label: 'Out of Order' },
   { value: 'CLEANING', label: 'Cleaning' },
   { value: 'RESERVED', label: 'Reserved' },
+];
+
+const housekeepingStatuses: { value: HousekeepingStatus; label: string }[] = [
+  { value: 'CLEAN', label: 'Clean' },
+  { value: 'INSPECTED', label: 'Inspected' },
+  { value: 'DIRTY', label: 'Dirty' },
 ];
 
 const EditRoomPage: React.FC = () => {
@@ -86,6 +110,7 @@ const EditRoomPage: React.FC = () => {
   const [room, setRoom] = useState<RoomData | null>(null);
   const [businessUnits, setBusinessUnits] = useState<BusinessUnitData[]>([]);
   const [roomTypes, setRoomTypes] = useState<RoomTypeData[]>([]);
+  const [newFeature, setNewFeature] = useState('');
   const [formData, setFormData] = useState<RoomFormData>({
     roomNumber: '',
     floor: null,
@@ -94,9 +119,14 @@ const EditRoomPage: React.FC = () => {
     housekeeping: 'CLEAN',
     isActive: true,
     notes: '',
+    specialFeatures: [], // FIX: Initialized the missing field
     businessUnitId: '',
     roomTypeId: '',
     outOfOrderUntil: '',
+  });
+  const [images, setImages] = useState<RoomImages>({
+    images: [],
+    removeImageIds: [],
   });
   const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({
     open: false,
@@ -121,16 +151,29 @@ const EditRoomPage: React.FC = () => {
           setFormData({
             roomNumber: roomData.roomNumber,
             floor: roomData.floor,
-            // FIX: Added missing fields
             wing: roomData.wing || '',
             housekeeping: roomData.housekeeping,
-            outOfOrderUntil: roomData.outOfOrderUntil ? roomData.outOfOrderUntil.toISOString().slice(0, 10) : '',
+            outOfOrderUntil: roomData.outOfOrderUntil ? roomData.outOfOrderUntil.toISOString().slice(0, 16) : '',
             status: roomData.status,
             isActive: roomData.isActive,
             notes: roomData.notes || '',
+            specialFeatures: roomData.specialFeatures || [],
             businessUnitId: roomData.businessUnit.id,
             roomTypeId: roomData.roomType.id,
           });
+          if (roomData.images && roomData.images.length > 0) {
+            const existingImages = roomData.images.map(img => ({
+              fileName: img.image.originalUrl.split('/').pop() || 'image',
+              name: img.image.title || img.image.altText || 'Room Image',
+              fileUrl: img.image.originalUrl,
+              imageId: img.image.id,
+            }));
+
+            setImages(prev => ({
+              ...prev,
+              images: existingImages,
+            }));
+          }
         } else {
           setSnackbar({
             open: true,
@@ -159,18 +202,70 @@ const EditRoomPage: React.FC = () => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
+  const handleAddFeature = () => {
+    if (newFeature.trim() && !formData.specialFeatures.includes(newFeature.trim())) {
+      setFormData(prev => ({
+        ...prev,
+        specialFeatures: [...prev.specialFeatures, newFeature.trim()],
+      }));
+      setNewFeature('');
+    }
+  };
+
+  const handleRemoveFeature = (feature: string) => {
+    setFormData(prev => ({
+      ...prev,
+      specialFeatures: prev.specialFeatures.filter(f => f !== feature),
+    }));
+  };
+
+  const handleImageUpload = (result: { fileName: string; name: string; fileUrl: string }) => {
+    setImages(prev => ({
+      ...prev,
+      images: [...prev.images, result],
+    }));
+  };
+
+  const handleImageRemove = (index: number) => {
+    const imageToRemove = images.images[index];
+
+    if (imageToRemove.imageId) {
+      setImages(prev => ({
+        ...prev,
+        removeImageIds: [...prev.removeImageIds, imageToRemove.imageId!],
+      }));
+    }
+
+    setImages(prev => ({
+      ...prev,
+      images: prev.images.filter((_, i) => i !== index),
+    }));
+  };
+
+  const handleUploadError = (error: string) => {
+    setSnackbar({
+      open: true,
+      message: `Upload failed: ${error}`,
+      severity: 'error',
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
 
     try {
-      // FIX: Correctly pass all form data fields to the server action
+      const newImages = images.images.filter(img => !img.imageId);
+
       const roomData: UpdateRoomData = {
         id: roomId,
         ...formData,
         notes: formData.notes || null,
         wing: formData.wing || null,
         outOfOrderUntil: formData.outOfOrderUntil ? new Date(formData.outOfOrderUntil) : null,
+        specialFeatures: formData.specialFeatures,
+        roomImages: newImages.length > 0 ? newImages : undefined,
+        removeImageIds: images.removeImageIds.length > 0 ? images.removeImageIds : undefined,
       };
 
       const result = await updateRoom(roomData);
@@ -205,7 +300,7 @@ const EditRoomPage: React.FC = () => {
       <Box sx={{ backgroundColor: darkTheme.background, minHeight: '100vh', color: darkTheme.text }}>
         <Container maxWidth="xl" sx={{ py: 4 }}>
           <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
-            <Typography sx={{ color: darkTheme.text }}>Loading room...</Typography>
+            <CircularProgress sx={{ color: darkTheme.primary }} />
           </Box>
         </Container>
       </Box>
@@ -249,7 +344,8 @@ const EditRoomPage: React.FC = () => {
         <Box sx={{ mb: 6 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
             <IconButton
-              onClick={() => router.push(`/${currentBusinessUnitId}/admin/operations/rooms`)}
+              component={Link}
+              href={`/${currentBusinessUnitId}/admin/operations/rooms`}
               sx={{
                 mr: 2,
                 color: darkTheme.textSecondary,
@@ -392,6 +488,26 @@ const EditRoomPage: React.FC = () => {
                           '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: darkTheme.primary },
                           '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: darkTheme.primary },
                         }}
+                        MenuProps={{
+                          sx: {
+                            '& .MuiPaper-root': {
+                              backgroundColor: darkTheme.surface,
+                              border: `1px solid ${darkTheme.border}`,
+                            },
+                            '& .MuiList-root': {
+                              color: darkTheme.text,
+                            },
+                            '& .MuiMenuItem-root': {
+                              '&:hover': {
+                                backgroundColor: darkTheme.surfaceHover,
+                              },
+                              '&.Mui-selected': {
+                                backgroundColor: darkTheme.selected,
+                                color: darkTheme.text,
+                              },
+                            },
+                          },
+                        }}
                       >
                         {businessUnits.map((unit) => (
                           <MenuItem key={unit.id} value={unit.id}>
@@ -415,6 +531,26 @@ const EditRoomPage: React.FC = () => {
                           '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: darkTheme.primary },
                           '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: darkTheme.primary },
                         }}
+                        MenuProps={{
+                          sx: {
+                            '& .MuiPaper-root': {
+                              backgroundColor: darkTheme.surface,
+                              border: `1px solid ${darkTheme.border}`,
+                            },
+                            '& .MuiList-root': {
+                              color: darkTheme.text,
+                            },
+                            '& .MuiMenuItem-root': {
+                              '&:hover': {
+                                backgroundColor: darkTheme.surfaceHover,
+                              },
+                              '&.Mui-selected': {
+                                backgroundColor: darkTheme.selected,
+                                color: darkTheme.text,
+                              },
+                            },
+                          },
+                        }}
                       >
                         {roomTypes.map((type) => (
                           <MenuItem key={type.id} value={type.id}>
@@ -425,28 +561,120 @@ const EditRoomPage: React.FC = () => {
                     </FormControl>
                   </Box>
 
-                  <FormControl sx={{ minWidth: 200, flex: 1 }}>
-                    <InputLabel sx={{ color: darkTheme.textSecondary }}>Status</InputLabel>
-                    <Select
-                      value={formData.status}
-                      onChange={(e) => handleInputChange('status', e.target.value as RoomStatus)}
-                      label="Status"
+                  <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                    <FormControl sx={{ minWidth: 200, flex: 1 }}>
+                      <InputLabel sx={{ color: darkTheme.textSecondary }}>Status</InputLabel>
+                      <Select
+                        value={formData.status}
+                        onChange={(e) => handleInputChange('status', e.target.value as RoomStatus)}
+                        label="Status"
+                        sx={{
+                          borderRadius: '8px',
+                          backgroundColor: darkTheme.background,
+                          color: darkTheme.text,
+                          '& .MuiOutlinedInput-notchedOutline': { borderColor: darkTheme.border },
+                          '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: darkTheme.primary },
+                          '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: darkTheme.primary },
+                        }}
+                        MenuProps={{
+                          sx: {
+                            '& .MuiPaper-root': {
+                              backgroundColor: darkTheme.surface,
+                              border: `1px solid ${darkTheme.border}`,
+                            },
+                            '& .MuiList-root': {
+                              color: darkTheme.text,
+                            },
+                            '& .MuiMenuItem-root': {
+                              '&:hover': {
+                                backgroundColor: darkTheme.surfaceHover,
+                              },
+                              '&.Mui-selected': {
+                                backgroundColor: darkTheme.selected,
+                                color: darkTheme.text,
+                              },
+                            },
+                          },
+                        }}
+                      >
+                        {roomStatuses.map((status) => (
+                          <MenuItem key={status.value} value={status.value}>
+                            {status.label}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+
+                    <FormControl sx={{ minWidth: 200, flex: 1 }}>
+                      <InputLabel sx={{ color: darkTheme.textSecondary }}>Housekeeping</InputLabel>
+                      <Select
+                        value={formData.housekeeping}
+                        onChange={(e) => handleInputChange('housekeeping', e.target.value as HousekeepingStatus)}
+                        label="Housekeeping"
+                        sx={{
+                          borderRadius: '8px',
+                          backgroundColor: darkTheme.background,
+                          color: darkTheme.text,
+                          '& .MuiOutlinedInput-notchedOutline': { borderColor: darkTheme.border },
+                          '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: darkTheme.primary },
+                          '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: darkTheme.primary },
+                        }}
+                        MenuProps={{
+                          sx: {
+                            '& .MuiPaper-root': {
+                              backgroundColor: darkTheme.surface,
+                              border: `1px solid ${darkTheme.border}`,
+                            },
+                            '& .MuiList-root': {
+                              color: darkTheme.text,
+                            },
+                            '& .MuiMenuItem-root': {
+                              '&:hover': {
+                                backgroundColor: darkTheme.surfaceHover,
+                              },
+                              '&.Mui-selected': {
+                                backgroundColor: darkTheme.selected,
+                                color: darkTheme.text,
+                              },
+                            },
+                          },
+                        }}
+                      >
+                        {housekeepingStatuses.map((status) => (
+                          <MenuItem key={status.value} value={status.value}>
+                            {status.label}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  </Box>
+                  
+                  {formData.status === 'OUT_OF_ORDER' && (
+                    <TextField
+                      label="Out of Order Until"
+                      name="outOfOrderUntil"
+                      type="datetime-local"
+                      value={formData.outOfOrderUntil}
+                      onChange={(e) => handleInputChange('outOfOrderUntil', e.target.value)}
+                      fullWidth
+                      InputLabelProps={{ shrink: true }}
                       sx={{
-                        borderRadius: '8px',
-                        backgroundColor: darkTheme.background,
-                        color: darkTheme.text,
-                        '& .MuiOutlinedInput-notchedOutline': { borderColor: darkTheme.border },
-                        '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: darkTheme.primary },
-                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: darkTheme.primary },
+                        '& .MuiInputLabel-root': {
+                          fontWeight: 600,
+                          color: darkTheme.textSecondary,
+                          '&.Mui-focused': { color: darkTheme.primary },
+                        },
+                        '& .MuiOutlinedInput-root': {
+                          backgroundColor: darkTheme.background,
+                          borderRadius: '8px',
+                          color: darkTheme.text,
+                          '& fieldset': { borderColor: darkTheme.border },
+                          '&:hover fieldset': { borderColor: darkTheme.primary },
+                          '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                        },
                       }}
-                    >
-                      {roomStatuses.map((status) => (
-                        <MenuItem key={status.value} value={status.value}>
-                          {status.label}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
+                    />
+                  )}
 
                   <TextField
                     label="Notes"
@@ -469,7 +697,126 @@ const EditRoomPage: React.FC = () => {
                       '& .MuiFormHelperText-root': { color: darkTheme.textSecondary }
                     }}
                   />
+
+                  {/* Special Features section */}
+                  <Box>
+                    <Typography variant="subtitle2" sx={{ mb: 2, color: darkTheme.textSecondary, fontWeight: 600 }}>
+                      Special Features
+                    </Typography>
+                    <Box sx={{ display: 'flex', gap: 2, mb: 2, flexWrap: 'wrap' }}>
+                      <TextField
+                        label="Add Special Feature"
+                        value={newFeature}
+                        onChange={(e) => setNewFeature(e.target.value)}
+                        onKeyPress={(e) => e.key === 'Enter' && handleAddFeature()}
+                        sx={{
+                          flex: 1,
+                          minWidth: 200,
+                          '& .MuiOutlinedInput-root': {
+                            borderRadius: '8px',
+                            backgroundColor: darkTheme.background,
+                            color: darkTheme.text,
+                            '& fieldset': { borderColor: darkTheme.border },
+                            '&:hover fieldset': { borderColor: darkTheme.primary },
+                            '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                          },
+                          '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
+                        }}
+                      />
+                      <Button
+                        onClick={handleAddFeature}
+                        variant="outlined"
+                        startIcon={<AddIcon />}
+                        sx={{
+                          borderRadius: '8px',
+                          borderColor: darkTheme.border,
+                          color: darkTheme.textSecondary,
+                          textTransform: 'none',
+                          fontWeight: 600,
+                          '&:hover': {
+                            backgroundColor: darkTheme.surfaceHover,
+                            borderColor: darkTheme.textSecondary,
+                          },
+                        }}
+                      >
+                        Add
+                      </Button>
+                    </Box>
+                    <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }}>
+                      {formData.specialFeatures.map((feature) => (
+                        <Chip
+                          key={feature}
+                          label={feature}
+                          onDelete={() => handleRemoveFeature(feature)}
+                          deleteIcon={<CloseIcon />}
+                          sx={{
+                            backgroundColor: darkTheme.selectedBg,
+                            color: darkTheme.primary,
+                            '& .MuiChip-deleteIcon': {
+                              color: darkTheme.primary,
+                            },
+                          }}
+                        />
+                      ))}
+                    </Stack>
+                  </Box>
                 </Box>
+              </CardContent>
+            </Card>
+
+            {/* Room Images */}
+            <Card sx={{ backgroundColor: darkTheme.surface, borderRadius: '8px', border: `1px solid ${darkTheme.border}` }}>
+              <CardContent sx={{ p: 4 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+                  <AddPhotoIcon sx={{ fontSize: 20, color: darkTheme.primary }} />
+                  <Typography
+                    sx={{
+                      fontSize: '14px',
+                      fontWeight: 600,
+                      color: darkTheme.text,
+                      textTransform: 'uppercase',
+                      letterSpacing: '1px',
+                    }}
+                  >
+                    Room Images
+                  </Typography>
+                </Box>
+                
+                {images.images.length > 0 && (
+                  <Box sx={{ mb: 3 }}>
+                    <Typography sx={{ fontSize: '12px', color: darkTheme.textSecondary, mb: 2 }}>
+                      Room Images ({images.images.length})
+                    </Typography>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                      {images.images.map((image, index) => (
+                        <UploadedFileDisplay
+                          key={`${image.fileUrl}-${index}`}
+                          fileName={image.fileName}
+                          name={image.name}
+                          fileUrl={image.fileUrl}
+                          onRemove={() => handleImageRemove(index)}
+                          disabled={saving}
+                        />
+                      ))}
+                    </Box>
+                  </Box>
+                )}
+
+                <Box sx={{ mb: 3 }}>
+                  <FileUpload
+                    onUploadComplete={handleImageUpload}
+                    onUploadError={handleUploadError}
+                    disabled={saving}
+                    maxSize={10}
+                    accept=".jpg,.jpeg,.png,.gif,.webp"
+                    multiple={true}
+                    maxFiles={5}
+                  />
+                </Box>
+
+                <Typography sx={{ fontSize: '12px', color: darkTheme.textSecondary }}>
+                  Upload up to 5 images showcasing this room. Recommended size: 1200x800px or larger. Supports JPG, PNG, WEBP and GIF formats.
+                </Typography>
               </CardContent>
             </Card>
 

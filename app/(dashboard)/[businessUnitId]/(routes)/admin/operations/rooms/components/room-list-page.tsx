@@ -8,7 +8,6 @@ import {
   Button,
   Card,
   CardContent,
-  Stack,
   Chip,
   IconButton,
   Dialog,
@@ -17,8 +16,6 @@ import {
   DialogActions,
   Alert,
   Snackbar,
-  Switch,
-  FormControlLabel,
   Tooltip,
   FormControl,
   InputLabel,
@@ -34,7 +31,9 @@ import {
   Build as MaintenanceIcon,
   Visibility as VisibilityIcon,
   VisibilityOff as VisibilityOffIcon,
-  ChevronRightTwoTone,
+  ToggleOn as ToggleOnIcon,
+  ToggleOff as ToggleOffIcon,
+  SwapVert as StatusIcon,
 } from '@mui/icons-material';
 import { useRouter } from 'next/navigation';
 import { deleteRoom, RoomData, toggleRoomStatus, updateRoomStatus } from '@/lib/actions/room-management';
@@ -114,7 +113,7 @@ const RoomListPage: React.FC<RoomListPageProps> = ({ initialRooms }) => {
     } catch (error) {
       setSnackbar({
         open: true,
-        message: 'An error occurred while deleting',
+        message: `An error occurred while deleting ${error}`,
         severity: 'error',
       });
     } finally {
@@ -146,7 +145,7 @@ const RoomListPage: React.FC<RoomListPageProps> = ({ initialRooms }) => {
     } catch (error) {
       setSnackbar({
         open: true,
-        message: 'An error occurred while updating status',
+        message: `An error occurred while updating status ${error}`,
         severity: 'error',
       });
     } finally {
@@ -179,7 +178,7 @@ const RoomListPage: React.FC<RoomListPageProps> = ({ initialRooms }) => {
     } catch (error) {
       setSnackbar({
         open: true,
-        message: 'An error occurred while updating room status',
+        message: `An error occurred while updating room status ${error}`,
         severity: 'error',
       });
     } finally {
@@ -432,92 +431,88 @@ const RoomListPage: React.FC<RoomListPageProps> = ({ initialRooms }) => {
                     </Box>
                   </Box>
 
-                  {/* Actions */}
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, ml: 2, flexShrink: 0 }}>
-                    <Stack direction="row" spacing={1}>
-                      <Tooltip title="Update Status">
-                        <Button
-                          size="small"
-                          startIcon={<EditIcon />}
-                          onClick={() => {
-                            setNewStatus(room.status);
-                            setStatusDialog({ open: true, room });
-                          }}
-                          disabled={loading === room.id}
-                          sx={{
+                  {/* Streamlined Actions */}
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, ml: 2, flexShrink: 0 }}>
+                    {/* View & Edit - Primary Action */}
+                    <Tooltip title="View & Edit Room">
+                      <IconButton
+                        onClick={() => router.push(`/${businessUnitId}/admin/operations/rooms/${room.id}`)}
+                        sx={{
+                          color: darkTheme.primary,
+                          backgroundColor: darkTheme.selectedBg,
+                          '&:hover': {
                             backgroundColor: darkTheme.primary,
                             color: 'white',
-                            textTransform: 'none',
-                            fontSize: '12px',
-                            fontWeight: 600,
-                            borderRadius: '8px',
-                            '&:hover': { backgroundColor: darkTheme.primaryHover },
-                            '&:disabled': { backgroundColor: darkTheme.surface, color: darkTheme.textSecondary },
-                          }}
-                        >
-                          Update Status
-                        </Button>
-                      </Tooltip>
-                      <Tooltip title="Toggle Active">
-                        <FormControlLabel
-                          control={
-                            <Switch
-                              checked={room.isActive}
-                              onChange={() => handleToggleStatus(room.id, room.isActive)}
-                              disabled={loading === room.id}
-                              size="small"
-                              sx={{
-                                '& .MuiSwitch-switchBase.Mui-checked': {
-                                  color: darkTheme.success,
-                                  '&:hover': { backgroundColor: 'rgba(16, 185, 129, 0.04)' },
-                                },
-                                '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-                                  backgroundColor: darkTheme.success,
-                                },
-                                '& .MuiSwitch-track': {
-                                  backgroundColor: darkTheme.border,
-                                },
-                              }}
-                            />
-                          }
-                          label=""
-                          sx={{ mr: 0 }}
-                        />
-                      </Tooltip>
-                      <Tooltip title="Delete Room">
-                        <IconButton
-                          onClick={() => setDeleteDialog({ open: true, room })}
-                          disabled={loading === room.id}
-                          sx={{
-                            color: darkTheme.textSecondary,
-                            '&:hover': {
-                              backgroundColor: darkTheme.errorBg,
-                              color: darkTheme.error,
-                            },
-                            width: 32,
-                            height: 32,
-                          }}
-                        >
-                          <DeleteIcon sx={{ fontSize: 16 }} />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="View Details">
-                        <IconButton
-                          onClick={() => router.push(`/${businessUnitId}/admin/operations/rooms/${room.id}`)}
-                          sx={{
-                            color: darkTheme.textSecondary,
-                            '&:hover': {
-                              backgroundColor: darkTheme.selectedBg,
-                              color: darkTheme.primary,
-                            },
-                            width: 32,
-                            height: 32,
-                          }}
-                        >
-                          <ChevronRightTwoTone sx={{ fontSize: 16 }} />
-                        </IconButton>
-                      </Tooltip>
-                    </Stack>
+                          },
+                          width: 40,
+                          height: 40,
+                        }}
+                      >
+                        <EditIcon sx={{ fontSize: 20 }} />
+                      </IconButton>
+                    </Tooltip>
+
+                    {/* Change Status */}
+                    <Tooltip title="Change Room Status">
+                      <IconButton
+                        onClick={() => {
+                          setNewStatus(room.status);
+                          setStatusDialog({ open: true, room });
+                        }}
+                        disabled={loading === room.id}
+                        sx={{
+                          color: darkTheme[getRoomStatusColor(room.status)],
+                          backgroundColor: darkTheme[getRoomStatusBg(room.status)],
+                          '&:hover': {
+                            backgroundColor: darkTheme[getRoomStatusColor(room.status)],
+                            color: 'white',
+                          },
+                          width: 38,
+                          height: 38,
+                        }}
+                      >
+                        <StatusIcon sx={{ fontSize: 19 }} />
+                      </IconButton>
+                    </Tooltip>
+
+                    {/* Toggle Active/Inactive */}
+                    <Tooltip title={room.isActive ? 'Deactivate Room' : 'Activate Room'}>
+                      <IconButton
+                        onClick={() => handleToggleStatus(room.id, room.isActive)}
+                        disabled={loading === room.id}
+                        sx={{
+                          color: room.isActive ? darkTheme.success : darkTheme.textSecondary,
+                          backgroundColor: room.isActive ? darkTheme.successBg : 'transparent',
+                          '&:hover': {
+                            backgroundColor: room.isActive ? darkTheme.success : darkTheme.successBg,
+                            color: room.isActive ? 'white' : darkTheme.success,
+                          },
+                          width: 38,
+                          height: 38,
+                        }}
+                      >
+                        {room.isActive ? <ToggleOnIcon sx={{ fontSize: 19 }} /> : <ToggleOffIcon sx={{ fontSize: 19 }} />}
+                      </IconButton>
+                    </Tooltip>
+
+                    {/* Delete */}
+                    <Tooltip title="Delete Room">
+                      <IconButton
+                        onClick={() => setDeleteDialog({ open: true, room })}
+                        disabled={loading === room.id}
+                        sx={{
+                          color: darkTheme.textSecondary,
+                          '&:hover': {
+                            backgroundColor: darkTheme.errorBg,
+                            color: darkTheme.error,
+                          },
+                          width: 38,
+                          height: 38,
+                        }}
+                      >
+                        <DeleteIcon sx={{ fontSize: 19 }} />
+                      </IconButton>
+                    </Tooltip>
                   </Box>
                 </CardContent>
               </Card>

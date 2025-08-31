@@ -7,8 +7,6 @@ import {
   Typography,
   Button,
   Card,
-  CardContent,
-  CardActions,
   Stack,
   Chip,
   IconButton,
@@ -31,7 +29,6 @@ import {
   Phone as PhoneIcon,
   Email as EmailIcon,
   LocationOn as LocationIcon,
-  ChevronRightTwoTone,
 } from '@mui/icons-material';
 import { useRouter } from 'next/navigation';
 import { deleteGuest, GuestData, toggleGuestVipStatus } from '@/lib/actions/guest-management';
@@ -99,7 +96,7 @@ const GuestListPage: React.FC<GuestListPageProps> = ({ initialGuests }) => {
     } catch (error) {
       setSnackbar({
         open: true,
-        message: 'An error occurred while deleting',
+        message: `An error occurred while deleting ${error}`,
         severity: 'error',
       });
     } finally {
@@ -131,21 +128,12 @@ const GuestListPage: React.FC<GuestListPageProps> = ({ initialGuests }) => {
     } catch (error) {
       setSnackbar({
         open: true,
-        message: 'An error occurred while updating VIP status',
+        message: `'An error occurred while updating VIP status ${error}`,
         severity: 'error',
       });
     } finally {
       setLoading(null);
     }
-  };
-
-  const formatDate = (date: Date | null) => {
-    if (!date) return 'Not provided';
-    return new Intl.DateTimeFormat('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    }).format(new Date(date));
   };
 
   const getGuestInitials = (firstName: string, lastName: string) => {
@@ -439,41 +427,48 @@ const GuestListPage: React.FC<GuestListPageProps> = ({ initialGuests }) => {
                     )}
                   </Box>
 
-                  {/* Actions */}
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, ml: 2, flexShrink: 0 }}>
+                  {/* Actions - Streamlined */}
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, ml: 2, flexShrink: 0 }}>
+                    {/* View/Edit Profile - Primary action */}
+                    <Tooltip title="View & Edit Guest Profile">
+                      <IconButton
+                        onClick={() => router.push(`/${businessUnitId}/admin/operations/guests/${guest.id}`)}
+                        sx={{
+                          color: darkTheme.primary,
+                          backgroundColor: darkTheme.selectedBg,
+                          '&:hover': {
+                            backgroundColor: darkTheme.primary,
+                            color: 'white',
+                          },
+                          width: 40,
+                          height: 40,
+                        }}
+                      >
+                        <EditIcon sx={{ fontSize: 20 }} />
+                      </IconButton>
+                    </Tooltip>
+
+                    {/* VIP Toggle - Status action */}
                     <Tooltip title={guest.vipStatus ? 'Remove VIP Status' : 'Add VIP Status'}>
                       <IconButton
                         onClick={() => handleToggleVip(guest.id, guest.vipStatus)}
                         disabled={loading === guest.id}
                         sx={{
                           color: guest.vipStatus ? darkTheme.warning : darkTheme.textSecondary,
-                          backgroundColor: 'transparent',
+                          backgroundColor: guest.vipStatus ? darkTheme.warningBg : 'transparent',
                           '&:hover': {
-                            backgroundColor: guest.vipStatus ? darkTheme.warningBg : darkTheme.surfaceHover,
+                            backgroundColor: guest.vipStatus ? darkTheme.warning : darkTheme.warningBg,
+                            color: guest.vipStatus ? 'white' : darkTheme.warning,
                           },
-                          width: 32,
-                          height: 32,
+                          width: 38,
+                          height: 38,
                         }}
                       >
-                        {guest.vipStatus ? <StarIcon sx={{ fontSize: 16 }} /> : <StarBorderIcon sx={{ fontSize: 16 }} />}
+                        {guest.vipStatus ? <StarIcon sx={{ fontSize: 19 }} /> : <StarBorderIcon sx={{ fontSize: 19 }} />}
                       </IconButton>
                     </Tooltip>
-                    <Tooltip title="Edit guest profile">
-                      <IconButton
-                        onClick={() => router.push(`/${businessUnitId}/admin/operations/guests/${guest.id}`)}
-                        sx={{
-                          color: darkTheme.textSecondary,
-                          '&:hover': {
-                            backgroundColor: darkTheme.selectedBg,
-                            color: darkTheme.primary,
-                          },
-                          width: 32,
-                          height: 32,
-                        }}
-                      >
-                        <EditIcon sx={{ fontSize: 16 }} />
-                      </IconButton>
-                    </Tooltip>
+
+                    {/* Delete - Destructive action, placed last */}
                     <Tooltip title="Delete guest profile">
                       <IconButton
                         onClick={() => setDeleteDialog({ open: true, guest })}
@@ -483,24 +478,13 @@ const GuestListPage: React.FC<GuestListPageProps> = ({ initialGuests }) => {
                             backgroundColor: darkTheme.errorBg,
                             color: darkTheme.error,
                           },
-                          width: 32,
-                          height: 32,
+                          width: 38,
+                          height: 38,
                         }}
                       >
-                        <DeleteIcon sx={{ fontSize: 16 }} />
+                        <DeleteIcon sx={{ fontSize: 19 }} />
                       </IconButton>
                     </Tooltip>
-                    <ChevronRightTwoTone
-                      sx={{
-                        ml: 1,
-                        fontSize: '16px',
-                        color: darkTheme.textSecondary,
-                        cursor: 'pointer',
-                        transition: 'color 0.2s ease',
-                        '&:hover': { color: darkTheme.primary },
-                      }}
-                      onClick={() => router.push(`/${businessUnitId}/admin/operations/guests/${guest.id}`)}
-                    />
                   </Box>
                 </Box>
               </Card>

@@ -21,10 +21,13 @@ import {
   VerifiedUser as VerifiedUserIcon,
   Star as StarIcon,
 } from '@mui/icons-material';
+import {
+  AddPhotoAlternate as AddPhotoIcon,
+} from '@mui/icons-material';
 import { useRouter, useParams } from 'next/navigation';
 import { getGuestById, GuestData, updateGuest, UpdateGuestData } from '@/lib/actions/guest-management';
 import { useBusinessUnit } from '@/context/business-unit-context';
-
+import { FileUpload, UploadedFileDisplay } from '@/components/file-upload';
 
 // Enhanced dark theme matching BusinessUnitSwitcher aesthetic
 const darkTheme = {
@@ -73,6 +76,16 @@ interface GuestFormData {
   notes: string;
 }
 
+interface GuestImages {
+  images: Array<{ 
+    fileName: string; 
+    name: string; 
+    fileUrl: string;
+    imageId?: string;
+  }>;
+  removeImageIds: string[];
+}
+
 const EditGuestPage: React.FC = () => {
   const router = useRouter();
   const params = useParams();
@@ -107,6 +120,10 @@ const EditGuestPage: React.FC = () => {
     marketingOptIn: false,
     source: '',
     notes: '',
+  });
+  const [images, setImages] = useState<GuestImages>({
+    images: [],
+    removeImageIds: [],
   });
   const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({
     open: false,
@@ -145,6 +162,21 @@ const EditGuestPage: React.FC = () => {
             source: guestData.source || '',
             notes: guestData.notes || '',
           });
+
+          // Initialize existing guest images with proper ID tracking
+          if (guestData.images && guestData.images.length > 0) {
+            const existingImages = guestData.images.map(img => ({
+              fileName: img.image.originalUrl.split('/').pop() || 'image',
+              name: img.image.title || img.image.altText || 'Guest Image',
+              fileUrl: img.image.originalUrl,
+              imageId: img.image.id,
+            }));
+            
+            setImages(prev => ({
+              ...prev,
+              images: existingImages,
+            }));
+          }
         } else {
           setSnackbar({
             open: true,
@@ -156,7 +188,7 @@ const EditGuestPage: React.FC = () => {
       } catch (error) {
         setSnackbar({
           open: true,
-          message: 'Failed to load guest',
+          message: `'Failed to load guest ${error}`,
           severity: 'error',
         });
       } finally {
@@ -173,12 +205,59 @@ const EditGuestPage: React.FC = () => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
+  const handleImageUpload = (result: { fileName: string; name: string; fileUrl: string }) => {
+    setImages(prev => ({
+      ...prev,
+      images: [...prev.images, result],
+    }));
+  };
+
+  const handleImageRemove = (index: number) => {
+    const imageToRemove = images.images[index];
+    
+    // If this is an existing image (has an imageId), add it to removeImageIds
+    if (imageToRemove.imageId) {
+      setImages(prev => ({
+        ...prev,
+        removeImageIds: [...prev.removeImageIds, imageToRemove.imageId!],
+      }));
+    }
+
+    // Remove from display
+    setImages(prev => ({
+      ...prev,
+      images: prev.images.filter((_, i) => i !== index),
+    }));
+  };
+
+  const handleUploadError = (error: string) => {
+    setSnackbar({
+      open: true,
+      message: `Upload failed: ${error}`,
+      severity: 'error',
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
 
     try {
       const preferencesObj = formData.preferences ? JSON.parse(formData.preferences) : null;
+
+      // Filter out new images (ones that weren't in the original guest)
+      const newImages = images.images
+        .filter(img => {
+          if (!guest?.images) return true;
+          return !guest.images.some(existingImg => 
+            existingImg.image.originalUrl === img.fileUrl
+          );
+        })
+        .filter(img => img.fileUrl !== null)
+        .map(img => ({
+          ...img,
+          fileUrl: img.fileUrl as string
+        }));
 
       const guestData: UpdateGuestData = {
         id: guestId,
@@ -205,6 +284,8 @@ const EditGuestPage: React.FC = () => {
         vipStatus: formData.vipStatus,
         marketingOptIn: formData.marketingOptIn,
         source: formData.source || null,
+        guestImages: newImages.length > 0 ? newImages : undefined,
+        removeImageIds: images.removeImageIds.length > 0 ? images.removeImageIds : undefined,
       };
 
       const result = await updateGuest(guestData);
@@ -226,7 +307,7 @@ const EditGuestPage: React.FC = () => {
     } catch (error) {
       setSnackbar({
         open: true,
-        message: 'An error occurred while updating guest',
+        message: `'An error occurred while updating guest ${error}`,
         severity: 'error',
       });
     } finally {
@@ -775,6 +856,64 @@ const EditGuestPage: React.FC = () => {
                     }}
                   />
                 </Box>
+              </CardContent>
+            </Card>
+
+            {/* Guest Images */}
+            <Card sx={{ backgroundColor: darkTheme.surface, borderRadius: '8px', border: `1px solid ${darkTheme.border}` }}>
+              <CardContent sx={{ p: 4 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+                  <AddPhotoIcon sx={{ fontSize: 20, color: darkTheme.primary }} />
+                  <Typography
+                    sx={{
+                      fontSize: '14px',
+                      fontWeight: 600,
+                      color: darkTheme.text,
+                      textTransform: 'uppercase',
+                      letterSpacing: '1px',
+                    }}
+                  >
+                    Guest Images
+                  </Typography>
+                </Box>
+
+                {/* Existing Images */}
+                {images.images.length > 0 && (
+                  <Box sx={{ mb: 3 }}>
+                    <Typography sx={{ fontSize: '12px', color: darkTheme.textSecondary, mb: 2 }}>
+                      Guest Images ({images.images.length})
+                    </Typography>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                      {images.images.map((image, index) => (
+                        <UploadedFileDisplay
+                          key={`${image.fileUrl}-${index}`}
+                          fileName={image.fileName}
+                          name={image.name}
+                          fileUrl={image.fileUrl}
+                          onRemove={() => handleImageRemove(index)}
+                          disabled={saving}
+                        />
+                      ))}
+                    </Box>
+                  </Box>
+                )}
+
+                {/* Upload New Images */}
+                <Box sx={{ mb: 3 }}>
+                  <FileUpload
+                    onUploadComplete={handleImageUpload}
+                    onUploadError={handleUploadError}
+                    disabled={saving}
+                    maxSize={10}
+                    accept=".jpg,.jpeg,.png,.gif,.webp"
+                    multiple={true}
+                    maxFiles={3}
+                  />
+                </Box>
+
+                <Typography sx={{ fontSize: '12px', color: darkTheme.textSecondary }}>
+                  Upload up to 3 images for guest identification. Recommended size: 800x600px or larger. Supports JPG, PNG, WEBP and GIF formats.
+                </Typography>
               </CardContent>
             </Card>
 
