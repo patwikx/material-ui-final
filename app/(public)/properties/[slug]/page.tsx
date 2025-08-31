@@ -1,11 +1,10 @@
 import React from 'react';
 import { notFound } from 'next/navigation';
 import { Box, Container, Typography, Button, Card, CardContent, Chip } from '@mui/material';
-import { LocationOn, Phone, Email, ArrowForward, } from '@mui/icons-material';
-import { getBusinessUnitBySlug } from '@/lib/actions/business-units';
-import { getRestaurantsByBusinessUnit } from '@/lib/actions/restaurants';
-import { getEventsByBusinessUnit } from '@/lib/actions/events';
-import { getRoomTypes } from '@/lib/actions/room-type-management';
+import { LocationOn, Phone, Email, ArrowForward, Bed, People } from '@mui/icons-material';
+import Link from 'next/link';
+import { getPropertyWithRooms } from '@/lib/room-details';
+
 
 // Enhanced dark theme
 const darkTheme = {
@@ -34,24 +33,24 @@ interface PropertyPageProps {
 const PropertyPage: React.FC<PropertyPageProps> = async ({ params }) => {
   const { slug } = await params;
   
-  const [property, roomTypes] = await Promise.all([
-    getBusinessUnitBySlug(slug),
-    getBusinessUnitBySlug(slug).then(p => p ? getRestaurantsByBusinessUnit(p.id) : []),
-    getBusinessUnitBySlug(slug).then(p => p ? getEventsByBusinessUnit(p.id) : []),
-    getBusinessUnitBySlug(slug).then(p => p ? getRoomTypes(p.id) : []),
-  ]);
+  const property = await getPropertyWithRooms(slug);
 
   if (!property) {
     notFound();
   }
 
+  const formatCurrency = (amount: string, currency: string) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: currency,
+    }).format(Number(amount));
+  };
 
   const getPropertyTypeDisplay = (type: string): string => {
     return type.replace('_', ' ').toLowerCase();
   };
 
-
-  const primaryImage = property.images.find(img => img.isPrimary)?.image.originalUrl || 
+  const primaryImage = property.images.find(img => img.isPrimary)?.image.originalUrl ||
                      property.images[0]?.image.originalUrl || 
                      'https://images.pexels.com/photos/338504/pexels-photo-338504.jpeg?auto=compress&cs=tinysrgb&w=1920';
 
@@ -156,8 +155,80 @@ const PropertyPage: React.FC<PropertyPageProps> = async ({ params }) => {
 
       {/* Property Details */}
       <Container maxWidth="xl" sx={{ py: { xs: 8, md: 12 } }}>
+        {/* Property Gallery */}
+        {property.images.length > 1 && (
+          <Box sx={{ mb: { xs: 8, md: 12 } }}>
+            <Typography
+              sx={{
+                fontWeight: 900,
+                fontSize: { xs: '2rem', md: '3rem' },
+                color: darkTheme.text,
+                mb: 6,
+                textTransform: 'uppercase',
+                letterSpacing: '-0.02em',
+              }}
+            >
+              Property Gallery
+            </Typography>
+            <Box
+              sx={{
+                display: 'grid',
+                gridTemplateColumns: {
+                  xs: '1fr',
+                  md: 'repeat(3, 1fr)',
+                  lg: 'repeat(3, 1fr)'
+                },
+                gap: 4,
+              }}
+            >
+              {property.images.slice(1, 7).map((imageRelation) => (
+                <Box
+                  key={imageRelation.id}
+                  sx={{
+                    position: 'relative',
+                    height: 250,
+                    borderRadius: '8px',
+                    overflow: 'hidden',
+                    backgroundImage: `url(${imageRelation.image.originalUrl})`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                    cursor: 'pointer',
+                    transition: 'transform 0.3s ease',
+                    '&:hover': {
+                      transform: 'scale(1.05)',
+                    },
+                  }}
+                >
+                  {imageRelation.image.title && (
+                    <Box
+                      sx={{
+                        position: 'absolute',
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                        background: 'linear-gradient(transparent, rgba(0,0,0,0.8))',
+                        p: 2,
+                      }}
+                    >
+                      <Typography
+                        sx={{
+                          color: 'white',
+                          fontWeight: 600,
+                          fontSize: '1rem',
+                        }}
+                      >
+                        {imageRelation.image.title}
+                      </Typography>
+                    </Box>
+                  )}
+                </Box>
+              ))}
+            </Box>
+          </Box>
+        )}
+
         {/* Room Types Section */}
-        {roomTypes.length > 0 && (
+        {property.roomTypes.length > 0 && (
           <Box sx={{ mb: { xs: 8, md: 12 } }}>
             <Typography
               sx={{
@@ -171,7 +242,6 @@ const PropertyPage: React.FC<PropertyPageProps> = async ({ params }) => {
             >
               Our Rooms & Suites
             </Typography>
-            {/* Using CSS Grid instead of Material-UI Grid */}
             <Box
               sx={{
                 display: 'grid',
@@ -183,7 +253,7 @@ const PropertyPage: React.FC<PropertyPageProps> = async ({ params }) => {
                 gap: 4,
               }}
             >
-              {roomTypes.slice(0, 6).map((roomType) => (
+              {property.roomTypes.map((roomType) => (
                 <Card
                   key={roomType.id}
                   sx={{
@@ -206,30 +276,82 @@ const PropertyPage: React.FC<PropertyPageProps> = async ({ params }) => {
                         backgroundImage: `url(${roomType.images[0].image.originalUrl})`,
                         backgroundSize: 'cover',
                         backgroundPosition: 'center',
+                        position: 'relative',
                       }}
-                    />
+                    >
+                      <Box
+                        sx={{
+                          position: 'absolute',
+                          top: 12,
+                          right: 12,
+                          backgroundColor: darkTheme.primary,
+                          color: 'white',
+                          px: 2,
+                          py: 1,
+                          borderRadius: '4px',
+                          fontSize: '0.875rem',
+                          fontWeight: 600,
+                        }}
+                      >
+                        {formatCurrency(roomType.baseRate, roomType.currency)}
+                      </Box>
+                    </Box>
                   )}
                   <CardContent sx={{ p: 3 }}>
+                    <Typography
+                      sx={{
+                        fontWeight: 700,
+                        fontSize: '1.25rem',
+                        color: darkTheme.text,
+                        mb: 2,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.5px',
+                      }}
+                    >
+                      {roomType.displayName}
+                    </Typography>
+                    
+                    {/* Room Stats */}
+                    <Box sx={{ display: 'flex', gap: 3, mb: 3, flexWrap: 'wrap' }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <People sx={{ fontSize: 16, color: darkTheme.textSecondary }} />
+                        <Typography sx={{ fontSize: '0.875rem', color: darkTheme.textSecondary }}>
+                          {roomType.maxOccupancy} guests
+                        </Typography>
+                      </Box>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Bed sx={{ fontSize: 16, color: darkTheme.textSecondary }} />
+                        <Typography sx={{ fontSize: '0.875rem', color: darkTheme.textSecondary }}>
+                          {roomType._count.rooms} available
+                        </Typography>
+                      </Box>
+                    </Box>
+
                     <Typography
                       sx={{
                         color: darkTheme.textSecondary,
                         mb: 3,
                         lineHeight: 1.6,
+                        fontSize: '0.95rem',
                       }}
                     >
                       {roomType.description}
                     </Typography>
                     <Button
                       fullWidth
-                      href={`/properties/${slug}/rooms/${roomType.id}`}
+                      component={Link}
+                      href={`/properties/${property.slug}/rooms/${roomType.id}`}
                       sx={{
                         backgroundColor: darkTheme.primary,
                         color: 'white',
                         py: 1.5,
                         fontWeight: 600,
                         textTransform: 'uppercase',
+                        letterSpacing: '1px',
+                        borderRadius: '8px',
                         '&:hover': {
                           backgroundColor: darkTheme.primaryHover,
+                          transform: 'translateY(-2px)',
                         },
                       }}
                     >
@@ -256,7 +378,6 @@ const PropertyPage: React.FC<PropertyPageProps> = async ({ params }) => {
           >
             Contact Information
           </Typography>
-          {/* Using CSS Grid for contact cards */}
           <Box
             sx={{
               display: 'grid',
@@ -298,7 +419,7 @@ const PropertyPage: React.FC<PropertyPageProps> = async ({ params }) => {
                 Email
               </Typography>
               <Typography sx={{ color: darkTheme.textSecondary }}>
-                {property.email || `info@${property.slug}.com`}
+                {property.email || `info@${slug}.com`}
               </Typography>
             </Card>
             <Card
@@ -315,7 +436,7 @@ const PropertyPage: React.FC<PropertyPageProps> = async ({ params }) => {
                 Address
               </Typography>
               <Typography sx={{ color: darkTheme.textSecondary }}>
-                {property.address || `${property.city}, ${property.country}`}
+                {property.address || `${property.city}${property.state ? ', ' + property.state : ''}, ${property.country}`}
               </Typography>
             </Card>
           </Box>
