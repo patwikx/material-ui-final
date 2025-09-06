@@ -7,7 +7,6 @@ import {
   Typography,
   Button,
   Card,
-  Stack,
   Chip,
   IconButton,
   Dialog,
@@ -33,14 +32,13 @@ import {
   VisibilityOff,
   TrendingUp,
   Schedule,
-  ChevronRightTwoTone,
   Mouse as ClickIcon,
 } from '@mui/icons-material';
 import { useRouter } from 'next/navigation';
 import { HeroData } from '@/lib/actions/heroes';
 import { deleteHeroSlide, toggleHeroFeatured, toggleHeroStatus } from '@/lib/cms-actions/hero-management';
 import { useBusinessUnit } from '@/context/business-unit-context';
-import Link from 'next/link';
+
 
 // Enhanced dark theme matching BusinessUnitSwitcher aesthetic
 const darkTheme = {
@@ -170,16 +168,6 @@ const HeroListPage: React.FC<HeroListPageProps> = ({ initialHeroes }) => {
     } finally {
       setLoading(null);
     }
-  };
-
-  const formatDate = (date: Date) => {
-    return new Intl.DateTimeFormat('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    }).format(new Date(date));
   };
 
   const getMediaIcon = (hero: HeroData) => {

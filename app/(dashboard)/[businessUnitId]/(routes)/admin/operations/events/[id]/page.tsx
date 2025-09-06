@@ -385,7 +385,7 @@ const EditEventPage: React.FC = () => {
         <Box sx={{ mb: 6 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
             <IconButton
-              onClick={() => router.push(`${businessUnitId}/admin/operations/events'`)}
+              onClick={() => router.push(`/${businessUnitId}/admin/operations/events`)}
               disabled={saving}
               sx={{
                 mr: 2,

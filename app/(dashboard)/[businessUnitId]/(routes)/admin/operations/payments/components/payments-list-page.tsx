@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 'use client';
 
 import React, { useState } from 'react';
@@ -7,8 +8,6 @@ import {
   Typography,
   Card,
   CardContent,
-  CardActions,
-  Stack,
   Chip,
   IconButton,
   Dialog,
@@ -27,10 +26,7 @@ import {
 } from '@mui/material';
 import {
   Edit as EditIcon,
-  Receipt as ReceiptIcon,
   Payment as PaymentIcon,
-  Person as PersonIcon,
-  Hotel as HotelIcon,
   Undo as RefundIcon,
   ChevronRightTwoTone,
 } from '@mui/icons-material';

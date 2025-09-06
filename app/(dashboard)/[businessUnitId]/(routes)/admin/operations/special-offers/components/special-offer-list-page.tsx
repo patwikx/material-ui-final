@@ -31,8 +31,6 @@ import {
   LocalOffer as OfferIcon,
   CalendarToday as CalendarIcon,
   AttachMoney as MoneyIcon,
-  Visibility as VisibilityIcon,
-  VisibilityOff as VisibilityOffIcon,
 } from '@mui/icons-material';
 import { useRouter } from 'next/navigation';
 import { SpecialOfferData } from '@/lib/actions/special-offers';

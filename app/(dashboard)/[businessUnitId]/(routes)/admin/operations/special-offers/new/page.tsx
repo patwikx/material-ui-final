@@ -263,7 +263,7 @@ const NewSpecialOfferPage: React.FC = () => {
         <Box sx={{ mb: 6 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
             <IconButton
-              onClick={() => router.push(`/${businessUnitId}/admin/cms/special-offers`)}
+              onClick={() => router.push(`/${businessUnitId}/admin/operations/special-offers`)}
               sx={{ 
                 mr: 2, 
                 color: darkTheme.textSecondary,

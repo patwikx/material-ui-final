@@ -265,7 +265,7 @@ const NewEventPage: React.FC = () => {
         <Box sx={{ mb: 6 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
             <IconButton
-              onClick={() => router.push(`/${businessUnitId}/admin/cms/events`)}
+              onClick={() => router.push(`/${businessUnitId}/admin/operations/events`)}
               disabled={loading}
               sx={{
                 mr: 2,
