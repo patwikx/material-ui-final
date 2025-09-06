@@ -182,6 +182,7 @@ const EditRoomPage: React.FC = () => {
           });
           router.push(`/${currentBusinessUnitId}/admin/operations/rooms`);
         }
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (error) {
         setSnackbar({
           open: true,
@@ -284,6 +285,7 @@ const EditRoomPage: React.FC = () => {
           severity: 'error',
         });
       }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       setSnackbar({
         open: true,
@@ -297,12 +299,8 @@ const EditRoomPage: React.FC = () => {
 
   if (loading) {
     return (
-      <Box sx={{ backgroundColor: darkTheme.background, minHeight: '100vh', color: darkTheme.text }}>
-        <Container maxWidth="xl" sx={{ py: 4 }}>
-          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
-            <CircularProgress sx={{ color: darkTheme.primary }} />
-          </Box>
-        </Container>
+      <Box sx={{ backgroundColor: darkTheme.background, minHeight: '100vh', color: darkTheme.text, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+        <CircularProgress size={60} sx={{ color: darkTheme.text }} />
       </Box>
     );
   }
@@ -346,12 +344,15 @@ const EditRoomPage: React.FC = () => {
             <IconButton
               component={Link}
               href={`/${currentBusinessUnitId}/admin/operations/rooms`}
+              disabled={saving}
               sx={{
                 mr: 2,
                 color: darkTheme.textSecondary,
+                transition: 'all 0.2s ease-in-out',
                 '&:hover': {
                   backgroundColor: darkTheme.surfaceHover,
                   color: darkTheme.text,
+                  transform: 'scale(1.1)',
                 }
               }}
             >
@@ -398,7 +399,18 @@ const EditRoomPage: React.FC = () => {
         <form onSubmit={handleSubmit}>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
             {/* Basic Information */}
-            <Card sx={{ backgroundColor: darkTheme.surface, borderRadius: '8px', border: `1px solid ${darkTheme.border}` }}>
+            <Card
+              sx={{
+                backgroundColor: darkTheme.surface,
+                borderRadius: '8px',
+                border: `1px solid ${darkTheme.border}`,
+                transition: 'all 0.2s ease-in-out',
+                '&:hover': {
+                  borderColor: darkTheme.primary,
+                  transform: 'translateY(-4px)',
+                }
+              }}
+            >
               <CardContent sx={{ p: 4 }}>
                 <Typography
                   sx={{
@@ -420,6 +432,8 @@ const EditRoomPage: React.FC = () => {
                       value={formData.roomNumber}
                       onChange={(e) => handleInputChange('roomNumber', e.target.value)}
                       required
+                      fullWidth
+                      disabled={saving}
                       sx={{
                         flex: 1,
                         minWidth: 200,
@@ -430,6 +444,7 @@ const EditRoomPage: React.FC = () => {
                           '& fieldset': { borderColor: darkTheme.border },
                           '&:hover fieldset': { borderColor: darkTheme.primary },
                           '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                          transition: 'all 0.2s ease-in-out',
                         },
                         '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                       }}
@@ -439,6 +454,7 @@ const EditRoomPage: React.FC = () => {
                       type="number"
                       value={formData.floor || ''}
                       onChange={(e) => handleInputChange('floor', e.target.value ? parseInt(e.target.value) : null)}
+                      disabled={saving}
                       sx={{
                         flex: 1,
                         minWidth: 150,
@@ -449,6 +465,7 @@ const EditRoomPage: React.FC = () => {
                           '& fieldset': { borderColor: darkTheme.border },
                           '&:hover fieldset': { borderColor: darkTheme.primary },
                           '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                          transition: 'all 0.2s ease-in-out',
                         },
                         '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                       }}
@@ -457,6 +474,7 @@ const EditRoomPage: React.FC = () => {
                       label="Wing"
                       value={formData.wing || ''}
                       onChange={(e) => handleInputChange('wing', e.target.value)}
+                      disabled={saving}
                       sx={{
                         flex: 1,
                         minWidth: 150,
@@ -467,6 +485,7 @@ const EditRoomPage: React.FC = () => {
                           '& fieldset': { borderColor: darkTheme.border },
                           '&:hover fieldset': { borderColor: darkTheme.primary },
                           '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                          transition: 'all 0.2s ease-in-out',
                         },
                         '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                       }}
@@ -474,7 +493,7 @@ const EditRoomPage: React.FC = () => {
                   </Box>
 
                   <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-                    <FormControl sx={{ minWidth: 200, flex: 1 }}>
+                    <FormControl fullWidth disabled={saving} sx={{ minWidth: 200, flex: 1 }}>
                       <InputLabel sx={{ color: darkTheme.textSecondary }}>Property</InputLabel>
                       <Select
                         value={formData.businessUnitId}
@@ -487,26 +506,7 @@ const EditRoomPage: React.FC = () => {
                           '& .MuiOutlinedInput-notchedOutline': { borderColor: darkTheme.border },
                           '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: darkTheme.primary },
                           '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: darkTheme.primary },
-                        }}
-                        MenuProps={{
-                          sx: {
-                            '& .MuiPaper-root': {
-                              backgroundColor: darkTheme.surface,
-                              border: `1px solid ${darkTheme.border}`,
-                            },
-                            '& .MuiList-root': {
-                              color: darkTheme.text,
-                            },
-                            '& .MuiMenuItem-root': {
-                              '&:hover': {
-                                backgroundColor: darkTheme.surfaceHover,
-                              },
-                              '&.Mui-selected': {
-                                backgroundColor: darkTheme.selected,
-                                color: darkTheme.text,
-                              },
-                            },
-                          },
+                          transition: 'all 0.2s ease-in-out',
                         }}
                       >
                         {businessUnits.map((unit) => (
@@ -517,7 +517,7 @@ const EditRoomPage: React.FC = () => {
                       </Select>
                     </FormControl>
 
-                    <FormControl sx={{ minWidth: 200, flex: 1 }}>
+                    <FormControl fullWidth disabled={saving} sx={{ minWidth: 200, flex: 1 }}>
                       <InputLabel sx={{ color: darkTheme.textSecondary }}>Room Type</InputLabel>
                       <Select
                         value={formData.roomTypeId}
@@ -530,26 +530,7 @@ const EditRoomPage: React.FC = () => {
                           '& .MuiOutlinedInput-notchedOutline': { borderColor: darkTheme.border },
                           '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: darkTheme.primary },
                           '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: darkTheme.primary },
-                        }}
-                        MenuProps={{
-                          sx: {
-                            '& .MuiPaper-root': {
-                              backgroundColor: darkTheme.surface,
-                              border: `1px solid ${darkTheme.border}`,
-                            },
-                            '& .MuiList-root': {
-                              color: darkTheme.text,
-                            },
-                            '& .MuiMenuItem-root': {
-                              '&:hover': {
-                                backgroundColor: darkTheme.surfaceHover,
-                              },
-                              '&.Mui-selected': {
-                                backgroundColor: darkTheme.selected,
-                                color: darkTheme.text,
-                              },
-                            },
-                          },
+                          transition: 'all 0.2s ease-in-out',
                         }}
                       >
                         {roomTypes.map((type) => (
@@ -560,9 +541,39 @@ const EditRoomPage: React.FC = () => {
                       </Select>
                     </FormControl>
                   </Box>
+                </Box>
+              </CardContent>
+            </Card>
 
+            {/* Room Status */}
+            <Card
+              sx={{
+                backgroundColor: darkTheme.surface,
+                borderRadius: '8px',
+                border: `1px solid ${darkTheme.border}`,
+                transition: 'all 0.2s ease-in-out',
+                '&:hover': {
+                  borderColor: darkTheme.primary,
+                  transform: 'translateY(-4px)',
+                }
+              }}
+            >
+              <CardContent sx={{ p: 4 }}>
+                <Typography
+                  sx={{
+                    fontSize: '14px',
+                    fontWeight: 600,
+                    color: darkTheme.text,
+                    textTransform: 'uppercase',
+                    letterSpacing: '1px',
+                    mb: 3,
+                  }}
+                >
+                  Room Status
+                </Typography>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
                   <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-                    <FormControl sx={{ minWidth: 200, flex: 1 }}>
+                    <FormControl fullWidth disabled={saving} sx={{ minWidth: 200, flex: 1 }}>
                       <InputLabel sx={{ color: darkTheme.textSecondary }}>Status</InputLabel>
                       <Select
                         value={formData.status}
@@ -575,26 +586,7 @@ const EditRoomPage: React.FC = () => {
                           '& .MuiOutlinedInput-notchedOutline': { borderColor: darkTheme.border },
                           '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: darkTheme.primary },
                           '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: darkTheme.primary },
-                        }}
-                        MenuProps={{
-                          sx: {
-                            '& .MuiPaper-root': {
-                              backgroundColor: darkTheme.surface,
-                              border: `1px solid ${darkTheme.border}`,
-                            },
-                            '& .MuiList-root': {
-                              color: darkTheme.text,
-                            },
-                            '& .MuiMenuItem-root': {
-                              '&:hover': {
-                                backgroundColor: darkTheme.surfaceHover,
-                              },
-                              '&.Mui-selected': {
-                                backgroundColor: darkTheme.selected,
-                                color: darkTheme.text,
-                              },
-                            },
-                          },
+                          transition: 'all 0.2s ease-in-out',
                         }}
                       >
                         {roomStatuses.map((status) => (
@@ -605,7 +597,7 @@ const EditRoomPage: React.FC = () => {
                       </Select>
                     </FormControl>
 
-                    <FormControl sx={{ minWidth: 200, flex: 1 }}>
+                    <FormControl fullWidth disabled={saving} sx={{ minWidth: 200, flex: 1 }}>
                       <InputLabel sx={{ color: darkTheme.textSecondary }}>Housekeeping</InputLabel>
                       <Select
                         value={formData.housekeeping}
@@ -618,26 +610,7 @@ const EditRoomPage: React.FC = () => {
                           '& .MuiOutlinedInput-notchedOutline': { borderColor: darkTheme.border },
                           '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: darkTheme.primary },
                           '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: darkTheme.primary },
-                        }}
-                        MenuProps={{
-                          sx: {
-                            '& .MuiPaper-root': {
-                              backgroundColor: darkTheme.surface,
-                              border: `1px solid ${darkTheme.border}`,
-                            },
-                            '& .MuiList-root': {
-                              color: darkTheme.text,
-                            },
-                            '& .MuiMenuItem-root': {
-                              '&:hover': {
-                                backgroundColor: darkTheme.surfaceHover,
-                              },
-                              '&.Mui-selected': {
-                                backgroundColor: darkTheme.selected,
-                                color: darkTheme.text,
-                              },
-                            },
-                          },
+                          transition: 'all 0.2s ease-in-out',
                         }}
                       >
                         {housekeepingStatuses.map((status) => (
@@ -648,7 +621,7 @@ const EditRoomPage: React.FC = () => {
                       </Select>
                     </FormControl>
                   </Box>
-                  
+
                   {formData.status === 'OUT_OF_ORDER' && (
                     <TextField
                       label="Out of Order Until"
@@ -658,6 +631,7 @@ const EditRoomPage: React.FC = () => {
                       onChange={(e) => handleInputChange('outOfOrderUntil', e.target.value)}
                       fullWidth
                       InputLabelProps={{ shrink: true }}
+                      disabled={saving}
                       sx={{
                         '& .MuiInputLabel-root': {
                           fontWeight: 600,
@@ -671,6 +645,7 @@ const EditRoomPage: React.FC = () => {
                           '& fieldset': { borderColor: darkTheme.border },
                           '&:hover fieldset': { borderColor: darkTheme.primary },
                           '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                          transition: 'all 0.2s ease-in-out',
                         },
                       }}
                     />
@@ -684,6 +659,7 @@ const EditRoomPage: React.FC = () => {
                     rows={3}
                     fullWidth
                     helperText="Any special notes about this room"
+                    disabled={saving}
                     sx={{
                       '& .MuiOutlinedInput-root': {
                         borderRadius: '8px',
@@ -692,23 +668,51 @@ const EditRoomPage: React.FC = () => {
                         '& fieldset': { borderColor: darkTheme.border },
                         '&:hover fieldset': { borderColor: darkTheme.primary },
                         '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                        transition: 'all 0.2s ease-in-out',
                       },
                       '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                       '& .MuiFormHelperText-root': { color: darkTheme.textSecondary }
                     }}
                   />
+                </Box>
+              </CardContent>
+            </Card>
 
-                  {/* Special Features section */}
+            {/* Special Features */}
+            <Card
+              sx={{
+                backgroundColor: darkTheme.surface,
+                borderRadius: '8px',
+                border: `1px solid ${darkTheme.border}`,
+                transition: 'all 0.2s ease-in-out',
+                '&:hover': {
+                  borderColor: darkTheme.primary,
+                  transform: 'translateY(-4px)',
+                }
+              }}
+            >
+              <CardContent sx={{ p: 4 }}>
+                <Typography
+                  sx={{
+                    fontSize: '14px',
+                    fontWeight: 600,
+                    color: darkTheme.text,
+                    textTransform: 'uppercase',
+                    letterSpacing: '1px',
+                    mb: 3,
+                  }}
+                >
+                  Special Features
+                </Typography>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                   <Box>
-                    <Typography variant="subtitle2" sx={{ mb: 2, color: darkTheme.textSecondary, fontWeight: 600 }}>
-                      Special Features
-                    </Typography>
                     <Box sx={{ display: 'flex', gap: 2, mb: 2, flexWrap: 'wrap' }}>
                       <TextField
                         label="Add Special Feature"
                         value={newFeature}
                         onChange={(e) => setNewFeature(e.target.value)}
                         onKeyPress={(e) => e.key === 'Enter' && handleAddFeature()}
+                        disabled={saving}
                         sx={{
                           flex: 1,
                           minWidth: 200,
@@ -719,6 +723,7 @@ const EditRoomPage: React.FC = () => {
                             '& fieldset': { borderColor: darkTheme.border },
                             '&:hover fieldset': { borderColor: darkTheme.primary },
                             '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                            transition: 'all 0.2s ease-in-out',
                           },
                           '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                         }}
@@ -727,15 +732,22 @@ const EditRoomPage: React.FC = () => {
                         onClick={handleAddFeature}
                         variant="outlined"
                         startIcon={<AddIcon />}
+                        disabled={saving}
                         sx={{
                           borderRadius: '8px',
                           borderColor: darkTheme.border,
                           color: darkTheme.textSecondary,
                           textTransform: 'none',
                           fontWeight: 600,
+                          transition: 'all 0.2s ease-in-out',
                           '&:hover': {
                             backgroundColor: darkTheme.surfaceHover,
                             borderColor: darkTheme.textSecondary,
+                            transform: 'translateY(-2px)',
+                          },
+                          '&:disabled': {
+                            color: darkTheme.textSecondary,
+                            opacity: 0.5,
                           },
                         }}
                       >
@@ -748,13 +760,17 @@ const EditRoomPage: React.FC = () => {
                           key={feature}
                           label={feature}
                           onDelete={() => handleRemoveFeature(feature)}
+                          disabled={saving}
                           deleteIcon={<CloseIcon />}
                           sx={{
                             backgroundColor: darkTheme.selectedBg,
                             color: darkTheme.primary,
+                            transition: 'all 0.2s ease-in-out',
                             '& .MuiChip-deleteIcon': {
                               color: darkTheme.primary,
+                              transition: 'color 0.2s ease-in-out',
                             },
+                            '&:hover': { transform: 'scale(1.05)' },
                           }}
                         />
                       ))}
@@ -765,7 +781,18 @@ const EditRoomPage: React.FC = () => {
             </Card>
 
             {/* Room Images */}
-            <Card sx={{ backgroundColor: darkTheme.surface, borderRadius: '8px', border: `1px solid ${darkTheme.border}` }}>
+            <Card
+              sx={{
+                backgroundColor: darkTheme.surface,
+                borderRadius: '8px',
+                border: `1px solid ${darkTheme.border}`,
+                transition: 'all 0.2s ease-in-out',
+                '&:hover': {
+                  borderColor: darkTheme.primary,
+                  transform: 'translateY(-4px)',
+                }
+              }}
+            >
               <CardContent sx={{ p: 4 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
                   <AddPhotoIcon sx={{ fontSize: 20, color: darkTheme.primary }} />
@@ -821,7 +848,18 @@ const EditRoomPage: React.FC = () => {
             </Card>
 
             {/* Settings */}
-            <Card sx={{ backgroundColor: darkTheme.surface, borderRadius: '8px', border: `1px solid ${darkTheme.border}` }}>
+            <Card
+              sx={{
+                backgroundColor: darkTheme.surface,
+                borderRadius: '8px',
+                border: `1px solid ${darkTheme.border}`,
+                transition: 'all 0.2s ease-in-out',
+                '&:hover': {
+                  borderColor: darkTheme.primary,
+                  transform: 'translateY(-4px)',
+                }
+              }}
+            >
               <CardContent sx={{ p: 4 }}>
                 <Typography
                   sx={{
@@ -842,6 +880,7 @@ const EditRoomPage: React.FC = () => {
                       <Switch
                         checked={formData.isActive}
                         onChange={(e) => handleInputChange('isActive', e.target.checked)}
+                        disabled={saving}
                         sx={{
                           '& .MuiSwitch-switchBase.Mui-checked': {
                             color: darkTheme.success,
@@ -853,6 +892,7 @@ const EditRoomPage: React.FC = () => {
                           '& .MuiSwitch-track': {
                             backgroundColor: darkTheme.border,
                           },
+                          transition: 'all 0.2s ease-in-out',
                         }}
                       />
                     }
@@ -864,27 +904,6 @@ const EditRoomPage: React.FC = () => {
                     }
                   />
                 </Box>
-                {formData.status === 'OUT_OF_ORDER' && (
-                  <TextField
-                    label="Out of Order Until"
-                    type="date"
-                    value={formData.outOfOrderUntil}
-                    onChange={(e) => handleInputChange('outOfOrderUntil', e.target.value)}
-                    InputLabelProps={{ shrink: true }}
-                    sx={{
-                      mt: 3,
-                      '& .MuiOutlinedInput-root': {
-                        borderRadius: '8px',
-                        backgroundColor: darkTheme.background,
-                        color: darkTheme.text,
-                        '& fieldset': { borderColor: darkTheme.border },
-                        '&:hover fieldset': { borderColor: darkTheme.primary },
-                        '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
-                      },
-                      '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
-                    }}
-                  />
-                )}
               </CardContent>
             </Card>
 
@@ -893,6 +912,7 @@ const EditRoomPage: React.FC = () => {
               <Button
                 type="button"
                 onClick={() => router.push(`/${currentBusinessUnitId}/admin/operations/rooms`)}
+                disabled={saving}
                 sx={{
                   color: darkTheme.textSecondary,
                   borderColor: darkTheme.border,
@@ -901,9 +921,15 @@ const EditRoomPage: React.FC = () => {
                   borderRadius: '8px',
                   textTransform: 'none',
                   fontWeight: 600,
+                  transition: 'all 0.2s ease-in-out',
                   '&:hover': {
                     backgroundColor: darkTheme.surfaceHover,
                     borderColor: darkTheme.textSecondary,
+                    transform: 'translateY(-2px)',
+                  },
+                  '&:disabled': {
+                    color: darkTheme.textSecondary,
+                    opacity: 0.5,
                   },
                 }}
                 variant="outlined"
@@ -913,7 +939,7 @@ const EditRoomPage: React.FC = () => {
               <Button
                 type="submit"
                 variant="contained"
-                startIcon={<SaveIcon />}
+                startIcon={saving ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />}
                 disabled={saving}
                 sx={{
                   backgroundColor: darkTheme.primary,
@@ -924,11 +950,14 @@ const EditRoomPage: React.FC = () => {
                   fontWeight: 600,
                   textTransform: 'none',
                   borderRadius: '8px',
+                  transition: 'all 0.2s ease-in-out',
                   '&:hover': {
                     backgroundColor: darkTheme.primaryHover,
+                    transform: 'translateY(-2px)',
                   },
                   '&:disabled': {
                     backgroundColor: darkTheme.textSecondary,
+                    color: darkTheme.surface,
                   },
                 }}
               >
@@ -943,6 +972,7 @@ const EditRoomPage: React.FC = () => {
           open={snackbar.open}
           autoHideDuration={6000}
           onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
         >
           <Alert
             onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}

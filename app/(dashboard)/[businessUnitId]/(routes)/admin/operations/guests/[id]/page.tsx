@@ -14,14 +14,13 @@ import {
   Alert,
   Snackbar,
   IconButton,
+  CircularProgress,
 } from '@mui/material';
 import {
   ArrowBack as ArrowBackIcon,
   Save as SaveIcon,
   VerifiedUser as VerifiedUserIcon,
   Star as StarIcon,
-} from '@mui/icons-material';
-import {
   AddPhotoAlternate as AddPhotoIcon,
 } from '@mui/icons-material';
 import { useRouter, useParams } from 'next/navigation';
@@ -48,7 +47,6 @@ const darkTheme = {
   warning: '#f59e0b',
   warningBg: 'rgba(245, 158, 11, 0.1)',
 };
-
 
 interface GuestFormData {
   businessUnitId: string;
@@ -77,9 +75,9 @@ interface GuestFormData {
 }
 
 interface GuestImages {
-  images: Array<{ 
-    fileName: string; 
-    name: string; 
+  images: Array<{
+    fileName: string;
+    name: string;
     fileUrl: string;
     imageId?: string;
   }>;
@@ -91,7 +89,6 @@ const EditGuestPage: React.FC = () => {
   const params = useParams();
   const guestId = params.id as string;
   const { businessUnitId } = useBusinessUnit();
-
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -188,7 +185,7 @@ const EditGuestPage: React.FC = () => {
       } catch (error) {
         setSnackbar({
           open: true,
-          message: `'Failed to load guest ${error}`,
+          message: `Failed to load guest: ${error}`,
           severity: 'error',
         });
       } finally {
@@ -249,7 +246,7 @@ const EditGuestPage: React.FC = () => {
       const newImages = images.images
         .filter(img => {
           if (!guest?.images) return true;
-          return !guest.images.some(existingImg => 
+          return !guest.images.some(existingImg =>
             existingImg.image.originalUrl === img.fileUrl
           );
         })
@@ -307,7 +304,7 @@ const EditGuestPage: React.FC = () => {
     } catch (error) {
       setSnackbar({
         open: true,
-        message: `'An error occurred while updating guest ${error}`,
+        message: `An error occurred while updating guest ${error}`,
         severity: 'error',
       });
     } finally {
@@ -317,17 +314,33 @@ const EditGuestPage: React.FC = () => {
 
   if (loading) {
     return (
-      <Container maxWidth="xl" sx={{ py: 4, backgroundColor: darkTheme.background, minHeight: '100vh' }}>
-        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
-          <Typography sx={{ color: darkTheme.text }}>Loading guest...</Typography>
-        </Box>
+      <Container
+        maxWidth="xl"
+        sx={{
+          py: 4,
+          backgroundColor: darkTheme.background,
+          minHeight: '100vh',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}
+      >
+        <CircularProgress size={60} sx={{ color: darkTheme.text }} />
       </Container>
     );
   }
 
   if (!guest) {
     return (
-      <Container maxWidth="xl" sx={{ py: 4, backgroundColor: darkTheme.background, minHeight: '100vh' }}>
+      <Container
+        maxWidth="xl"
+        sx={{
+          py: 4,
+          backgroundColor: darkTheme.background,
+          minHeight: '100vh',
+          color: darkTheme.text,
+        }}
+      >
         <Alert severity="error"
           sx={{
             backgroundColor: darkTheme.errorBg,
@@ -361,12 +374,15 @@ const EditGuestPage: React.FC = () => {
           <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
             <IconButton
               onClick={() => router.push(`/${businessUnitId}/admin/operations/guests`)}
+              disabled={saving}
               sx={{
                 mr: 2,
                 color: darkTheme.textSecondary,
+                transition: 'all 0.2s ease-in-out',
                 '&:hover': {
                   backgroundColor: darkTheme.surfaceHover,
                   color: darkTheme.text,
+                  transform: 'scale(1.1)',
                 }
               }}
             >
@@ -413,7 +429,16 @@ const EditGuestPage: React.FC = () => {
         <form onSubmit={handleSubmit}>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
             {/* Personal Information */}
-            <Card sx={{ backgroundColor: darkTheme.surface, borderRadius: '8px', border: `1px solid ${darkTheme.border}` }}>
+            <Card sx={{
+              backgroundColor: darkTheme.surface,
+              borderRadius: '8px',
+              border: `1px solid ${darkTheme.border}`,
+              transition: 'all 0.2s ease-in-out',
+              '&:hover': {
+                borderColor: darkTheme.primary,
+                transform: 'translateY(-4px)',
+              }
+            }}>
               <CardContent sx={{ p: 4 }}>
                 <Typography
                   sx={{
@@ -434,6 +459,7 @@ const EditGuestPage: React.FC = () => {
                       label="Title"
                       value={formData.title}
                       onChange={(e) => handleInputChange('title', e.target.value)}
+                      disabled={saving}
                       sx={{
                         flex: 1,
                         minWidth: 100,
@@ -444,6 +470,7 @@ const EditGuestPage: React.FC = () => {
                           '& fieldset': { borderColor: darkTheme.border },
                           '&:hover fieldset': { borderColor: darkTheme.primary },
                           '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                          transition: 'all 0.2s ease-in-out',
                         },
                         '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                       }}
@@ -453,6 +480,7 @@ const EditGuestPage: React.FC = () => {
                       value={formData.firstName}
                       onChange={(e) => handleInputChange('firstName', e.target.value)}
                       required
+                      disabled={saving}
                       sx={{
                         flex: 1,
                         minWidth: 200,
@@ -463,6 +491,7 @@ const EditGuestPage: React.FC = () => {
                           '& fieldset': { borderColor: darkTheme.border },
                           '&:hover fieldset': { borderColor: darkTheme.primary },
                           '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                          transition: 'all 0.2s ease-in-out',
                         },
                         '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                       }}
@@ -472,6 +501,7 @@ const EditGuestPage: React.FC = () => {
                       value={formData.lastName}
                       onChange={(e) => handleInputChange('lastName', e.target.value)}
                       required
+                      disabled={saving}
                       sx={{
                         flex: 1,
                         minWidth: 200,
@@ -482,6 +512,7 @@ const EditGuestPage: React.FC = () => {
                           '& fieldset': { borderColor: darkTheme.border },
                           '&:hover fieldset': { borderColor: darkTheme.primary },
                           '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                          transition: 'all 0.2s ease-in-out',
                         },
                         '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                       }}
@@ -494,6 +525,7 @@ const EditGuestPage: React.FC = () => {
                     onChange={(e) => handleInputChange('email', e.target.value)}
                     required
                     fullWidth
+                    disabled={saving}
                     sx={{
                       '& .MuiOutlinedInput-root': {
                         borderRadius: '8px',
@@ -502,6 +534,7 @@ const EditGuestPage: React.FC = () => {
                         '& fieldset': { borderColor: darkTheme.border },
                         '&:hover fieldset': { borderColor: darkTheme.primary },
                         '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                        transition: 'all 0.2s ease-in-out',
                       },
                       '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                     }}
@@ -512,6 +545,7 @@ const EditGuestPage: React.FC = () => {
                       label="Phone"
                       value={formData.phone}
                       onChange={(e) => handleInputChange('phone', e.target.value)}
+                      disabled={saving}
                       sx={{
                         flex: 1,
                         minWidth: 200,
@@ -522,6 +556,7 @@ const EditGuestPage: React.FC = () => {
                           '& fieldset': { borderColor: darkTheme.border },
                           '&:hover fieldset': { borderColor: darkTheme.primary },
                           '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                          transition: 'all 0.2s ease-in-out',
                         },
                         '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                       }}
@@ -532,6 +567,7 @@ const EditGuestPage: React.FC = () => {
                       value={formData.dateOfBirth}
                       onChange={(e) => handleInputChange('dateOfBirth', e.target.value)}
                       InputLabelProps={{ shrink: true }}
+                      disabled={saving}
                       sx={{
                         flex: 1,
                         minWidth: 200,
@@ -542,6 +578,7 @@ const EditGuestPage: React.FC = () => {
                           '& fieldset': { borderColor: darkTheme.border },
                           '&:hover fieldset': { borderColor: darkTheme.primary },
                           '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                          transition: 'all 0.2s ease-in-out',
                         },
                         '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                       }}
@@ -553,6 +590,7 @@ const EditGuestPage: React.FC = () => {
                       label="Nationality"
                       value={formData.nationality}
                       onChange={(e) => handleInputChange('nationality', e.target.value)}
+                      disabled={saving}
                       sx={{
                         flex: 1,
                         minWidth: 200,
@@ -563,6 +601,7 @@ const EditGuestPage: React.FC = () => {
                           '& fieldset': { borderColor: darkTheme.border },
                           '&:hover fieldset': { borderColor: darkTheme.primary },
                           '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                          transition: 'all 0.2s ease-in-out',
                         },
                         '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                       }}
@@ -571,6 +610,7 @@ const EditGuestPage: React.FC = () => {
                       label="Country"
                       value={formData.country}
                       onChange={(e) => handleInputChange('country', e.target.value)}
+                      disabled={saving}
                       sx={{
                         flex: 1,
                         minWidth: 200,
@@ -581,6 +621,7 @@ const EditGuestPage: React.FC = () => {
                           '& fieldset': { borderColor: darkTheme.border },
                           '&:hover fieldset': { borderColor: darkTheme.primary },
                           '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                          transition: 'all 0.2s ease-in-out',
                         },
                         '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                       }}
@@ -591,7 +632,16 @@ const EditGuestPage: React.FC = () => {
             </Card>
 
             {/* Address Information */}
-            <Card sx={{ backgroundColor: darkTheme.surface, borderRadius: '8px', border: `1px solid ${darkTheme.border}` }}>
+            <Card sx={{
+              backgroundColor: darkTheme.surface,
+              borderRadius: '8px',
+              border: `1px solid ${darkTheme.border}`,
+              transition: 'all 0.2s ease-in-out',
+              '&:hover': {
+                borderColor: darkTheme.primary,
+                transform: 'translateY(-4px)',
+              }
+            }}>
               <CardContent sx={{ p: 4 }}>
                 <Typography
                   sx={{
@@ -611,6 +661,7 @@ const EditGuestPage: React.FC = () => {
                     value={formData.address}
                     onChange={(e) => handleInputChange('address', e.target.value)}
                     fullWidth
+                    disabled={saving}
                     sx={{
                       '& .MuiOutlinedInput-root': {
                         borderRadius: '8px',
@@ -619,6 +670,7 @@ const EditGuestPage: React.FC = () => {
                         '& fieldset': { borderColor: darkTheme.border },
                         '&:hover fieldset': { borderColor: darkTheme.primary },
                         '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                        transition: 'all 0.2s ease-in-out',
                       },
                       '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                     }}
@@ -628,6 +680,7 @@ const EditGuestPage: React.FC = () => {
                       label="City"
                       value={formData.city}
                       onChange={(e) => handleInputChange('city', e.target.value)}
+                      disabled={saving}
                       sx={{
                         flex: 1,
                         minWidth: 200,
@@ -638,6 +691,7 @@ const EditGuestPage: React.FC = () => {
                           '& fieldset': { borderColor: darkTheme.border },
                           '&:hover fieldset': { borderColor: darkTheme.primary },
                           '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                          transition: 'all 0.2s ease-in-out',
                         },
                         '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                       }}
@@ -646,6 +700,7 @@ const EditGuestPage: React.FC = () => {
                       label="State/Province"
                       value={formData.state}
                       onChange={(e) => handleInputChange('state', e.target.value)}
+                      disabled={saving}
                       sx={{
                         flex: 1,
                         minWidth: 200,
@@ -656,6 +711,7 @@ const EditGuestPage: React.FC = () => {
                           '& fieldset': { borderColor: darkTheme.border },
                           '&:hover fieldset': { borderColor: darkTheme.primary },
                           '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                          transition: 'all 0.2s ease-in-out',
                         },
                         '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                       }}
@@ -664,6 +720,7 @@ const EditGuestPage: React.FC = () => {
                       label="Postal Code"
                       value={formData.postalCode}
                       onChange={(e) => handleInputChange('postalCode', e.target.value)}
+                      disabled={saving}
                       sx={{
                         flex: 1,
                         minWidth: 150,
@@ -674,6 +731,7 @@ const EditGuestPage: React.FC = () => {
                           '& fieldset': { borderColor: darkTheme.border },
                           '&:hover fieldset': { borderColor: darkTheme.primary },
                           '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                          transition: 'all 0.2s ease-in-out',
                         },
                         '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                       }}
@@ -684,7 +742,16 @@ const EditGuestPage: React.FC = () => {
             </Card>
 
             {/* Identification */}
-            <Card sx={{ backgroundColor: darkTheme.surface, borderRadius: '8px', border: `1px solid ${darkTheme.border}` }}>
+            <Card sx={{
+              backgroundColor: darkTheme.surface,
+              borderRadius: '8px',
+              border: `1px solid ${darkTheme.border}`,
+              transition: 'all 0.2s ease-in-out',
+              '&:hover': {
+                borderColor: darkTheme.primary,
+                transform: 'translateY(-4px)',
+              }
+            }}>
               <CardContent sx={{ p: 4 }}>
                 <Typography
                   sx={{
@@ -704,6 +771,7 @@ const EditGuestPage: React.FC = () => {
                       label="Passport Number"
                       value={formData.passportNumber}
                       onChange={(e) => handleInputChange('passportNumber', e.target.value)}
+                      disabled={saving}
                       sx={{
                         flex: 1,
                         minWidth: 200,
@@ -714,6 +782,7 @@ const EditGuestPage: React.FC = () => {
                           '& fieldset': { borderColor: darkTheme.border },
                           '&:hover fieldset': { borderColor: darkTheme.primary },
                           '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                          transition: 'all 0.2s ease-in-out',
                         },
                         '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                       }}
@@ -724,6 +793,7 @@ const EditGuestPage: React.FC = () => {
                       value={formData.passportExpiry}
                       onChange={(e) => handleInputChange('passportExpiry', e.target.value)}
                       InputLabelProps={{ shrink: true }}
+                      disabled={saving}
                       sx={{
                         flex: 1,
                         minWidth: 200,
@@ -734,6 +804,7 @@ const EditGuestPage: React.FC = () => {
                           '& fieldset': { borderColor: darkTheme.border },
                           '&:hover fieldset': { borderColor: darkTheme.primary },
                           '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                          transition: 'all 0.2s ease-in-out',
                         },
                         '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                       }}
@@ -744,6 +815,7 @@ const EditGuestPage: React.FC = () => {
                       label="ID Number"
                       value={formData.idNumber}
                       onChange={(e) => handleInputChange('idNumber', e.target.value)}
+                      disabled={saving}
                       sx={{
                         flex: 1,
                         minWidth: 200,
@@ -754,6 +826,7 @@ const EditGuestPage: React.FC = () => {
                           '& fieldset': { borderColor: darkTheme.border },
                           '&:hover fieldset': { borderColor: darkTheme.primary },
                           '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                          transition: 'all 0.2s ease-in-out',
                         },
                         '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                       }}
@@ -762,6 +835,7 @@ const EditGuestPage: React.FC = () => {
                       label="ID Type"
                       value={formData.idType}
                       onChange={(e) => handleInputChange('idType', e.target.value)}
+                      disabled={saving}
                       sx={{
                         flex: 1,
                         minWidth: 200,
@@ -772,6 +846,7 @@ const EditGuestPage: React.FC = () => {
                           '& fieldset': { borderColor: darkTheme.border },
                           '&:hover fieldset': { borderColor: darkTheme.primary },
                           '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                          transition: 'all 0.2s ease-in-out',
                         },
                         '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                       }}
@@ -781,6 +856,7 @@ const EditGuestPage: React.FC = () => {
                     label="Loyalty Number"
                     value={formData.loyaltyNumber}
                     onChange={(e) => handleInputChange('loyaltyNumber', e.target.value)}
+                    disabled={saving}
                     sx={{
                       '& .MuiOutlinedInput-root': {
                         borderRadius: '8px',
@@ -789,6 +865,7 @@ const EditGuestPage: React.FC = () => {
                         '& fieldset': { borderColor: darkTheme.border },
                         '&:hover fieldset': { borderColor: darkTheme.primary },
                         '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                        transition: 'all 0.2s ease-in-out',
                       },
                       '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                     }}
@@ -798,7 +875,16 @@ const EditGuestPage: React.FC = () => {
             </Card>
 
             {/* Preferences */}
-            <Card sx={{ backgroundColor: darkTheme.surface, borderRadius: '8px', border: `1px solid ${darkTheme.border}` }}>
+            <Card sx={{
+              backgroundColor: darkTheme.surface,
+              borderRadius: '8px',
+              border: `1px solid ${darkTheme.border}`,
+              transition: 'all 0.2s ease-in-out',
+              '&:hover': {
+                borderColor: darkTheme.primary,
+                transform: 'translateY(-4px)',
+              }
+            }}>
               <CardContent sx={{ p: 4 }}>
                 <Typography
                   sx={{
@@ -821,6 +907,7 @@ const EditGuestPage: React.FC = () => {
                     rows={3}
                     fullWidth
                     helperText="Enter preferences as a JSON object (e.g., {'bedType': 'King', 'diet': 'Vegan'})"
+                    disabled={saving}
                     sx={{
                       '& .MuiOutlinedInput-root': {
                         borderRadius: '8px',
@@ -829,6 +916,7 @@ const EditGuestPage: React.FC = () => {
                         '& fieldset': { borderColor: darkTheme.border },
                         '&:hover fieldset': { borderColor: darkTheme.primary },
                         '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                        transition: 'all 0.2s ease-in-out',
                       },
                       '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                       '& .MuiFormHelperText-root': { color: darkTheme.textSecondary }
@@ -842,6 +930,7 @@ const EditGuestPage: React.FC = () => {
                     rows={3}
                     fullWidth
                     helperText="Internal staff notes about the guest"
+                    disabled={saving}
                     sx={{
                       '& .MuiOutlinedInput-root': {
                         borderRadius: '8px',
@@ -850,6 +939,7 @@ const EditGuestPage: React.FC = () => {
                         '& fieldset': { borderColor: darkTheme.border },
                         '&:hover fieldset': { borderColor: darkTheme.primary },
                         '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                        transition: 'all 0.2s ease-in-out',
                       },
                       '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                       '& .MuiFormHelperText-root': { color: darkTheme.textSecondary }
@@ -860,7 +950,16 @@ const EditGuestPage: React.FC = () => {
             </Card>
 
             {/* Guest Images */}
-            <Card sx={{ backgroundColor: darkTheme.surface, borderRadius: '8px', border: `1px solid ${darkTheme.border}` }}>
+            <Card sx={{
+              backgroundColor: darkTheme.surface,
+              borderRadius: '8px',
+              border: `1px solid ${darkTheme.border}`,
+              transition: 'all 0.2s ease-in-out',
+              '&:hover': {
+                borderColor: darkTheme.primary,
+                transform: 'translateY(-4px)',
+              }
+            }}>
               <CardContent sx={{ p: 4 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
                   <AddPhotoIcon sx={{ fontSize: 20, color: darkTheme.primary }} />
@@ -918,7 +1017,16 @@ const EditGuestPage: React.FC = () => {
             </Card>
 
             {/* Settings */}
-            <Card sx={{ backgroundColor: darkTheme.surface, borderRadius: '8px', border: `1px solid ${darkTheme.border}` }}>
+            <Card sx={{
+              backgroundColor: darkTheme.surface,
+              borderRadius: '8px',
+              border: `1px solid ${darkTheme.border}`,
+              transition: 'all 0.2s ease-in-out',
+              '&:hover': {
+                borderColor: darkTheme.primary,
+                transform: 'translateY(-4px)',
+              }
+            }}>
               <CardContent sx={{ p: 4 }}>
                 <Typography
                   sx={{
@@ -938,6 +1046,7 @@ const EditGuestPage: React.FC = () => {
                       <Switch
                         checked={formData.vipStatus}
                         onChange={(e) => handleInputChange('vipStatus', e.target.checked)}
+                        disabled={saving}
                         sx={{
                           '& .MuiSwitch-switchBase.Mui-checked': {
                             color: darkTheme.warning,
@@ -949,6 +1058,7 @@ const EditGuestPage: React.FC = () => {
                           '& .MuiSwitch-track': {
                             backgroundColor: darkTheme.border,
                           },
+                          transition: 'all 0.2s ease-in-out',
                         }}
                       />
                     }
@@ -964,6 +1074,7 @@ const EditGuestPage: React.FC = () => {
                       <Switch
                         checked={formData.marketingOptIn}
                         onChange={(e) => handleInputChange('marketingOptIn', e.target.checked)}
+                        disabled={saving}
                         sx={{
                           '& .MuiSwitch-switchBase.Mui-checked': {
                             color: darkTheme.success,
@@ -975,6 +1086,7 @@ const EditGuestPage: React.FC = () => {
                           '& .MuiSwitch-track': {
                             backgroundColor: darkTheme.border,
                           },
+                          transition: 'all 0.2s ease-in-out',
                         }}
                       />
                     }
@@ -994,6 +1106,7 @@ const EditGuestPage: React.FC = () => {
               <Button
                 type="button"
                 onClick={() => router.push(`/${businessUnitId}/admin/operations/guests`)}
+                disabled={saving}
                 sx={{
                   color: darkTheme.textSecondary,
                   borderColor: darkTheme.border,
@@ -1002,9 +1115,15 @@ const EditGuestPage: React.FC = () => {
                   borderRadius: '8px',
                   textTransform: 'none',
                   fontWeight: 600,
+                  transition: 'all 0.2s ease-in-out',
                   '&:hover': {
                     backgroundColor: darkTheme.surfaceHover,
                     borderColor: darkTheme.textSecondary,
+                    transform: 'translateY(-2px)',
+                  },
+                  '&:disabled': {
+                    color: darkTheme.textSecondary,
+                    opacity: 0.5,
                   },
                 }}
                 variant="outlined"
@@ -1014,7 +1133,7 @@ const EditGuestPage: React.FC = () => {
               <Button
                 type="submit"
                 variant="contained"
-                startIcon={<SaveIcon />}
+                startIcon={saving ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />}
                 disabled={saving}
                 sx={{
                   backgroundColor: darkTheme.primary,
@@ -1025,8 +1144,15 @@ const EditGuestPage: React.FC = () => {
                   fontWeight: 600,
                   textTransform: 'none',
                   borderRadius: '8px',
-                  '&:hover': { backgroundColor: darkTheme.primaryHover },
-                  '&:disabled': { backgroundColor: darkTheme.textSecondary },
+                  transition: 'all 0.2s ease-in-out',
+                  '&:hover': {
+                    backgroundColor: darkTheme.primaryHover,
+                    transform: 'translateY(-2px)',
+                  },
+                  '&:disabled': {
+                    backgroundColor: darkTheme.textSecondary,
+                    color: darkTheme.surface,
+                  },
                 }}
               >
                 {saving ? 'Saving...' : 'Save Changes'}
@@ -1040,6 +1166,7 @@ const EditGuestPage: React.FC = () => {
           open={snackbar.open}
           autoHideDuration={6000}
           onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
         >
           <Alert
             onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}

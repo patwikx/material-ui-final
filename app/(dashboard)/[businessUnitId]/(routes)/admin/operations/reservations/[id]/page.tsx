@@ -19,13 +19,13 @@ import {
   DialogActions,
   TextField,
   Snackbar,
+  CircularProgress,
 } from '@mui/material';
 import {
   ArrowBack as ArrowBackIcon,
   Person as PersonIcon,
   Payment as PaymentIcon,
   CalendarToday as CalendarIcon,
-  LocationOn as LocationIcon,
   CheckCircle as CheckIcon,
   Cancel as CancelIcon,
   LocationCity,
@@ -259,12 +259,17 @@ const ReservationDetailPage: React.FC = () => {
 
   if (loading) {
     return (
-      <Box sx={{ backgroundColor: darkTheme.background, minHeight: '100vh', color: darkTheme.text }}>
-        <Container maxWidth="xl" sx={{ py: 4 }}>
-          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
-            <Typography sx={{ color: darkTheme.text }}>Loading reservation...</Typography>
-          </Box>
-        </Container>
+      <Box
+        sx={{
+          backgroundColor: darkTheme.background,
+          minHeight: '100vh',
+          color: darkTheme.text,
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}
+      >
+        <CircularProgress size={60} sx={{ color: darkTheme.text }} />
       </Box>
     );
   }
@@ -307,12 +312,15 @@ const ReservationDetailPage: React.FC = () => {
           <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
             <IconButton
               onClick={() => router.push(`/${businessUnitId}/admin/operations/reservations`)}
+              disabled={actionLoading}
               sx={{
                 mr: 2,
                 color: darkTheme.textSecondary,
+                transition: 'all 0.2s ease-in-out',
                 '&:hover': {
                   backgroundColor: darkTheme.surfaceHover,
                   color: darkTheme.text,
+                  transform: 'scale(1.1)',
                 }
               }}
             >
@@ -358,7 +366,18 @@ const ReservationDetailPage: React.FC = () => {
 
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
           {/* Reservation Overview */}
-          <Card sx={{ backgroundColor: darkTheme.surface, borderRadius: '8px', border: `1px solid ${darkTheme.border}` }}>
+          <Card
+            sx={{
+              backgroundColor: darkTheme.surface,
+              borderRadius: '8px',
+              border: `1px solid ${darkTheme.border}`,
+              transition: 'all 0.2s ease-in-out',
+              '&:hover': {
+                borderColor: darkTheme.primary,
+                transform: 'translateY(-4px)',
+              }
+            }}
+          >
             <CardContent sx={{ p: 4 }}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3 }}>
                 <Box>
@@ -381,6 +400,8 @@ const ReservationDetailPage: React.FC = () => {
                         backgroundColor: darkTheme[getStatusBg(reservation.status)],
                         color: darkTheme[getStatusColor(reservation.status)],
                         fontWeight: 600,
+                        transition: 'all 0.2s ease-in-out',
+                        '&:hover': { transform: 'scale(1.05)' },
                       }}
                     />
                     {reservation.paymentStatus === 'SUCCEEDED' && (
@@ -392,7 +413,9 @@ const ReservationDetailPage: React.FC = () => {
                           backgroundColor: darkTheme.successBg,
                           color: darkTheme.success,
                           fontWeight: 600,
+                          transition: 'all 0.2s ease-in-out',
                           '& .MuiChip-icon': { color: darkTheme.success },
+                          '&:hover': { transform: 'scale(1.05)' },
                         }}
                       />
                     )}
@@ -402,8 +425,9 @@ const ReservationDetailPage: React.FC = () => {
                 <Box sx={{ display: 'flex', gap: 1 }}>
                   {reservation.status === 'PROVISIONAL' && (
                     <Button
-                      startIcon={<CheckIcon />}
+                      startIcon={actionLoading ? <CircularProgress size={20} color="inherit" /> : <CheckIcon />}
                       onClick={() => setActionDialog({ open: true, action: 'confirm' })}
+                      disabled={actionLoading}
                       sx={{
                         backgroundColor: darkTheme.success,
                         color: 'white',
@@ -413,19 +437,27 @@ const ReservationDetailPage: React.FC = () => {
                         fontSize: '12px',
                         fontWeight: 600,
                         borderRadius: '8px',
-                        '&:hover': { backgroundColor: darkTheme.successBg, color: darkTheme.success },
-                        '&:disabled': { backgroundColor: darkTheme.surface, color: darkTheme.textSecondary },
                         border: `1px solid ${darkTheme.success}`,
+                        transition: 'all 0.2s ease-in-out',
+                        '&:hover': {
+                          backgroundColor: darkTheme.success,
+                          transform: 'translateY(-2px)',
+                        },
+                        '&:disabled': {
+                          backgroundColor: darkTheme.textSecondary,
+                          color: darkTheme.surface,
+                          opacity: 0.5,
+                        },
                       }}
-                      disabled={actionLoading}
                     >
-                      Confirm
+                      {actionLoading ? 'Confirming...' : 'Confirm'}
                     </Button>
                   )}
                   {reservation.status !== 'CANCELLED' && reservation.status !== 'CHECKED_OUT' && (
                     <Button
-                      startIcon={<CancelIcon />}
+                      startIcon={actionLoading ? <CircularProgress size={20} color="inherit" /> : <CancelIcon />}
                       onClick={() => setActionDialog({ open: true, action: 'cancel' })}
+                      disabled={actionLoading}
                       sx={{
                         backgroundColor: darkTheme.error,
                         color: 'white',
@@ -435,12 +467,19 @@ const ReservationDetailPage: React.FC = () => {
                         fontSize: '12px',
                         fontWeight: 600,
                         borderRadius: '8px',
-                        '&:hover': { backgroundColor: darkTheme.errorHover },
-                        '&:disabled': { backgroundColor: darkTheme.surface, color: darkTheme.textSecondary },
+                        transition: 'all 0.2s ease-in-out',
+                        '&:hover': {
+                          backgroundColor: darkTheme.errorHover,
+                          transform: 'translateY(-2px)',
+                        },
+                        '&:disabled': {
+                          backgroundColor: darkTheme.textSecondary,
+                          color: darkTheme.surface,
+                          opacity: 0.5,
+                        },
                       }}
-                      disabled={actionLoading}
                     >
-                      Cancel
+                      {actionLoading ? 'Cancelling...' : 'Cancel'}
                     </Button>
                   )}
                 </Box>
@@ -460,7 +499,18 @@ const ReservationDetailPage: React.FC = () => {
           </Card>
 
           {/* Guest Information */}
-          <Card sx={{ backgroundColor: darkTheme.surface, borderRadius: '8px', border: `1px solid ${darkTheme.border}` }}>
+          <Card
+            sx={{
+              backgroundColor: darkTheme.surface,
+              borderRadius: '8px',
+              border: `1px solid ${darkTheme.border}`,
+              transition: 'all 0.2s ease-in-out',
+              '&:hover': {
+                borderColor: darkTheme.primary,
+                transform: 'translateY(-4px)',
+              }
+            }}
+          >
             <CardContent sx={{ p: 4 }}>
               <Typography
                 sx={{
@@ -509,7 +559,18 @@ const ReservationDetailPage: React.FC = () => {
           </Card>
 
           {/* Stay Details */}
-          <Card sx={{ backgroundColor: darkTheme.surface, borderRadius: '8px', border: `1px solid ${darkTheme.border}` }}>
+          <Card
+            sx={{
+              backgroundColor: darkTheme.surface,
+              borderRadius: '8px',
+              border: `1px solid ${darkTheme.border}`,
+              transition: 'all 0.2s ease-in-out',
+              '&:hover': {
+                borderColor: darkTheme.primary,
+                transform: 'translateY(-4px)',
+              }
+            }}
+          >
             <CardContent sx={{ p: 4 }}>
               <Typography
                 sx={{
@@ -573,7 +634,20 @@ const ReservationDetailPage: React.FC = () => {
                     Room Details
                   </Typography>
                   {reservation.rooms.map((room) => (
-                    <Box key={room.id} sx={{ mb: 2, p: 2, backgroundColor: darkTheme.background, borderRadius: '8px', border: `1px solid ${darkTheme.border}` }}>
+                    <Box key={room.id}
+                      sx={{
+                        mb: 2,
+                        p: 2,
+                        backgroundColor: darkTheme.background,
+                        borderRadius: '8px',
+                        border: `1px solid ${darkTheme.border}`,
+                        transition: 'all 0.2s ease-in-out',
+                        '&:hover': {
+                          borderColor: darkTheme.primary,
+                          transform: 'scale(1.02)',
+                        }
+                      }}
+                    >
                       <Typography sx={{ fontWeight: 600, color: darkTheme.text }}>
                         Room {room.room?.roomNumber || 'Not Assigned'}
                       </Typography>
@@ -595,7 +669,18 @@ const ReservationDetailPage: React.FC = () => {
 
           {/* Payment Information */}
           {reservation.payments.length > 0 && (
-            <Card sx={{ backgroundColor: darkTheme.surface, borderRadius: '8px', border: `1px solid ${darkTheme.border}` }}>
+            <Card
+              sx={{
+                backgroundColor: darkTheme.surface,
+                borderRadius: '8px',
+                border: `1px solid ${darkTheme.border}`,
+                transition: 'all 0.2s ease-in-out',
+                '&:hover': {
+                  borderColor: darkTheme.primary,
+                  transform: 'translateY(-4px)',
+                }
+              }}
+            >
               <CardContent sx={{ p: 4 }}>
                 <Typography
                   sx={{
@@ -612,7 +697,20 @@ const ReservationDetailPage: React.FC = () => {
 
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                   {reservation.payments.map((payment) => (
-                    <Box key={payment.id} sx={{ p: 2, backgroundColor: darkTheme.background, borderRadius: '8px', border: `1px solid ${darkTheme.border}` }}>
+                    <Box
+                      key={payment.id}
+                      sx={{
+                        p: 2,
+                        backgroundColor: darkTheme.background,
+                        borderRadius: '8px',
+                        border: `1px solid ${darkTheme.border}`,
+                        transition: 'all 0.2s ease-in-out',
+                        '&:hover': {
+                          borderColor: darkTheme.primary,
+                          transform: 'scale(1.02)',
+                        }
+                      }}
+                    >
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <Box>
                           <Typography sx={{ fontWeight: 600, color: darkTheme.text }}>
@@ -630,6 +728,8 @@ const ReservationDetailPage: React.FC = () => {
                             backgroundColor: darkTheme[getPaymentStatusBg(payment.status)],
                             color: darkTheme[getPaymentStatusColor(payment.status)],
                             fontWeight: 600,
+                            transition: 'all 0.2s ease-in-out',
+                            '&:hover': { transform: 'scale(1.05)' },
                           }}
                         />
                       </Box>
@@ -642,7 +742,18 @@ const ReservationDetailPage: React.FC = () => {
 
           {/* Special Requests & Notes */}
           {(reservation.specialRequests || reservation.internalNotes) && (
-            <Card sx={{ backgroundColor: darkTheme.surface, borderRadius: '8px', border: `1px solid ${darkTheme.border}` }}>
+            <Card
+              sx={{
+                backgroundColor: darkTheme.surface,
+                borderRadius: '8px',
+                border: `1px solid ${darkTheme.border}`,
+                transition: 'all 0.2s ease-in-out',
+                '&:hover': {
+                  borderColor: darkTheme.primary,
+                  transform: 'translateY(-4px)',
+                }
+              }}
+            >
               <CardContent sx={{ p: 4 }}>
                 <Typography
                   sx={{
@@ -683,7 +794,18 @@ const ReservationDetailPage: React.FC = () => {
           )}
 
           {/* Metadata */}
-          <Card sx={{ backgroundColor: darkTheme.surface, borderRadius: '8px', border: `1px solid ${darkTheme.border}` }}>
+          <Card
+            sx={{
+              backgroundColor: darkTheme.surface,
+              borderRadius: '8px',
+              border: `1px solid ${darkTheme.border}`,
+              transition: 'all 0.2s ease-in-out',
+              '&:hover': {
+                borderColor: darkTheme.primary,
+                transform: 'translateY(-4px)',
+              }
+            }}
+          >
             <CardContent sx={{ p: 4 }}>
               <Typography
                 sx={{
@@ -754,6 +876,7 @@ const ReservationDetailPage: React.FC = () => {
                     '& fieldset': { borderColor: darkTheme.border },
                     '&:hover fieldset': { borderColor: darkTheme.primary },
                     '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                    transition: 'all 0.2s ease-in-out',
                   },
                   '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                 }}
@@ -772,13 +895,20 @@ const ReservationDetailPage: React.FC = () => {
           <DialogActions sx={{ p: 2, pt: 1 }}>
             <Button
               onClick={() => setActionDialog({ open: false, action: null })}
+              disabled={actionLoading}
               sx={{
                 color: darkTheme.textSecondary,
                 fontSize: '12px',
                 fontWeight: 600,
                 textTransform: 'none',
+                transition: 'all 0.2s ease-in-out',
                 '&:hover': {
                   backgroundColor: darkTheme.surfaceHover,
+                  transform: 'translateY(-2px)',
+                },
+                '&:disabled': {
+                  color: darkTheme.textSecondary,
+                  opacity: 0.5,
                 },
               }}
             >
@@ -788,6 +918,7 @@ const ReservationDetailPage: React.FC = () => {
               onClick={actionDialog.action === 'confirm' ? handleConfirm : handleCancel}
               variant="contained"
               disabled={actionLoading}
+              startIcon={actionLoading ? <CircularProgress size={16} color="inherit" /> : null}
               sx={{
                 backgroundColor: actionDialog.action === 'confirm' ? darkTheme.success : darkTheme.error,
                 color: 'white',
@@ -797,16 +928,18 @@ const ReservationDetailPage: React.FC = () => {
                 fontWeight: 600,
                 textTransform: 'none',
                 borderRadius: '8px',
+                transition: 'all 0.2s ease-in-out',
                 '&:hover': {
-                  backgroundColor: actionDialog.action === 'confirm' ? darkTheme.successBg : darkTheme.errorHover
+                  backgroundColor: actionDialog.action === 'confirm' ? darkTheme.success : darkTheme.error,
+                  transform: 'translateY(-2px)',
                 },
-                '&:disabled': { backgroundColor: darkTheme.textSecondary, color: darkTheme.surface },
+                '&:disabled': {
+                  backgroundColor: darkTheme.textSecondary,
+                  color: darkTheme.surface,
+                },
               }}
             >
-              {actionLoading ?
-                `${actionDialog.action === 'confirm' ? 'Confirming' : 'Cancelling'}...` :
-                actionDialog.action === 'confirm' ? 'Confirm' : 'Cancel Reservation'
-              }
+              {actionLoading ? `${actionDialog.action === 'confirm' ? 'Confirming' : 'Cancelling'}...` : (actionDialog.action === 'confirm' ? 'Confirm' : 'Cancel Reservation')}
             </Button>
           </DialogActions>
         </Dialog>
@@ -816,6 +949,7 @@ const ReservationDetailPage: React.FC = () => {
           open={snackbar.open}
           autoHideDuration={6000}
           onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
         >
           <Alert
             onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}

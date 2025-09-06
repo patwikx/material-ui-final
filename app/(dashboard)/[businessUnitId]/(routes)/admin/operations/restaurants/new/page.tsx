@@ -20,6 +20,7 @@ import {
   IconButton,
   Chip,
   Stack,
+  CircularProgress,
 } from '@mui/material';
 import {
   ArrowBack as ArrowBackIcon,
@@ -96,9 +97,9 @@ interface RestaurantFormData {
 }
 
 interface RestaurantImages {
-  images: Array<{ 
-    fileName: string; 
-    name: string; 
+  images: Array<{
+    fileName: string;
+    name: string;
     fileUrl: string;
   }>;
   removeImageIds: string[];
@@ -125,6 +126,7 @@ const NewRestaurantPage: React.FC = () => {
   const [newCuisine, setNewCuisine] = useState('');
   const [newFeature, setNewFeature] = useState('');
   const [formData, setFormData] = useState<RestaurantFormData>({
+    businessUnitId: businessUnitId as string,
     name: '',
     slug: '',
     description: '',
@@ -143,7 +145,6 @@ const NewRestaurantPage: React.FC = () => {
     isPublished: false,
     isFeatured: false,
     sortOrder: 0,
-    businessUnitId: '',
     totalSeats: null,
     privateRooms: 0,
     outdoorSeating: false,
@@ -316,6 +317,7 @@ const NewRestaurantPage: React.FC = () => {
           severity: 'error',
         });
       }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       setSnackbar({
         open: true,
@@ -341,12 +343,15 @@ const NewRestaurantPage: React.FC = () => {
           <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
             <IconButton
               onClick={() => router.push(`/${businessUnitId}/admin/operations/restaurants`)}
+              disabled={loading}
               sx={{
                 mr: 2,
                 color: darkTheme.textSecondary,
+                transition: 'all 0.2s ease-in-out',
                 '&:hover': {
                   backgroundColor: darkTheme.surfaceHover,
                   color: darkTheme.text,
+                  transform: 'scale(1.1)',
                 }
               }}
             >
@@ -393,7 +398,16 @@ const NewRestaurantPage: React.FC = () => {
         <form onSubmit={handleSubmit}>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
             {/* Basic Information */}
-            <Card sx={{ backgroundColor: darkTheme.surface, borderRadius: '8px', border: `1px solid ${darkTheme.border}` }}>
+            <Card sx={{
+              backgroundColor: darkTheme.surface,
+              borderRadius: '8px',
+              border: `1px solid ${darkTheme.border}`,
+              transition: 'all 0.2s ease-in-out',
+              '&:hover': {
+                borderColor: darkTheme.primary,
+                transform: 'translateY(-4px)',
+              }
+            }}>
               <CardContent sx={{ p: 4 }}>
                 <Typography
                   sx={{
@@ -415,6 +429,7 @@ const NewRestaurantPage: React.FC = () => {
                     onChange={(e) => handleInputChange('name', e.target.value)}
                     required
                     fullWidth
+                    disabled={loading}
                     sx={{
                       '& .MuiOutlinedInput-root': {
                         borderRadius: '8px',
@@ -423,6 +438,7 @@ const NewRestaurantPage: React.FC = () => {
                         '& fieldset': { borderColor: darkTheme.border },
                         '&:hover fieldset': { borderColor: darkTheme.primary },
                         '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                        transition: 'all 0.2s ease-in-out',
                       },
                       '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                     }}
@@ -435,6 +451,7 @@ const NewRestaurantPage: React.FC = () => {
                     required
                     fullWidth
                     helperText="URL-friendly version of the name"
+                    disabled={loading}
                     sx={{
                       '& .MuiOutlinedInput-root': {
                         borderRadius: '8px',
@@ -443,6 +460,7 @@ const NewRestaurantPage: React.FC = () => {
                         '& fieldset': { borderColor: darkTheme.border },
                         '&:hover fieldset': { borderColor: darkTheme.primary },
                         '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                        transition: 'all 0.2s ease-in-out',
                       },
                       '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                       '& .MuiFormHelperText-root': { color: darkTheme.textSecondary }
@@ -457,6 +475,7 @@ const NewRestaurantPage: React.FC = () => {
                     multiline
                     rows={4}
                     fullWidth
+                    disabled={loading}
                     sx={{
                       '& .MuiOutlinedInput-root': {
                         borderRadius: '8px',
@@ -465,6 +484,7 @@ const NewRestaurantPage: React.FC = () => {
                         '& fieldset': { borderColor: darkTheme.border },
                         '&:hover fieldset': { borderColor: darkTheme.primary },
                         '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                        transition: 'all 0.2s ease-in-out',
                       },
                       '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                     }}
@@ -478,6 +498,7 @@ const NewRestaurantPage: React.FC = () => {
                     rows={2}
                     fullWidth
                     helperText="Brief description for cards and previews"
+                    disabled={loading}
                     sx={{
                       '& .MuiOutlinedInput-root': {
                         borderRadius: '8px',
@@ -486,6 +507,7 @@ const NewRestaurantPage: React.FC = () => {
                         '& fieldset': { borderColor: darkTheme.border },
                         '&:hover fieldset': { borderColor: darkTheme.primary },
                         '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                        transition: 'all 0.2s ease-in-out',
                       },
                       '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                       '& .MuiFormHelperText-root': { color: darkTheme.textSecondary }
@@ -493,7 +515,7 @@ const NewRestaurantPage: React.FC = () => {
                   />
 
                   <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-                    <FormControl sx={{ minWidth: 200, flex: 1 }}>
+                    <FormControl sx={{ minWidth: 200, flex: 1 }} disabled={loading}>
                       <InputLabel sx={{ color: darkTheme.textSecondary }}>Restaurant Type</InputLabel>
                       <Select
                         value={formData.type}
@@ -506,6 +528,7 @@ const NewRestaurantPage: React.FC = () => {
                           '& .MuiOutlinedInput-notchedOutline': { borderColor: darkTheme.border },
                           '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: darkTheme.primary },
                           '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: darkTheme.primary },
+                          transition: 'all 0.2s ease-in-out',
                         }}
                       >
                         {restaurantTypes.map((type) => (
@@ -516,7 +539,7 @@ const NewRestaurantPage: React.FC = () => {
                       </Select>
                     </FormControl>
 
-                    <FormControl sx={{ minWidth: 200, flex: 1 }}>
+                    <FormControl sx={{ minWidth: 200, flex: 1 }} disabled={loading}>
                       <InputLabel sx={{ color: darkTheme.textSecondary }}>Property</InputLabel>
                       <Select
                         value={formData.businessUnitId}
@@ -529,6 +552,7 @@ const NewRestaurantPage: React.FC = () => {
                           '& .MuiOutlinedInput-notchedOutline': { borderColor: darkTheme.border },
                           '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: darkTheme.primary },
                           '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: darkTheme.primary },
+                          transition: 'all 0.2s ease-in-out',
                         }}
                       >
                         {businessUnits.map((unit) => (
@@ -544,7 +568,16 @@ const NewRestaurantPage: React.FC = () => {
             </Card>
 
             {/* Location & Contact */}
-            <Card sx={{ backgroundColor: darkTheme.surface, borderRadius: '8px', border: `1px solid ${darkTheme.border}` }}>
+            <Card sx={{
+              backgroundColor: darkTheme.surface,
+              borderRadius: '8px',
+              border: `1px solid ${darkTheme.border}`,
+              transition: 'all 0.2s ease-in-out',
+              '&:hover': {
+                borderColor: darkTheme.primary,
+                transform: 'translateY(-4px)',
+              }
+            }}>
               <CardContent sx={{ p: 4 }}>
                 <Typography
                   sx={{
@@ -566,6 +599,7 @@ const NewRestaurantPage: React.FC = () => {
                     onChange={(e) => handleInputChange('location', e.target.value)}
                     fullWidth
                     helperText="Specific location within the property"
+                    disabled={loading}
                     sx={{
                       '& .MuiOutlinedInput-root': {
                         borderRadius: '8px',
@@ -574,6 +608,7 @@ const NewRestaurantPage: React.FC = () => {
                         '& fieldset': { borderColor: darkTheme.border },
                         '&:hover fieldset': { borderColor: darkTheme.primary },
                         '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                        transition: 'all 0.2s ease-in-out',
                       },
                       '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                       '& .MuiFormHelperText-root': { color: darkTheme.textSecondary }
@@ -585,6 +620,7 @@ const NewRestaurantPage: React.FC = () => {
                       label="Phone"
                       value={formData.phone}
                       onChange={(e) => handleInputChange('phone', e.target.value)}
+                      disabled={loading}
                       sx={{
                         flex: 1,
                         minWidth: 200,
@@ -595,6 +631,7 @@ const NewRestaurantPage: React.FC = () => {
                           '& fieldset': { borderColor: darkTheme.border },
                           '&:hover fieldset': { borderColor: darkTheme.primary },
                           '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                          transition: 'all 0.2s ease-in-out',
                         },
                         '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                       }}
@@ -604,6 +641,7 @@ const NewRestaurantPage: React.FC = () => {
                       type="email"
                       value={formData.email}
                       onChange={(e) => handleInputChange('email', e.target.value)}
+                      disabled={loading}
                       sx={{
                         flex: 1,
                         minWidth: 200,
@@ -614,6 +652,7 @@ const NewRestaurantPage: React.FC = () => {
                           '& fieldset': { borderColor: darkTheme.border },
                           '&:hover fieldset': { borderColor: darkTheme.primary },
                           '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                          transition: 'all 0.2s ease-in-out',
                         },
                         '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                       }}
@@ -624,7 +663,16 @@ const NewRestaurantPage: React.FC = () => {
             </Card>
 
             {/* Cuisine & Features */}
-            <Card sx={{ backgroundColor: darkTheme.surface, borderRadius: '8px', border: `1px solid ${darkTheme.border}` }}>
+            <Card sx={{
+              backgroundColor: darkTheme.surface,
+              borderRadius: '8px',
+              border: `1px solid ${darkTheme.border}`,
+              transition: 'all 0.2s ease-in-out',
+              '&:hover': {
+                borderColor: darkTheme.primary,
+                transform: 'translateY(-4px)',
+              }
+            }}>
               <CardContent sx={{ p: 4 }}>
                 <Typography
                   sx={{
@@ -651,6 +699,7 @@ const NewRestaurantPage: React.FC = () => {
                         value={newCuisine}
                         onChange={(e) => setNewCuisine(e.target.value)}
                         onKeyPress={(e) => e.key === 'Enter' && handleAddCuisine()}
+                        disabled={loading}
                         sx={{
                           flex: 1,
                           minWidth: 200,
@@ -661,6 +710,7 @@ const NewRestaurantPage: React.FC = () => {
                             '& fieldset': { borderColor: darkTheme.border },
                             '&:hover fieldset': { borderColor: darkTheme.primary },
                             '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                            transition: 'all 0.2s ease-in-out',
                           },
                           '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                         }}
@@ -669,15 +719,22 @@ const NewRestaurantPage: React.FC = () => {
                         onClick={handleAddCuisine}
                         variant="outlined"
                         startIcon={<AddIcon />}
+                        disabled={loading}
                         sx={{
                           borderRadius: '8px',
                           borderColor: darkTheme.border,
                           color: darkTheme.textSecondary,
                           textTransform: 'none',
                           fontWeight: 600,
+                          transition: 'all 0.2s ease-in-out',
                           '&:hover': {
                             backgroundColor: darkTheme.surfaceHover,
                             borderColor: darkTheme.textSecondary,
+                            transform: 'translateY(-2px)',
+                          },
+                          '&:disabled': {
+                            color: darkTheme.textSecondary,
+                            opacity: 0.5,
                           },
                         }}
                       >
@@ -690,13 +747,17 @@ const NewRestaurantPage: React.FC = () => {
                           key={cuisine}
                           label={cuisine}
                           onDelete={() => handleRemoveCuisine(cuisine)}
+                          disabled={loading}
                           deleteIcon={<CloseIcon />}
                           sx={{
                             backgroundColor: darkTheme.selectedBg,
                             color: darkTheme.primary,
+                            transition: 'all 0.2s ease-in-out',
                             '& .MuiChip-deleteIcon': {
                               color: darkTheme.primary,
+                              transition: 'color 0.2s ease-in-out',
                             },
+                            '&:hover': { transform: 'scale(1.05)' },
                           }}
                         />
                       ))}
@@ -714,6 +775,7 @@ const NewRestaurantPage: React.FC = () => {
                         value={newFeature}
                         onChange={(e) => setNewFeature(e.target.value)}
                         onKeyPress={(e) => e.key === 'Enter' && handleAddFeature()}
+                        disabled={loading}
                         sx={{
                           flex: 1,
                           minWidth: 200,
@@ -724,6 +786,7 @@ const NewRestaurantPage: React.FC = () => {
                             '& fieldset': { borderColor: darkTheme.border },
                             '&:hover fieldset': { borderColor: darkTheme.primary },
                             '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                            transition: 'all 0.2s ease-in-out',
                           },
                           '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                         }}
@@ -732,15 +795,22 @@ const NewRestaurantPage: React.FC = () => {
                         onClick={handleAddFeature}
                         variant="outlined"
                         startIcon={<AddIcon />}
+                        disabled={loading}
                         sx={{
                           borderRadius: '8px',
                           borderColor: darkTheme.border,
                           color: darkTheme.textSecondary,
                           textTransform: 'none',
                           fontWeight: 600,
+                          transition: 'all 0.2s ease-in-out',
                           '&:hover': {
                             backgroundColor: darkTheme.surfaceHover,
                             borderColor: darkTheme.textSecondary,
+                            transform: 'translateY(-2px)',
+                          },
+                          '&:disabled': {
+                            color: darkTheme.textSecondary,
+                            opacity: 0.5,
                           },
                         }}
                       >
@@ -753,13 +823,17 @@ const NewRestaurantPage: React.FC = () => {
                           key={feature}
                           label={feature}
                           onDelete={() => handleRemoveFeature(feature)}
+                          disabled={loading}
                           deleteIcon={<CloseIcon />}
                           sx={{
                             backgroundColor: darkTheme.selectedBg,
                             color: darkTheme.primary,
+                            transition: 'all 0.2s ease-in-out',
                             '& .MuiChip-deleteIcon': {
                               color: darkTheme.primary,
+                              transition: 'color 0.2s ease-in-out',
                             },
+                            '&:hover': { transform: 'scale(1.05)' },
                           }}
                         />
                       ))}
@@ -770,7 +844,16 @@ const NewRestaurantPage: React.FC = () => {
             </Card>
 
             {/* Pricing */}
-            <Card sx={{ backgroundColor: darkTheme.surface, borderRadius: '8px', border: `1px solid ${darkTheme.border}` }}>
+            <Card sx={{
+              backgroundColor: darkTheme.surface,
+              borderRadius: '8px',
+              border: `1px solid ${darkTheme.border}`,
+              transition: 'all 0.2s ease-in-out',
+              '&:hover': {
+                borderColor: darkTheme.primary,
+                transform: 'translateY(-4px)',
+              }
+            }}>
               <CardContent sx={{ p: 4 }}>
                 <Typography
                   sx={{
@@ -786,7 +869,7 @@ const NewRestaurantPage: React.FC = () => {
                 </Typography>
 
                 <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-                  <FormControl sx={{ minWidth: 200, flex: 1 }}>
+                  <FormControl fullWidth disabled={loading} sx={{ minWidth: 200, flex: 1 }}>
                     <InputLabel sx={{ color: darkTheme.textSecondary }}>Price Range</InputLabel>
                     <Select
                       value={formData.priceRange}
@@ -799,6 +882,7 @@ const NewRestaurantPage: React.FC = () => {
                         '& .MuiOutlinedInput-notchedOutline': { borderColor: darkTheme.border },
                         '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: darkTheme.primary },
                         '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: darkTheme.primary },
+                        transition: 'all 0.2s ease-in-out',
                       }}
                     >
                       {priceRanges.map((range) => (
@@ -814,6 +898,7 @@ const NewRestaurantPage: React.FC = () => {
                     type="number"
                     value={formData.averageMeal || ''}
                     onChange={(e) => handleInputChange('averageMeal', e.target.value ? parseFloat(e.target.value) : null)}
+                    disabled={loading}
                     sx={{
                       flex: 1,
                       minWidth: 200,
@@ -824,6 +909,7 @@ const NewRestaurantPage: React.FC = () => {
                         '& fieldset': { borderColor: darkTheme.border },
                         '&:hover fieldset': { borderColor: darkTheme.primary },
                         '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                        transition: 'all 0.2s ease-in-out',
                       },
                       '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                     }}
@@ -833,6 +919,7 @@ const NewRestaurantPage: React.FC = () => {
                     label="Currency"
                     value={formData.currency}
                     onChange={(e) => handleInputChange('currency', e.target.value)}
+                    disabled={loading}
                     sx={{
                       width: 150,
                       '& .MuiOutlinedInput-root': {
@@ -842,6 +929,7 @@ const NewRestaurantPage: React.FC = () => {
                         '& fieldset': { borderColor: darkTheme.border },
                         '&:hover fieldset': { borderColor: darkTheme.primary },
                         '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                        transition: 'all 0.2s ease-in-out',
                       },
                       '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                     }}
@@ -851,7 +939,16 @@ const NewRestaurantPage: React.FC = () => {
             </Card>
 
             {/* Restaurant Images */}
-            <Card sx={{ backgroundColor: darkTheme.surface, borderRadius: '8px', border: `1px solid ${darkTheme.border}` }}>
+            <Card sx={{
+              backgroundColor: darkTheme.surface,
+              borderRadius: '8px',
+              border: `1px solid ${darkTheme.border}`,
+              transition: 'all 0.2s ease-in-out',
+              '&:hover': {
+                borderColor: darkTheme.primary,
+                transform: 'translateY(-4px)',
+              }
+            }}>
               <CardContent sx={{ p: 4 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
                   <AddPhotoIcon sx={{ fontSize: 20, color: darkTheme.primary }} />
@@ -909,7 +1006,16 @@ const NewRestaurantPage: React.FC = () => {
             </Card>
 
             {/* Settings */}
-            <Card sx={{ backgroundColor: darkTheme.surface, borderRadius: '8px', border: `1px solid ${darkTheme.border}` }}>
+            <Card sx={{
+              backgroundColor: darkTheme.surface,
+              borderRadius: '8px',
+              border: `1px solid ${darkTheme.border}`,
+              transition: 'all 0.2s ease-in-out',
+              '&:hover': {
+                borderColor: darkTheme.primary,
+                transform: 'translateY(-4px)',
+              }
+            }}>
               <CardContent sx={{ p: 4 }}>
                 <Typography
                   sx={{
@@ -930,6 +1036,7 @@ const NewRestaurantPage: React.FC = () => {
                     type="number"
                     value={formData.sortOrder}
                     onChange={(e) => handleInputChange('sortOrder', parseInt(e.target.value) || 0)}
+                    disabled={loading}
                     sx={{
                       width: 200,
                       '& .MuiOutlinedInput-root': {
@@ -939,6 +1046,7 @@ const NewRestaurantPage: React.FC = () => {
                         '& fieldset': { borderColor: darkTheme.border },
                         '&:hover fieldset': { borderColor: darkTheme.primary },
                         '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                        transition: 'all 0.2s ease-in-out',
                       },
                       '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                     }}
@@ -950,6 +1058,7 @@ const NewRestaurantPage: React.FC = () => {
                         <Switch
                           checked={formData.isActive}
                           onChange={(e) => handleInputChange('isActive', e.target.checked)}
+                          disabled={loading}
                           sx={{
                             '& .MuiSwitch-switchBase.Mui-checked': {
                               color: darkTheme.success,
@@ -961,6 +1070,7 @@ const NewRestaurantPage: React.FC = () => {
                             '& .MuiSwitch-track': {
                               backgroundColor: darkTheme.border,
                             },
+                            transition: 'all 0.2s ease-in-out',
                           }}
                         />
                       }
@@ -976,6 +1086,7 @@ const NewRestaurantPage: React.FC = () => {
                         <Switch
                           checked={formData.isPublished}
                           onChange={(e) => handleInputChange('isPublished', e.target.checked)}
+                          disabled={loading}
                           sx={{
                             '& .MuiSwitch-switchBase.Mui-checked': {
                               color: darkTheme.primary,
@@ -987,6 +1098,7 @@ const NewRestaurantPage: React.FC = () => {
                             '& .MuiSwitch-track': {
                               backgroundColor: darkTheme.border,
                             },
+                            transition: 'all 0.2s ease-in-out',
                           }}
                         />
                       }
@@ -1002,6 +1114,7 @@ const NewRestaurantPage: React.FC = () => {
                         <Switch
                           checked={formData.isFeatured}
                           onChange={(e) => handleInputChange('isFeatured', e.target.checked)}
+                          disabled={loading}
                           sx={{
                             '& .MuiSwitch-switchBase.Mui-checked': {
                               color: darkTheme.warning,
@@ -1013,6 +1126,7 @@ const NewRestaurantPage: React.FC = () => {
                             '& .MuiSwitch-track': {
                               backgroundColor: darkTheme.border,
                             },
+                            transition: 'all 0.2s ease-in-out',
                           }}
                         />
                       }
@@ -1033,6 +1147,7 @@ const NewRestaurantPage: React.FC = () => {
               <Button
                 type="button"
                 onClick={() => router.push(`/${businessUnitId}/admin/operations/restaurants`)}
+                disabled={loading}
                 sx={{
                   color: darkTheme.textSecondary,
                   borderColor: darkTheme.border,
@@ -1041,9 +1156,15 @@ const NewRestaurantPage: React.FC = () => {
                   borderRadius: '8px',
                   textTransform: 'none',
                   fontWeight: 600,
+                  transition: 'all 0.2s ease-in-out',
                   '&:hover': {
                     backgroundColor: darkTheme.surfaceHover,
                     borderColor: darkTheme.textSecondary,
+                    transform: 'translateY(-2px)',
+                  },
+                  '&:disabled': {
+                    color: darkTheme.textSecondary,
+                    opacity: 0.5,
                   },
                 }}
                 variant="outlined"
@@ -1053,7 +1174,7 @@ const NewRestaurantPage: React.FC = () => {
               <Button
                 type="submit"
                 variant="contained"
-                startIcon={<SaveIcon />}
+                startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />}
                 disabled={loading}
                 sx={{
                   backgroundColor: darkTheme.primary,
@@ -1064,11 +1185,14 @@ const NewRestaurantPage: React.FC = () => {
                   fontWeight: 600,
                   textTransform: 'none',
                   borderRadius: '8px',
+                  transition: 'all 0.2s ease-in-out',
                   '&:hover': {
                     backgroundColor: darkTheme.primaryHover,
+                    transform: 'translateY(-2px)',
                   },
                   '&:disabled': {
                     backgroundColor: darkTheme.textSecondary,
+                    color: darkTheme.surface,
                   },
                 }}
               >
@@ -1083,6 +1207,7 @@ const NewRestaurantPage: React.FC = () => {
           open={snackbar.open}
           autoHideDuration={6000}
           onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
         >
           <Alert
             onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}

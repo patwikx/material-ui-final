@@ -18,6 +18,7 @@ import {
   Alert,
   Snackbar,
   IconButton,
+  CircularProgress,
 } from '@mui/material';
 import {
   ArrowBack as ArrowBackIcon,
@@ -95,7 +96,7 @@ const NewRoomRatePage: React.FC = () => {
     name: '',
     description: '',
     baseRate: 0,
-    currency: 'PHP',
+    currency: '',
     validFrom: '',
     validTo: '',
     isActive: true,
@@ -217,12 +218,15 @@ const NewRoomRatePage: React.FC = () => {
             <IconButton
               component={Link}
               href={`/${businessUnitId}/admin/operations/room-rates`}
+              disabled={loading}
               sx={{
                 mr: 2,
                 color: darkTheme.textSecondary,
+                transition: 'all 0.2s ease-in-out',
                 '&:hover': {
                   backgroundColor: darkTheme.surfaceHover,
                   color: darkTheme.text,
+                  transform: 'scale(1.1)',
                 }
               }}
             >
@@ -268,7 +272,18 @@ const NewRoomRatePage: React.FC = () => {
 
         <form onSubmit={handleSubmit}>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-            <Card sx={{ backgroundColor: darkTheme.surface, borderRadius: '8px', border: `1px solid ${darkTheme.border}` }}>
+            <Card
+              sx={{
+                backgroundColor: darkTheme.surface,
+                borderRadius: '8px',
+                border: `1px solid ${darkTheme.border}`,
+                transition: 'all 0.2s ease-in-out',
+                '&:hover': {
+                  borderColor: darkTheme.primary,
+                  transform: 'translateY(-4px)',
+                }
+              }}
+            >
               <CardContent sx={{ p: 4 }}>
                 <Typography
                   sx={{
@@ -290,6 +305,7 @@ const NewRoomRatePage: React.FC = () => {
                     onChange={(e) => handleInputChange('name', e.target.value)}
                     required
                     fullWidth
+                    disabled={loading}
                     sx={{
                       '& .MuiOutlinedInput-root': {
                         borderRadius: '8px',
@@ -298,6 +314,7 @@ const NewRoomRatePage: React.FC = () => {
                         '& fieldset': { borderColor: darkTheme.border },
                         '&:hover fieldset': { borderColor: darkTheme.primary },
                         '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                        transition: 'all 0.2s ease-in-out',
                       },
                       '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                     }}
@@ -310,6 +327,7 @@ const NewRoomRatePage: React.FC = () => {
                     multiline
                     rows={3}
                     fullWidth
+                    disabled={loading}
                     sx={{
                       '& .MuiOutlinedInput-root': {
                         borderRadius: '8px',
@@ -318,13 +336,14 @@ const NewRoomRatePage: React.FC = () => {
                         '& fieldset': { borderColor: darkTheme.border },
                         '&:hover fieldset': { borderColor: darkTheme.primary },
                         '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                        transition: 'all 0.2s ease-in-out',
                       },
                       '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                     }}
                   />
 
                   <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-                    <FormControl sx={{ minWidth: 200, flex: 1 }}>
+                    <FormControl fullWidth disabled={loading} sx={{ minWidth: 200, flex: 1 }}>
                       <InputLabel sx={{ color: darkTheme.textSecondary }}>Room Type</InputLabel>
                       <Select
                         value={formData.roomTypeId}
@@ -337,6 +356,7 @@ const NewRoomRatePage: React.FC = () => {
                           '& .MuiOutlinedInput-notchedOutline': { borderColor: darkTheme.border },
                           '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: darkTheme.primary },
                           '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: darkTheme.primary },
+                          transition: 'all 0.2s ease-in-out',
                         }}
                         MenuProps={{
                           sx: {
@@ -371,7 +391,16 @@ const NewRoomRatePage: React.FC = () => {
               </CardContent>
             </Card>
 
-            <Card sx={{ backgroundColor: darkTheme.surface, borderRadius: '8px', border: `1px solid ${darkTheme.border}` }}>
+            <Card sx={{
+              backgroundColor: darkTheme.surface,
+              borderRadius: '8px',
+              border: `1px solid ${darkTheme.border}`,
+              transition: 'all 0.2s ease-in-out',
+              '&:hover': {
+                borderColor: darkTheme.primary,
+                transform: 'translateY(-4px)',
+              }
+            }}>
               <CardContent sx={{ p: 4 }}>
                 <Typography
                   sx={{
@@ -393,6 +422,7 @@ const NewRoomRatePage: React.FC = () => {
                       value={formData.baseRate}
                       onChange={(e) => handleInputChange('baseRate', parseFloat(e.target.value) || 0)}
                       required
+                      disabled={loading}
                       sx={{
                         flex: 1,
                         minWidth: 200,
@@ -403,6 +433,7 @@ const NewRoomRatePage: React.FC = () => {
                           '& fieldset': { borderColor: darkTheme.border },
                           '&:hover fieldset': { borderColor: darkTheme.primary },
                           '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                          transition: 'all 0.2s ease-in-out',
                         },
                         '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                       }}
@@ -411,6 +442,7 @@ const NewRoomRatePage: React.FC = () => {
                       label="Currency"
                       value={formData.currency}
                       onChange={(e) => handleInputChange('currency', e.target.value)}
+                      disabled={loading}
                       sx={{
                         width: 150,
                         '& .MuiOutlinedInput-root': {
@@ -420,6 +452,7 @@ const NewRoomRatePage: React.FC = () => {
                           '& fieldset': { borderColor: darkTheme.border },
                           '&:hover fieldset': { borderColor: darkTheme.primary },
                           '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                          transition: 'all 0.2s ease-in-out',
                         },
                         '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                       }}
@@ -429,7 +462,16 @@ const NewRoomRatePage: React.FC = () => {
               </CardContent>
             </Card>
 
-            <Card sx={{ backgroundColor: darkTheme.surface, borderRadius: '8px', border: `1px solid ${darkTheme.border}` }}>
+            <Card sx={{
+              backgroundColor: darkTheme.surface,
+              borderRadius: '8px',
+              border: `1px solid ${darkTheme.border}`,
+              transition: 'all 0.2s ease-in-out',
+              '&:hover': {
+                borderColor: darkTheme.primary,
+                transform: 'translateY(-4px)',
+              }
+            }}>
               <CardContent sx={{ p: 4 }}>
                 <Typography
                   sx={{
@@ -451,6 +493,7 @@ const NewRoomRatePage: React.FC = () => {
                     onChange={(e) => handleInputChange('validFrom', e.target.value)}
                     required
                     InputLabelProps={{ shrink: true }}
+                    disabled={loading}
                     sx={{
                       flex: 1,
                       minWidth: 200,
@@ -461,6 +504,7 @@ const NewRoomRatePage: React.FC = () => {
                         '& fieldset': { borderColor: darkTheme.border },
                         '&:hover fieldset': { borderColor: darkTheme.primary },
                         '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                        transition: 'all 0.2s ease-in-out',
                       },
                       '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                     }}
@@ -471,6 +515,7 @@ const NewRoomRatePage: React.FC = () => {
                     value={formData.validTo}
                     onChange={(e) => handleInputChange('validTo', e.target.value)}
                     InputLabelProps={{ shrink: true }}
+                    disabled={loading}
                     sx={{
                       flex: 1,
                       minWidth: 200,
@@ -481,15 +526,59 @@ const NewRoomRatePage: React.FC = () => {
                         '& fieldset': { borderColor: darkTheme.border },
                         '&:hover fieldset': { borderColor: darkTheme.primary },
                         '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                        transition: 'all 0.2s ease-in-out',
                       },
                       '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                     }}
                   />
                 </Box>
+                
+                <Box sx={{ mt: 3 }}>
+                  <Typography variant="subtitle2" sx={{ mb: 2, color: darkTheme.textSecondary, fontWeight: 600 }}>
+                    Days of the Week
+                  </Typography>
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
+                    {weekDays.map((day) => (
+                      <FormControlLabel
+                        key={day.value}
+                        control={
+                          <Switch
+                            checked={formData[day.value as keyof RoomRateFormData] as boolean}
+                            onChange={(e) => handleDayOfWeekChange(day.value, e.target.checked)}
+                            disabled={loading}
+                            sx={{
+                              '& .MuiSwitch-switchBase.Mui-checked': {
+                                color: darkTheme.primary,
+                                '&:hover': { backgroundColor: 'rgba(59, 130, 246, 0.04)' },
+                              },
+                              '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                                backgroundColor: darkTheme.primary,
+                              },
+                              '& .MuiSwitch-track': {
+                                backgroundColor: darkTheme.border,
+                              },
+                              transition: 'all 0.2s ease-in-out',
+                            }}
+                          />
+                        }
+                        label={<Typography sx={{ color: darkTheme.text }}>{day.label}</Typography>}
+                      />
+                    ))}
+                  </Box>
+                </Box>
               </CardContent>
             </Card>
 
-            <Card sx={{ backgroundColor: darkTheme.surface, borderRadius: '8px', border: `1px solid ${darkTheme.border}` }}>
+            <Card sx={{
+              backgroundColor: darkTheme.surface,
+              borderRadius: '8px',
+              border: `1px solid ${darkTheme.border}`,
+              transition: 'all 0.2s ease-in-out',
+              '&:hover': {
+                borderColor: darkTheme.primary,
+                transform: 'translateY(-4px)',
+              }
+            }}>
               <CardContent sx={{ p: 4 }}>
                 <Typography
                   sx={{
@@ -511,6 +600,7 @@ const NewRoomRatePage: React.FC = () => {
                       value={formData.minStay}
                       onChange={(e) => handleInputChange('minStay', parseInt(e.target.value) || 1)}
                       required
+                      disabled={loading}
                       sx={{
                         flex: 1,
                         minWidth: 200,
@@ -521,6 +611,7 @@ const NewRoomRatePage: React.FC = () => {
                           '& fieldset': { borderColor: darkTheme.border },
                           '&:hover fieldset': { borderColor: darkTheme.primary },
                           '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                          transition: 'all 0.2s ease-in-out',
                         },
                         '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                       }}
@@ -530,6 +621,7 @@ const NewRoomRatePage: React.FC = () => {
                       type="number"
                       value={formData.maxStay || ''}
                       onChange={(e) => handleInputChange('maxStay', e.target.value ? parseInt(e.target.value) : null)}
+                      disabled={loading}
                       sx={{
                         flex: 1,
                         minWidth: 200,
@@ -540,6 +632,7 @@ const NewRoomRatePage: React.FC = () => {
                           '& fieldset': { borderColor: darkTheme.border },
                           '&:hover fieldset': { borderColor: darkTheme.primary },
                           '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                          transition: 'all 0.2s ease-in-out',
                         },
                         '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                       }}
@@ -551,6 +644,7 @@ const NewRoomRatePage: React.FC = () => {
                       type="number"
                       value={formData.minAdvance || ''}
                       onChange={(e) => handleInputChange('minAdvance', e.target.value ? parseInt(e.target.value) : null)}
+                      disabled={loading}
                       sx={{
                         flex: 1,
                         minWidth: 200,
@@ -561,6 +655,7 @@ const NewRoomRatePage: React.FC = () => {
                           '& fieldset': { borderColor: darkTheme.border },
                           '&:hover fieldset': { borderColor: darkTheme.primary },
                           '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                          transition: 'all 0.2s ease-in-out',
                         },
                         '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                       }}
@@ -570,6 +665,7 @@ const NewRoomRatePage: React.FC = () => {
                       type="number"
                       value={formData.maxAdvance || ''}
                       onChange={(e) => handleInputChange('maxAdvance', e.target.value ? parseInt(e.target.value) : null)}
+                      disabled={loading}
                       sx={{
                         flex: 1,
                         minWidth: 200,
@@ -580,47 +676,26 @@ const NewRoomRatePage: React.FC = () => {
                           '& fieldset': { borderColor: darkTheme.border },
                           '&:hover fieldset': { borderColor: darkTheme.primary },
                           '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                          transition: 'all 0.2s ease-in-out',
                         },
                         '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                       }}
                     />
                   </Box>
-                  <Box sx={{ mt: 3 }}>
-                    <Typography variant="subtitle2" sx={{ mb: 2, color: darkTheme.textSecondary, fontWeight: 600 }}>
-                      Days of the Week
-                    </Typography>
-                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
-                      {weekDays.map((day) => (
-                        <FormControlLabel
-                          key={day.value}
-                          control={
-                            <Switch
-                              checked={formData[day.value as keyof RoomRateFormData] as boolean}
-                              onChange={(e) => handleDayOfWeekChange(day.value, e.target.checked)}
-                              sx={{
-                                '& .MuiSwitch-switchBase.Mui-checked': {
-                                  color: darkTheme.primary,
-                                  '&:hover': { backgroundColor: 'rgba(59, 130, 246, 0.04)' },
-                                },
-                                '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-                                  backgroundColor: darkTheme.primary,
-                                },
-                                '& .MuiSwitch-track': {
-                                  backgroundColor: darkTheme.border,
-                                },
-                              }}
-                            />
-                          }
-                          label={<Typography sx={{ color: darkTheme.text }}>{day.label}</Typography>}
-                        />
-                      ))}
-                    </Box>
-                  </Box>
                 </Box>
               </CardContent>
             </Card>
 
-            <Card sx={{ backgroundColor: darkTheme.surface, borderRadius: '8px', border: `1px solid ${darkTheme.border}` }}>
+            <Card sx={{
+              backgroundColor: darkTheme.surface,
+              borderRadius: '8px',
+              border: `1px solid ${darkTheme.border}`,
+              transition: 'all 0.2s ease-in-out',
+              '&:hover': {
+                borderColor: darkTheme.primary,
+                transform: 'translateY(-4px)',
+              }
+            }}>
               <CardContent sx={{ p: 4 }}>
                 <Typography
                   sx={{
@@ -634,12 +709,14 @@ const NewRoomRatePage: React.FC = () => {
                 >
                   Settings
                 </Typography>
+
                 <Box sx={{ display: 'flex', gap: 4 }}>
                   <FormControlLabel
                     control={
                       <Switch
                         checked={formData.isActive}
                         onChange={(e) => handleInputChange('isActive', e.target.checked)}
+                        disabled={loading}
                         sx={{
                           '& .MuiSwitch-switchBase.Mui-checked': {
                             color: darkTheme.success,
@@ -651,12 +728,13 @@ const NewRoomRatePage: React.FC = () => {
                           '& .MuiSwitch-track': {
                             backgroundColor: darkTheme.border,
                           },
+                          transition: 'all 0.2s ease-in-out',
                         }}
                       />
                     }
                     label={
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <MoneyIcon sx={{ fontSize: 16, color: darkTheme.textSecondary }} />
+                        <MoneyIcon sx={{ fontSize: 16, color: darkTheme.success }} />
                         <Typography sx={{ color: darkTheme.textSecondary }}>Active</Typography>
                       </Box>
                     }
@@ -666,6 +744,7 @@ const NewRoomRatePage: React.FC = () => {
                       <Switch
                         checked={formData.isDefault}
                         onChange={(e) => handleInputChange('isDefault', e.target.checked)}
+                        disabled={loading}
                         sx={{
                           '& .MuiSwitch-switchBase.Mui-checked': {
                             color: darkTheme.warning,
@@ -677,6 +756,7 @@ const NewRoomRatePage: React.FC = () => {
                           '& .MuiSwitch-track': {
                             backgroundColor: darkTheme.border,
                           },
+                          transition: 'all 0.2s ease-in-out',
                         }}
                       />
                     }
@@ -695,6 +775,7 @@ const NewRoomRatePage: React.FC = () => {
               <Button
                 type="button"
                 onClick={() => router.push(`/${businessUnitId}/admin/operations/room-rates`)}
+                disabled={loading}
                 sx={{
                   color: darkTheme.textSecondary,
                   borderColor: darkTheme.border,
@@ -703,9 +784,15 @@ const NewRoomRatePage: React.FC = () => {
                   borderRadius: '8px',
                   textTransform: 'none',
                   fontWeight: 600,
+                  transition: 'all 0.2s ease-in-out',
                   '&:hover': {
                     backgroundColor: darkTheme.surfaceHover,
                     borderColor: darkTheme.textSecondary,
+                    transform: 'translateY(-2px)',
+                  },
+                  '&:disabled': {
+                    color: darkTheme.textSecondary,
+                    opacity: 0.5,
                   },
                 }}
                 variant="outlined"
@@ -715,7 +802,7 @@ const NewRoomRatePage: React.FC = () => {
               <Button
                 type="submit"
                 variant="contained"
-                startIcon={<SaveIcon />}
+                startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />}
                 disabled={loading}
                 sx={{
                   backgroundColor: darkTheme.primary,
@@ -726,11 +813,14 @@ const NewRoomRatePage: React.FC = () => {
                   fontWeight: 600,
                   textTransform: 'none',
                   borderRadius: '8px',
+                  transition: 'all 0.2s ease-in-out',
                   '&:hover': {
                     backgroundColor: darkTheme.primaryHover,
+                    transform: 'translateY(-2px)',
                   },
                   '&:disabled': {
                     backgroundColor: darkTheme.textSecondary,
+                    color: darkTheme.surface,
                   },
                 }}
               >
@@ -744,6 +834,7 @@ const NewRoomRatePage: React.FC = () => {
           open={snackbar.open}
           autoHideDuration={6000}
           onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
         >
           <Alert
             onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}

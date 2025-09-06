@@ -14,6 +14,7 @@ import {
   Alert,
   Snackbar,
   IconButton,
+  CircularProgress,
 } from '@mui/material';
 import {
   ArrowBack as ArrowBackIcon,
@@ -24,7 +25,6 @@ import {
 import { useRouter } from 'next/navigation';
 import { createFAQ, CreateFAQData } from '@/lib/actions/faq-management';
 import { useBusinessUnit } from '@/context/business-unit-context';
-
 
 // Enhanced dark theme matching BusinessUnitSwitcher aesthetic
 const darkTheme = {
@@ -128,9 +128,11 @@ const NewFAQPage: React.FC = () => {
               sx={{ 
                 mr: 2, 
                 color: darkTheme.textSecondary,
+                transition: 'all 0.2s ease-in-out',
                 '&:hover': {
                   backgroundColor: darkTheme.surfaceHover,
                   color: darkTheme.text,
+                  transform: 'scale(1.1)',
                 } 
               }}
             >
@@ -177,7 +179,16 @@ const NewFAQPage: React.FC = () => {
         <form onSubmit={handleSubmit}>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
             {/* Basic Information */}
-            <Card sx={{ backgroundColor: darkTheme.surface, borderRadius: '8px', border: `1px solid ${darkTheme.border}` }}>
+            <Card sx={{ 
+              backgroundColor: darkTheme.surface, 
+              borderRadius: '8px', 
+              border: `1px solid ${darkTheme.border}`,
+              transition: 'all 0.2s ease-in-out',
+              '&:hover': {
+                borderColor: darkTheme.primary,
+                transform: 'translateY(-4px)',
+              }
+            }}>
               <CardContent sx={{ p: 4 }}>
                 <Typography
                   sx={{
@@ -207,6 +218,7 @@ const NewFAQPage: React.FC = () => {
                         '& fieldset': { borderColor: darkTheme.border },
                         '&:hover fieldset': { borderColor: darkTheme.primary },
                         '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                        transition: 'all 0.2s ease-in-out',
                       },
                       '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                     }}
@@ -228,6 +240,7 @@ const NewFAQPage: React.FC = () => {
                         '& fieldset': { borderColor: darkTheme.border },
                         '&:hover fieldset': { borderColor: darkTheme.primary },
                         '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                        transition: 'all 0.2s ease-in-out',
                       },
                       '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                     }}
@@ -248,6 +261,7 @@ const NewFAQPage: React.FC = () => {
                         '& fieldset': { borderColor: darkTheme.border },
                         '&:hover fieldset': { borderColor: darkTheme.primary },
                         '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                        transition: 'all 0.2s ease-in-out',
                       },
                       '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                       '& .MuiFormHelperText-root': { color: darkTheme.textSecondary }
@@ -268,6 +282,7 @@ const NewFAQPage: React.FC = () => {
                         '& fieldset': { borderColor: darkTheme.border },
                         '&:hover fieldset': { borderColor: darkTheme.primary },
                         '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                        transition: 'all 0.2s ease-in-out',
                       },
                       '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                     }}
@@ -277,7 +292,16 @@ const NewFAQPage: React.FC = () => {
             </Card>
 
             {/* Settings */}
-            <Card sx={{ backgroundColor: darkTheme.surface, borderRadius: '8px', border: `1px solid ${darkTheme.border}` }}>
+            <Card sx={{ 
+              backgroundColor: darkTheme.surface, 
+              borderRadius: '8px', 
+              border: `1px solid ${darkTheme.border}`,
+              transition: 'all 0.2s ease-in-out',
+              '&:hover': {
+                borderColor: darkTheme.primary,
+                transform: 'translateY(-4px)',
+              }
+            }}>
               <CardContent sx={{ p: 4 }}>
                 <Typography
                   sx={{
@@ -309,6 +333,7 @@ const NewFAQPage: React.FC = () => {
                           '& .MuiSwitch-track': {
                             backgroundColor: darkTheme.border,
                           },
+                          transition: 'all 0.2s ease-in-out',
                         }}
                       />
                     }
@@ -335,6 +360,7 @@ const NewFAQPage: React.FC = () => {
                           '& .MuiSwitch-track': {
                             backgroundColor: darkTheme.border,
                           },
+                          transition: 'all 0.2s ease-in-out',
                         }}
                       />
                     }
@@ -354,6 +380,7 @@ const NewFAQPage: React.FC = () => {
               <Button
                 type="button"
                 onClick={() => router.push(`/${businessUnitId}/admin/cms/faqs`)}
+                disabled={loading}
                 sx={{
                   color: darkTheme.textSecondary,
                   borderColor: darkTheme.border,
@@ -362,9 +389,15 @@ const NewFAQPage: React.FC = () => {
                   borderRadius: '8px',
                   textTransform: 'none',
                   fontWeight: 600,
+                  transition: 'all 0.2s ease-in-out',
                   '&:hover': {
                     backgroundColor: darkTheme.surfaceHover,
                     borderColor: darkTheme.textSecondary,
+                    transform: 'translateY(-2px)',
+                  },
+                  '&:disabled': {
+                    color: darkTheme.textSecondary,
+                    opacity: 0.5,
                   },
                 }}
                 variant="outlined"
@@ -374,7 +407,7 @@ const NewFAQPage: React.FC = () => {
               <Button
                 type="submit"
                 variant="contained"
-                startIcon={<SaveIcon />}
+                startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />}
                 disabled={loading}
                 sx={{
                   backgroundColor: darkTheme.primary,
@@ -385,11 +418,14 @@ const NewFAQPage: React.FC = () => {
                   fontWeight: 600,
                   textTransform: 'none',
                   borderRadius: '8px',
+                  transition: 'all 0.2s ease-in-out',
                   '&:hover': {
                     backgroundColor: darkTheme.primaryHover,
+                    transform: 'translateY(-2px)',
                   },
                   '&:disabled': {
                     backgroundColor: darkTheme.textSecondary,
+                    color: darkTheme.surface,
                   },
                 }}
               >
@@ -404,6 +440,7 @@ const NewFAQPage: React.FC = () => {
           open={snackbar.open}
           autoHideDuration={6000}
           onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
         >
           <Alert
             onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}

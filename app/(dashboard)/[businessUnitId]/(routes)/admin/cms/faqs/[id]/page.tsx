@@ -14,6 +14,7 @@ import {
   Alert,
   Snackbar,
   IconButton,
+  CircularProgress,
 } from '@mui/material';
 import {
   ArrowBack as ArrowBackIcon,
@@ -135,7 +136,6 @@ const EditFAQPage: React.FC = () => {
           message: 'FAQ updated successfully',
           severity: 'success',
         });
-        // Redirect back to the FAQ list page
         router.push(`/${businessUnitId}/admin/cms/faqs`);
       } else {
         setSnackbar({
@@ -165,11 +165,12 @@ const EditFAQPage: React.FC = () => {
           backgroundColor: darkTheme.background, 
           minHeight: '100vh',
           color: darkTheme.text,
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
         }}
       >
-        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
-          <Typography sx={{ color: darkTheme.text }}>Loading FAQ...</Typography>
-        </Box>
+        <CircularProgress size={60} sx={{ color: darkTheme.text }} />
       </Container>
     );
   }
@@ -185,7 +186,8 @@ const EditFAQPage: React.FC = () => {
           color: darkTheme.text,
         }}
       >
-        <Alert severity="error"
+        <Alert 
+          severity="error"
           sx={{
             backgroundColor: darkTheme.errorBg,
             borderColor: darkTheme.error,
@@ -197,7 +199,8 @@ const EditFAQPage: React.FC = () => {
             '& .MuiAlert-icon': {
               color: darkTheme.error
             }
-          }}>
+          }}
+        >
           FAQ not found
         </Alert>
       </Container>
@@ -221,9 +224,11 @@ const EditFAQPage: React.FC = () => {
               sx={{ 
                 mr: 2, 
                 color: darkTheme.textSecondary,
+                transition: 'all 0.2s ease-in-out',
                 '&:hover': {
                   backgroundColor: darkTheme.surfaceHover,
                   color: darkTheme.text,
+                  transform: 'scale(1.1)',
                 } 
               }}
             >
@@ -270,7 +275,16 @@ const EditFAQPage: React.FC = () => {
         <form onSubmit={handleSubmit}>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
             {/* Basic Information */}
-            <Card sx={{ backgroundColor: darkTheme.surface, borderRadius: '8px', border: `1px solid ${darkTheme.border}` }}>
+            <Card sx={{ 
+              backgroundColor: darkTheme.surface, 
+              borderRadius: '8px', 
+              border: `1px solid ${darkTheme.border}`,
+              transition: 'all 0.2s ease-in-out',
+              '&:hover': {
+                borderColor: darkTheme.primary,
+                transform: 'translateY(-4px)',
+              }
+            }}>
               <CardContent sx={{ p: 4 }}>
                 <Typography
                   sx={{
@@ -370,7 +384,16 @@ const EditFAQPage: React.FC = () => {
             </Card>
 
             {/* Settings */}
-            <Card sx={{ backgroundColor: darkTheme.surface, borderRadius: '8px', border: `1px solid ${darkTheme.border}` }}>
+            <Card sx={{ 
+              backgroundColor: darkTheme.surface, 
+              borderRadius: '8px', 
+              border: `1px solid ${darkTheme.border}`,
+              transition: 'all 0.2s ease-in-out',
+              '&:hover': {
+                borderColor: darkTheme.primary,
+                transform: 'translateY(-4px)',
+              }
+            }}>
               <CardContent sx={{ p: 4 }}>
                 <Typography
                   sx={{
@@ -402,6 +425,7 @@ const EditFAQPage: React.FC = () => {
                           '& .MuiSwitch-track': {
                             backgroundColor: darkTheme.border,
                           },
+                          transition: 'all 0.2s ease-in-out',
                         }}
                       />
                     }
@@ -421,6 +445,7 @@ const EditFAQPage: React.FC = () => {
               <Button
                 type="button"
                 onClick={() => router.push(`/${businessUnitId}/admin/cms/faqs`)}
+                disabled={saving}
                 sx={{
                   color: darkTheme.textSecondary,
                   borderColor: darkTheme.border,
@@ -429,9 +454,15 @@ const EditFAQPage: React.FC = () => {
                   borderRadius: '8px',
                   textTransform: 'none',
                   fontWeight: 600,
+                  transition: 'all 0.2s ease-in-out',
                   '&:hover': {
                     backgroundColor: darkTheme.surfaceHover,
                     borderColor: darkTheme.textSecondary,
+                    transform: 'translateY(-2px)',
+                  },
+                  '&:disabled': {
+                    color: darkTheme.textSecondary,
+                    opacity: 0.5,
                   },
                 }}
                 variant="outlined"
@@ -441,7 +472,7 @@ const EditFAQPage: React.FC = () => {
               <Button
                 type="submit"
                 variant="contained"
-                startIcon={<SaveIcon />}
+                startIcon={saving ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />}
                 disabled={saving}
                 sx={{
                   backgroundColor: darkTheme.primary,
@@ -452,11 +483,14 @@ const EditFAQPage: React.FC = () => {
                   fontWeight: 600,
                   textTransform: 'none',
                   borderRadius: '8px',
+                  transition: 'all 0.2s ease-in-out',
                   '&:hover': {
                     backgroundColor: darkTheme.primaryHover,
+                    transform: 'translateY(-2px)',
                   },
                   '&:disabled': {
                     backgroundColor: darkTheme.textSecondary,
+                    color: darkTheme.surface,
                   },
                 }}
               >
@@ -471,6 +505,7 @@ const EditFAQPage: React.FC = () => {
           open={snackbar.open}
           autoHideDuration={6000}
           onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
         >
           <Alert
             onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}

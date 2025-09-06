@@ -260,7 +260,7 @@ const EditRoomRatePage: React.FC = () => {
           alignItems: 'center',
         }}
       >
-        <CircularProgress sx={{ color: darkTheme.primary }} />
+        <CircularProgress size={60} sx={{ color: darkTheme.text }} />
       </Box>
     );
   }
@@ -303,12 +303,15 @@ const EditRoomRatePage: React.FC = () => {
             <IconButton
               component={Link}
               href={`/${businessUnitId}/admin/operations/room-rates`}
+              disabled={saving}
               sx={{
                 mr: 2,
                 color: darkTheme.textSecondary,
+                transition: 'all 0.2s ease-in-out',
                 '&:hover': {
                   backgroundColor: darkTheme.surfaceHover,
                   color: darkTheme.text,
+                  transform: 'scale(1.1)',
                 }
               }}
             >
@@ -355,7 +358,18 @@ const EditRoomRatePage: React.FC = () => {
         <form onSubmit={handleSubmit}>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
             {/* Basic Information */}
-            <Card sx={{ backgroundColor: darkTheme.surface, borderRadius: '8px', border: `1px solid ${darkTheme.border}` }}>
+            <Card
+              sx={{
+                backgroundColor: darkTheme.surface,
+                borderRadius: '8px',
+                border: `1px solid ${darkTheme.border}`,
+                transition: 'all 0.2s ease-in-out',
+                '&:hover': {
+                  borderColor: darkTheme.primary,
+                  transform: 'translateY(-4px)',
+                }
+              }}
+            >
               <CardContent sx={{ p: 4 }}>
                 <Typography
                   sx={{
@@ -377,6 +391,7 @@ const EditRoomRatePage: React.FC = () => {
                     onChange={(e) => handleInputChange('name', e.target.value)}
                     required
                     fullWidth
+                    disabled={saving}
                     sx={{
                       '& .MuiOutlinedInput-root': {
                         borderRadius: '8px',
@@ -385,6 +400,7 @@ const EditRoomRatePage: React.FC = () => {
                         '& fieldset': { borderColor: darkTheme.border },
                         '&:hover fieldset': { borderColor: darkTheme.primary },
                         '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                        transition: 'all 0.2s ease-in-out',
                       },
                       '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                     }}
@@ -397,6 +413,7 @@ const EditRoomRatePage: React.FC = () => {
                     multiline
                     rows={3}
                     fullWidth
+                    disabled={saving}
                     sx={{
                       '& .MuiOutlinedInput-root': {
                         borderRadius: '8px',
@@ -405,13 +422,14 @@ const EditRoomRatePage: React.FC = () => {
                         '& fieldset': { borderColor: darkTheme.border },
                         '&:hover fieldset': { borderColor: darkTheme.primary },
                         '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                        transition: 'all 0.2s ease-in-out',
                       },
                       '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                     }}
                   />
 
                   <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-                    <FormControl sx={{ minWidth: 200, flex: 1 }}>
+                    <FormControl fullWidth disabled={saving} sx={{ minWidth: 200, flex: 1 }}>
                       <InputLabel sx={{ color: darkTheme.textSecondary }}>Room Type</InputLabel>
                       <Select
                         value={formData.roomTypeId}
@@ -424,6 +442,7 @@ const EditRoomRatePage: React.FC = () => {
                           '& .MuiOutlinedInput-notchedOutline': { borderColor: darkTheme.border },
                           '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: darkTheme.primary },
                           '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: darkTheme.primary },
+                          transition: 'all 0.2s ease-in-out',
                         }}
                         MenuProps={{
                           sx: {
@@ -459,7 +478,18 @@ const EditRoomRatePage: React.FC = () => {
             </Card>
 
             {/* Pricing Information */}
-            <Card sx={{ backgroundColor: darkTheme.surface, borderRadius: '8px', border: `1px solid ${darkTheme.border}` }}>
+            <Card
+              sx={{
+                backgroundColor: darkTheme.surface,
+                borderRadius: '8px',
+                border: `1px solid ${darkTheme.border}`,
+                transition: 'all 0.2s ease-in-out',
+                '&:hover': {
+                  borderColor: darkTheme.primary,
+                  transform: 'translateY(-4px)',
+                }
+              }}
+            >
               <CardContent sx={{ p: 4 }}>
                 <Typography
                   sx={{
@@ -482,6 +512,7 @@ const EditRoomRatePage: React.FC = () => {
                       value={formData.baseRate}
                       onChange={(e) => handleInputChange('baseRate', parseFloat(e.target.value) || 0)}
                       required
+                      disabled={saving}
                       sx={{
                         flex: 1,
                         minWidth: 200,
@@ -492,6 +523,7 @@ const EditRoomRatePage: React.FC = () => {
                           '& fieldset': { borderColor: darkTheme.border },
                           '&:hover fieldset': { borderColor: darkTheme.primary },
                           '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                          transition: 'all 0.2s ease-in-out',
                         },
                         '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                       }}
@@ -500,6 +532,7 @@ const EditRoomRatePage: React.FC = () => {
                       label="Currency"
                       value={formData.currency}
                       onChange={(e) => handleInputChange('currency', e.target.value)}
+                      disabled={saving}
                       sx={{
                         width: 150,
                         '& .MuiOutlinedInput-root': {
@@ -509,6 +542,7 @@ const EditRoomRatePage: React.FC = () => {
                           '& fieldset': { borderColor: darkTheme.border },
                           '&:hover fieldset': { borderColor: darkTheme.primary },
                           '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                          transition: 'all 0.2s ease-in-out',
                         },
                         '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                       }}
@@ -519,7 +553,18 @@ const EditRoomRatePage: React.FC = () => {
             </Card>
 
             {/* Validity Period */}
-            <Card sx={{ backgroundColor: darkTheme.surface, borderRadius: '8px', border: `1px solid ${darkTheme.border}` }}>
+            <Card
+              sx={{
+                backgroundColor: darkTheme.surface,
+                borderRadius: '8px',
+                border: `1px solid ${darkTheme.border}`,
+                transition: 'all 0.2s ease-in-out',
+                '&:hover': {
+                  borderColor: darkTheme.primary,
+                  transform: 'translateY(-4px)',
+                }
+              }}
+            >
               <CardContent sx={{ p: 4 }}>
                 <Typography
                   sx={{
@@ -542,6 +587,7 @@ const EditRoomRatePage: React.FC = () => {
                     onChange={(e) => handleInputChange('validFrom', e.target.value)}
                     required
                     InputLabelProps={{ shrink: true }}
+                    disabled={saving}
                     sx={{
                       flex: 1,
                       minWidth: 200,
@@ -552,6 +598,7 @@ const EditRoomRatePage: React.FC = () => {
                         '& fieldset': { borderColor: darkTheme.border },
                         '&:hover fieldset': { borderColor: darkTheme.primary },
                         '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                        transition: 'all 0.2s ease-in-out',
                       },
                       '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                     }}
@@ -562,6 +609,7 @@ const EditRoomRatePage: React.FC = () => {
                     value={formData.validTo}
                     onChange={(e) => handleInputChange('validTo', e.target.value)}
                     InputLabelProps={{ shrink: true }}
+                    disabled={saving}
                     sx={{
                       flex: 1,
                       minWidth: 200,
@@ -572,6 +620,7 @@ const EditRoomRatePage: React.FC = () => {
                         '& fieldset': { borderColor: darkTheme.border },
                         '&:hover fieldset': { borderColor: darkTheme.primary },
                         '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                        transition: 'all 0.2s ease-in-out',
                       },
                       '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                     }}
@@ -591,6 +640,7 @@ const EditRoomRatePage: React.FC = () => {
                           <Switch
                             checked={formData[day.value as keyof RoomRateFormData] as boolean}
                             onChange={(e) => handleDayOfWeekChange(day.value, e.target.checked)}
+                            disabled={saving}
                             sx={{
                               '& .MuiSwitch-switchBase.Mui-checked': {
                                 color: darkTheme.primary,
@@ -602,6 +652,7 @@ const EditRoomRatePage: React.FC = () => {
                               '& .MuiSwitch-track': {
                                 backgroundColor: darkTheme.border,
                               },
+                              transition: 'all 0.2s ease-in-out',
                             }}
                           />
                         }
@@ -614,7 +665,18 @@ const EditRoomRatePage: React.FC = () => {
             </Card>
 
             {/* Booking Rules */}
-            <Card sx={{ backgroundColor: darkTheme.surface, borderRadius: '8px', border: `1px solid ${darkTheme.border}` }}>
+            <Card
+              sx={{
+                backgroundColor: darkTheme.surface,
+                borderRadius: '8px',
+                border: `1px solid ${darkTheme.border}`,
+                transition: 'all 0.2s ease-in-out',
+                '&:hover': {
+                  borderColor: darkTheme.primary,
+                  transform: 'translateY(-4px)',
+                }
+              }}
+            >
               <CardContent sx={{ p: 4 }}>
                 <Typography
                   sx={{
@@ -637,6 +699,7 @@ const EditRoomRatePage: React.FC = () => {
                       value={formData.minStay}
                       onChange={(e) => handleInputChange('minStay', parseInt(e.target.value) || 1)}
                       required
+                      disabled={saving}
                       sx={{
                         flex: 1,
                         minWidth: 200,
@@ -647,6 +710,7 @@ const EditRoomRatePage: React.FC = () => {
                           '& fieldset': { borderColor: darkTheme.border },
                           '&:hover fieldset': { borderColor: darkTheme.primary },
                           '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                          transition: 'all 0.2s ease-in-out',
                         },
                         '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                       }}
@@ -656,6 +720,7 @@ const EditRoomRatePage: React.FC = () => {
                       type="number"
                       value={formData.maxStay || ''}
                       onChange={(e) => handleInputChange('maxStay', e.target.value ? parseInt(e.target.value) : null)}
+                      disabled={saving}
                       sx={{
                         flex: 1,
                         minWidth: 200,
@@ -666,6 +731,7 @@ const EditRoomRatePage: React.FC = () => {
                           '& fieldset': { borderColor: darkTheme.border },
                           '&:hover fieldset': { borderColor: darkTheme.primary },
                           '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                          transition: 'all 0.2s ease-in-out',
                         },
                         '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                       }}
@@ -677,6 +743,7 @@ const EditRoomRatePage: React.FC = () => {
                       type="number"
                       value={formData.minAdvance || ''}
                       onChange={(e) => handleInputChange('minAdvance', e.target.value ? parseInt(e.target.value) : null)}
+                      disabled={saving}
                       sx={{
                         flex: 1,
                         minWidth: 200,
@@ -687,6 +754,7 @@ const EditRoomRatePage: React.FC = () => {
                           '& fieldset': { borderColor: darkTheme.border },
                           '&:hover fieldset': { borderColor: darkTheme.primary },
                           '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                          transition: 'all 0.2s ease-in-out',
                         },
                         '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                       }}
@@ -696,6 +764,7 @@ const EditRoomRatePage: React.FC = () => {
                       type="number"
                       value={formData.maxAdvance || ''}
                       onChange={(e) => handleInputChange('maxAdvance', e.target.value ? parseInt(e.target.value) : null)}
+                      disabled={saving}
                       sx={{
                         flex: 1,
                         minWidth: 200,
@@ -706,6 +775,7 @@ const EditRoomRatePage: React.FC = () => {
                           '& fieldset': { borderColor: darkTheme.border },
                           '&:hover fieldset': { borderColor: darkTheme.primary },
                           '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                          transition: 'all 0.2s ease-in-out',
                         },
                         '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                       }}
@@ -716,7 +786,18 @@ const EditRoomRatePage: React.FC = () => {
             </Card>
 
             {/* Settings */}
-            <Card sx={{ backgroundColor: darkTheme.surface, borderRadius: '8px', border: `1px solid ${darkTheme.border}` }}>
+            <Card
+              sx={{
+                backgroundColor: darkTheme.surface,
+                borderRadius: '8px',
+                border: `1px solid ${darkTheme.border}`,
+                transition: 'all 0.2s ease-in-out',
+                '&:hover': {
+                  borderColor: darkTheme.primary,
+                  transform: 'translateY(-4px)',
+                }
+              }}
+            >
               <CardContent sx={{ p: 4 }}>
                 <Typography
                   sx={{
@@ -737,6 +818,7 @@ const EditRoomRatePage: React.FC = () => {
                       <Switch
                         checked={formData.isActive}
                         onChange={(e) => handleInputChange('isActive', e.target.checked)}
+                        disabled={saving}
                         sx={{
                           '& .MuiSwitch-switchBase.Mui-checked': {
                             color: darkTheme.success,
@@ -748,6 +830,7 @@ const EditRoomRatePage: React.FC = () => {
                           '& .MuiSwitch-track': {
                             backgroundColor: darkTheme.border,
                           },
+                          transition: 'all 0.2s ease-in-out',
                         }}
                       />
                     }
@@ -763,6 +846,7 @@ const EditRoomRatePage: React.FC = () => {
                       <Switch
                         checked={formData.isDefault}
                         onChange={(e) => handleInputChange('isDefault', e.target.checked)}
+                        disabled={saving}
                         sx={{
                           '& .MuiSwitch-switchBase.Mui-checked': {
                             color: darkTheme.warning,
@@ -774,6 +858,7 @@ const EditRoomRatePage: React.FC = () => {
                           '& .MuiSwitch-track': {
                             backgroundColor: darkTheme.border,
                           },
+                          transition: 'all 0.2s ease-in-out',
                         }}
                       />
                     }
@@ -793,6 +878,7 @@ const EditRoomRatePage: React.FC = () => {
               <Button
                 type="button"
                 onClick={() => router.push(`/${businessUnitId}/admin/operations/room-rates`)}
+                disabled={saving}
                 sx={{
                   color: darkTheme.textSecondary,
                   borderColor: darkTheme.border,
@@ -801,9 +887,15 @@ const EditRoomRatePage: React.FC = () => {
                   borderRadius: '8px',
                   textTransform: 'none',
                   fontWeight: 600,
+                  transition: 'all 0.2s ease-in-out',
                   '&:hover': {
                     backgroundColor: darkTheme.surfaceHover,
                     borderColor: darkTheme.textSecondary,
+                    transform: 'translateY(-2px)',
+                  },
+                  '&:disabled': {
+                    color: darkTheme.textSecondary,
+                    opacity: 0.5,
                   },
                 }}
                 variant="outlined"
@@ -813,7 +905,7 @@ const EditRoomRatePage: React.FC = () => {
               <Button
                 type="submit"
                 variant="contained"
-                startIcon={<SaveIcon />}
+                startIcon={saving ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />}
                 disabled={saving}
                 sx={{
                   backgroundColor: darkTheme.primary,
@@ -824,11 +916,14 @@ const EditRoomRatePage: React.FC = () => {
                   fontWeight: 600,
                   textTransform: 'none',
                   borderRadius: '8px',
+                  transition: 'all 0.2s ease-in-out',
                   '&:hover': {
                     backgroundColor: darkTheme.primaryHover,
+                    transform: 'translateY(-2px)',
                   },
                   '&:disabled': {
                     backgroundColor: darkTheme.textSecondary,
+                    color: darkTheme.surface,
                   },
                 }}
               >
@@ -843,6 +938,7 @@ const EditRoomRatePage: React.FC = () => {
           open={snackbar.open}
           autoHideDuration={6000}
           onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
         >
           <Alert
             onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}

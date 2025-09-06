@@ -19,6 +19,7 @@ import {
   TextField,
   Snackbar,
   Divider,
+  CircularProgress,
 } from '@mui/material';
 import {
   ArrowBack as ArrowBackIcon,
@@ -51,7 +52,6 @@ const darkTheme = {
   errorBg: 'rgba(239, 68, 68, 0.1)',
   warning: '#f59e0b',
   warningBg: 'rgba(245, 158, 11, 0.1)',
-  // FIX: Added errorHover to the theme object
   errorHover: '#b91c1c',
 };
 
@@ -101,7 +101,6 @@ const PaymentDetailPage: React.FC = () => {
     if (paymentId && businessUnitId) {
       loadPayment();
     }
-    // FIX: Added businessUnitId to the dependency array
   }, [paymentId, router, businessUnitId]);
 
   const handleRefund = async () => {
@@ -198,17 +197,33 @@ const PaymentDetailPage: React.FC = () => {
 
   if (loading) {
     return (
-      <Container maxWidth="xl" sx={{ py: 4, backgroundColor: darkTheme.background, minHeight: '100vh' }}>
-        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
-          <Typography sx={{ color: darkTheme.text }}>Loading payment details...</Typography>
-        </Box>
+      <Container
+        maxWidth="xl"
+        sx={{
+          py: 4,
+          backgroundColor: darkTheme.background,
+          minHeight: '100vh',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}
+      >
+        <CircularProgress size={60} sx={{ color: darkTheme.text }} />
       </Container>
     );
   }
 
   if (!payment) {
     return (
-      <Container maxWidth="xl" sx={{ py: 4, backgroundColor: darkTheme.background, minHeight: '100vh' }}>
+      <Container
+        maxWidth="xl"
+        sx={{
+          py: 4,
+          backgroundColor: darkTheme.background,
+          minHeight: '100vh',
+          color: darkTheme.text,
+        }}
+      >
         <Alert severity="error"
           sx={{
             backgroundColor: darkTheme.errorBg,
@@ -228,8 +243,6 @@ const PaymentDetailPage: React.FC = () => {
     );
   }
   
-  // FIX: The original refund condition used status === 'SUCCEEDED' || payment.status !== 'REFUNDED',
-  // which is redundant and potentially buggy. A more robust check is against the refund status.
   const isRefundable = payment.status === 'SUCCEEDED' || payment.status === 'PAID';
 
   return (
@@ -246,12 +259,15 @@ const PaymentDetailPage: React.FC = () => {
           <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
             <IconButton
               onClick={() => router.push(`/${businessUnitId}/admin/operations/payments`)}
+              disabled={actionLoading}
               sx={{
                 mr: 2,
                 color: darkTheme.textSecondary,
+                transition: 'all 0.2s ease-in-out',
                 '&:hover': {
                   backgroundColor: darkTheme.surfaceHover,
                   color: darkTheme.text,
+                  transform: 'scale(1.1)',
                 }
               }}
             >
@@ -297,7 +313,18 @@ const PaymentDetailPage: React.FC = () => {
 
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
           {/* Payment Overview */}
-          <Card sx={{ backgroundColor: darkTheme.surface, borderRadius: '8px', border: `1px solid ${darkTheme.border}` }}>
+          <Card
+            sx={{
+              backgroundColor: darkTheme.surface,
+              borderRadius: '8px',
+              border: `1px solid ${darkTheme.border}`,
+              transition: 'all 0.2s ease-in-out',
+              '&:hover': {
+                borderColor: darkTheme.primary,
+                transform: 'translateY(-4px)',
+              }
+            }}
+          >
             <CardContent sx={{ p: 4 }}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3 }}>
                 <Box>
@@ -320,6 +347,8 @@ const PaymentDetailPage: React.FC = () => {
                         backgroundColor: darkTheme[getPaymentStatusBg(payment.status)],
                         color: darkTheme[getPaymentStatusColor(payment.status)],
                         fontWeight: 600,
+                        transition: 'all 0.2s ease-in-out',
+                        '&:hover': { transform: 'scale(1.05)' },
                       }}
                     />
                     <Chip
@@ -331,7 +360,9 @@ const PaymentDetailPage: React.FC = () => {
                         backgroundColor: darkTheme.selectedBg,
                         color: darkTheme.primary,
                         fontWeight: 600,
-                        '& .MuiChip-icon': { color: darkTheme.primary },
+                        transition: 'all 0.2s ease-in-out',
+                        '& .MuiChip-icon': { color: darkTheme.primary, transition: 'color 0.2s ease-in-out' },
+                        '&:hover': { transform: 'scale(1.05)' },
                       }}
                     />
                   </Box>
@@ -340,8 +371,9 @@ const PaymentDetailPage: React.FC = () => {
                 <Box sx={{ display: 'flex', gap: 1 }}>
                   {isRefundable && (
                     <Button
-                      startIcon={<RefundIcon />}
+                      startIcon={actionLoading ? <CircularProgress size={20} color="inherit" /> : <RefundIcon />}
                       onClick={() => setRefundDialog(true)}
+                      disabled={actionLoading}
                       sx={{
                         backgroundColor: darkTheme.error,
                         color: 'white',
@@ -351,19 +383,25 @@ const PaymentDetailPage: React.FC = () => {
                         fontSize: '12px',
                         fontWeight: 600,
                         borderRadius: '8px',
-                        '&:hover': { backgroundColor: darkTheme.errorHover },
-                        '&:disabled': { backgroundColor: darkTheme.textSecondary, color: darkTheme.surface },
-                        border: '1px solid transparent'
+                        border: '1px solid transparent',
+                        transition: 'all 0.2s ease-in-out',
+                        '&:hover': {
+                          backgroundColor: darkTheme.errorHover,
+                          transform: 'translateY(-2px)',
+                        },
+                        '&:disabled': {
+                          backgroundColor: darkTheme.textSecondary,
+                          color: darkTheme.surface,
+                          opacity: 0.5,
+                        },
                       }}
-                      disabled={actionLoading}
                     >
-                      Refund
+                      {actionLoading ? 'Processing...' : 'Refund'}
                     </Button>
                   )}
                 </Box>
               </Box>
 
-              {/* FIX: Use providerPaymentId as transaction ID */}
               {payment.providerPaymentId && (
                 <Typography
                   sx={{
@@ -377,7 +415,6 @@ const PaymentDetailPage: React.FC = () => {
                 </Typography>
               )}
 
-              {/* FIX: Use paymongoPaymentId from the nested object */}
               {payment.paymongoPayment?.paymentIntentId && (
                 <Typography
                   sx={{
@@ -394,7 +431,18 @@ const PaymentDetailPage: React.FC = () => {
 
           {/* Reservation Information */}
           {payment.reservation && (
-            <Card sx={{ backgroundColor: darkTheme.surface, borderRadius: '8px', border: `1px solid ${darkTheme.border}` }}>
+            <Card
+              sx={{
+                backgroundColor: darkTheme.surface,
+                borderRadius: '8px',
+                border: `1px solid ${darkTheme.border}`,
+                transition: 'all 0.2s ease-in-out',
+                '&:hover': {
+                  borderColor: darkTheme.primary,
+                  transform: 'translateY(-4px)',
+                }
+              }}
+            >
               <CardContent sx={{ p: 4 }}>
                 <Typography
                   sx={{
@@ -459,7 +507,18 @@ const PaymentDetailPage: React.FC = () => {
 
           {/* Payment Breakdown */}
           {payment.lineItems.length > 0 && (
-            <Card sx={{ backgroundColor: darkTheme.surface, borderRadius: '8px', border: `1px solid ${darkTheme.border}` }}>
+            <Card
+              sx={{
+                backgroundColor: darkTheme.surface,
+                borderRadius: '8px',
+                border: `1px solid ${darkTheme.border}`,
+                transition: 'all 0.2s ease-in-out',
+                '&:hover': {
+                  borderColor: darkTheme.primary,
+                  transform: 'translateY(-4px)',
+                }
+              }}
+            >
               <CardContent sx={{ p: 4 }}>
                 <Typography
                   sx={{
@@ -510,7 +569,18 @@ const PaymentDetailPage: React.FC = () => {
           )}
 
           {/* Payment Details */}
-          <Card sx={{ backgroundColor: darkTheme.surface, borderRadius: '8px', border: `1px solid ${darkTheme.border}` }}>
+          <Card
+            sx={{
+              backgroundColor: darkTheme.surface,
+              borderRadius: '8px',
+              border: `1px solid ${darkTheme.border}`,
+              transition: 'all 0.2s ease-in-out',
+              '&:hover': {
+                borderColor: darkTheme.primary,
+                transform: 'translateY(-4px)',
+              }
+            }}
+          >
             <CardContent sx={{ p: 4 }}>
               <Typography
                 sx={{
@@ -547,11 +617,11 @@ const PaymentDetailPage: React.FC = () => {
                       backgroundColor: darkTheme[getPaymentStatusBg(payment.status)],
                       color: darkTheme[getPaymentStatusColor(payment.status)],
                       fontWeight: 600,
+                      transition: 'all 0.2s ease-in-out',
+                      '&:hover': { transform: 'scale(1.05)' },
                     }}
                   />
                 </Box>
-
-                {/* FIX: Removed description field as it is not in the Payment model */}
 
                 <Box>
                   <Typography variant="subtitle2" sx={{ color: darkTheme.text, fontWeight: 600, mb: 0.5 }}>
@@ -587,7 +657,18 @@ const PaymentDetailPage: React.FC = () => {
 
           {/* Metadata */}
           {payment.providerMetadata && Object.keys(payment.providerMetadata).length > 0 && (
-            <Card sx={{ backgroundColor: darkTheme.surface, borderRadius: '8px', border: `1px solid ${darkTheme.border}` }}>
+            <Card
+              sx={{
+                backgroundColor: darkTheme.surface,
+                borderRadius: '8px',
+                border: `1px solid ${darkTheme.border}`,
+                transition: 'all 0.2s ease-in-out',
+                '&:hover': {
+                  borderColor: darkTheme.primary,
+                  transform: 'translateY(-4px)',
+                }
+              }}
+            >
               <CardContent sx={{ p: 4 }}>
                 <Typography
                   sx={{
@@ -602,7 +683,13 @@ const PaymentDetailPage: React.FC = () => {
                   Additional Information
                 </Typography>
 
-                <Box sx={{ backgroundColor: darkTheme.background, p: 3, borderRadius: '8px', border: `1px solid ${darkTheme.border}` }}>
+                <Box sx={{
+                  backgroundColor: darkTheme.background,
+                  p: 3,
+                  borderRadius: '8px',
+                  border: `1px solid ${darkTheme.border}`,
+                  overflowX: 'auto',
+                }}>
                   <pre style={{ margin: 0, fontSize: '0.875rem', color: darkTheme.textSecondary }}>
                     {JSON.stringify(payment.providerMetadata, null, 2)}
                   </pre>
@@ -650,6 +737,7 @@ const PaymentDetailPage: React.FC = () => {
                   '& fieldset': { borderColor: darkTheme.border },
                   '&:hover fieldset': { borderColor: darkTheme.primary },
                   '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                  transition: 'all 0.2s ease-in-out',
                 },
                 '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
               }}
@@ -667,13 +755,20 @@ const PaymentDetailPage: React.FC = () => {
           <DialogActions sx={{ p: 2, pt: 1 }}>
             <Button
               onClick={() => setRefundDialog(false)}
+              disabled={actionLoading}
               sx={{
                 color: darkTheme.textSecondary,
                 fontSize: '12px',
                 fontWeight: 600,
                 textTransform: 'none',
+                transition: 'all 0.2s ease-in-out',
                 '&:hover': {
                   backgroundColor: darkTheme.surfaceHover,
+                  transform: 'translateY(-2px)',
+                },
+                '&:disabled': {
+                  color: darkTheme.textSecondary,
+                  opacity: 0.5,
                 },
               }}
             >
@@ -683,6 +778,7 @@ const PaymentDetailPage: React.FC = () => {
               onClick={handleRefund}
               variant="contained"
               disabled={actionLoading}
+              startIcon={actionLoading ? <CircularProgress size={16} color="inherit" /> : <RefundIcon />}
               sx={{
                 backgroundColor: darkTheme.error,
                 color: 'white',
@@ -692,8 +788,15 @@ const PaymentDetailPage: React.FC = () => {
                 fontWeight: 600,
                 textTransform: 'none',
                 borderRadius: '8px',
-                '&:hover': { backgroundColor: darkTheme.errorHover },
-                '&:disabled': { backgroundColor: darkTheme.textSecondary, color: darkTheme.surface },
+                transition: 'all 0.2s ease-in-out',
+                '&:hover': {
+                  backgroundColor: darkTheme.errorHover,
+                  transform: 'translateY(-2px)',
+                },
+                '&:disabled': {
+                  backgroundColor: darkTheme.textSecondary,
+                  color: darkTheme.surface,
+                },
               }}
             >
               {actionLoading ? 'Processing...' : 'Process Refund'}
@@ -706,6 +809,7 @@ const PaymentDetailPage: React.FC = () => {
           open={snackbar.open}
           autoHideDuration={6000}
           onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
         >
           <Alert
             onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}

@@ -20,6 +20,7 @@ import {
   IconButton,
   Tabs,
   Tab,
+  CircularProgress,
 } from '@mui/material';
 import {
   ArrowBack as ArrowBackIcon,
@@ -86,9 +87,9 @@ interface BusinessUnitFormData {
 
 interface BusinessUnitImages {
   logo: { fileName: string; name: string; fileUrl: string } | null;
-  images: Array<{ 
-    fileName: string; 
-    name: string; 
+  images: Array<{
+    fileName: string;
+    name: string;
     fileUrl: string;
     imageId?: string; // Add this to track existing image IDs
   }>;
@@ -119,7 +120,7 @@ function TabPanel(props: TabPanelProps) {
       aria-labelledby={`simple-tab-${index}`}
       {...other}
     >
-      {value === index && <Box>{children}</Box>}
+      {value === index && <Box sx={{ py: 3 }}>{children}</Box>}
     </div>
   );
 }
@@ -183,74 +184,74 @@ const EditBusinessUnitPage: React.FC = () => {
     }
   }, [status, router]);
 
-useEffect(() => {
-  const loadBusinessUnit = async () => {
-    try {
-      const businessUnitData = await getBusinessUnitById(businessUnitId);
-      if (businessUnitData) {
-        setBusinessUnit(businessUnitData);
-        setFormData({
-          name: businessUnitData.name,
-          displayName: businessUnitData.displayName,
-          description: businessUnitData.description || '',
-          shortDescription: businessUnitData.shortDescription || '',
-          propertyType: businessUnitData.propertyType,
-          city: businessUnitData.city,
-          state: businessUnitData.state || '',
-          country: businessUnitData.country,
-          address: businessUnitData.address || '',
-          latitude: businessUnitData.latitude,
-          longitude: businessUnitData.longitude,
-          phone: businessUnitData.phone || '',
-          email: businessUnitData.email || '',
-          website: businessUnitData.website || '',
-          slug: businessUnitData.slug,
-          isActive: businessUnitData.isActive,
-          isPublished: businessUnitData.isPublished,
-          isFeatured: businessUnitData.isFeatured,
-          sortOrder: businessUnitData.sortOrder,
-          primaryColor: businessUnitData.primaryColor || '',
-          secondaryColor: businessUnitData.secondaryColor || '',
-          logo: businessUnitData.logo || '',
-        });
+  useEffect(() => {
+    const loadBusinessUnit = async () => {
+      try {
+        const businessUnitData = await getBusinessUnitById(businessUnitId);
+        if (businessUnitData) {
+          setBusinessUnit(businessUnitData);
+          setFormData({
+            name: businessUnitData.name,
+            displayName: businessUnitData.displayName,
+            description: businessUnitData.description || '',
+            shortDescription: businessUnitData.shortDescription || '',
+            propertyType: businessUnitData.propertyType,
+            city: businessUnitData.city,
+            state: businessUnitData.state || '',
+            country: businessUnitData.country,
+            address: businessUnitData.address || '',
+            latitude: businessUnitData.latitude,
+            longitude: businessUnitData.longitude,
+            phone: businessUnitData.phone || '',
+            email: businessUnitData.email || '',
+            website: businessUnitData.website || '',
+            slug: businessUnitData.slug,
+            isActive: businessUnitData.isActive,
+            isPublished: businessUnitData.isPublished,
+            isFeatured: businessUnitData.isFeatured,
+            sortOrder: businessUnitData.sortOrder,
+            primaryColor: businessUnitData.primaryColor || '',
+            secondaryColor: businessUnitData.secondaryColor || '',
+            logo: businessUnitData.logo || '',
+          });
 
-        // Initialize existing property images with proper ID tracking
-        if (businessUnitData.images && businessUnitData.images.length > 0) {
-          const existingImages = businessUnitData.images.map(img => ({
-            fileName: img.image.originalUrl.split('/').pop() || 'image',
-            name: img.image.title || img.image.altText || 'Property Image',
-            fileUrl: img.image.originalUrl,
-            imageId: img.image.id, // Store the image ID for tracking
-          }));
-          
-          setImages(prev => ({
-            ...prev,
-            images: existingImages,
-          }));
+          // Initialize existing property images with proper ID tracking
+          if (businessUnitData.images && businessUnitData.images.length > 0) {
+            const existingImages = businessUnitData.images.map(img => ({
+              fileName: img.image.originalUrl.split('/').pop() || 'image',
+              name: img.image.title || img.image.altText || 'Property Image',
+              fileUrl: img.image.originalUrl,
+              imageId: img.image.id, // Store the image ID for tracking
+            }));
+            
+            setImages(prev => ({
+              ...prev,
+              images: existingImages,
+            }));
+          }
+        } else {
+          setSnackbar({
+            open: true,
+            message: 'Business unit not found',
+            severity: 'error',
+          });
+          router.push(`/${currentBusinessUnitId}/admin/operations/properties`);
         }
-      } else {
+      } catch (error) {
         setSnackbar({
           open: true,
-          message: 'Business unit not found',
+          message: `Failed to load business unit ${error}`,
           severity: 'error',
         });
-        router.push(`/${currentBusinessUnitId}/admin/operations/properties`);
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      setSnackbar({
-        open: true,
-        message: `Failed to load business unit ${error}`,
-        severity: 'error',
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
 
-  if (businessUnitId && currentBusinessUnitId && status === 'authenticated') {
-    loadBusinessUnit();
-  }
-}, [businessUnitId, router, currentBusinessUnitId, status]);
+    if (businessUnitId && currentBusinessUnitId && status === 'authenticated') {
+      loadBusinessUnit();
+    }
+  }, [businessUnitId, router, currentBusinessUnitId, status]);
 
 
   const handleInputChange = (field: keyof BusinessUnitFormData, value: string | number | boolean) => {
@@ -285,22 +286,22 @@ useEffect(() => {
   };
 
   const handleImageRemove = (index: number) => {
-  const imageToRemove = images.images[index];
-  
-  // If this is an existing image (has an imageId), add it to removeImageIds
-  if (imageToRemove.imageId) {
+    const imageToRemove = images.images[index];
+    
+    // If this is an existing image (has an imageId), add it to removeImageIds
+    if (imageToRemove.imageId) {
+      setImages(prev => ({
+        ...prev,
+        removeImageIds: [...prev.removeImageIds, imageToRemove.imageId!],
+      }));
+    }
+
+    // Remove from display
     setImages(prev => ({
       ...prev,
-      removeImageIds: [...prev.removeImageIds, imageToRemove.imageId!],
+      images: prev.images.filter((_, i) => i !== index),
     }));
-  }
-
-  // Remove from display
-  setImages(prev => ({
-    ...prev,
-    images: prev.images.filter((_, i) => i !== index),
-  }));
-};
+  };
 
 
   const handleUploadError = (error: string) => {
@@ -311,80 +312,85 @@ useEffect(() => {
     });
   };
 
-const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setSaving(true);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
 
-  try {
-    // Filter out new images (ones that weren't in the original business unit)
-    // AND filter out any images with null fileUrl
-    const newImages = images.images
-      .filter(img => {
-        if (!businessUnit?.images) return true;
-        return !businessUnit.images.some(existingImg => 
-          existingImg.image.originalUrl === img.fileUrl
-        );
-      })
-      .filter(img => img.fileUrl !== null) // Filter out null fileUrl
-      .map(img => ({
-        ...img,
-        fileUrl: img.fileUrl as string // Type assertion since we filtered out nulls
-      }));
+    try {
+      // Filter out new images (ones that weren't in the original business unit)
+      // AND filter out any images with null fileUrl
+      const newImages = images.images
+        .filter(img => {
+          if (!businessUnit?.images) return true;
+          return !businessUnit.images.some(existingImg =>
+            existingImg.image.originalUrl === img.fileUrl
+          );
+        })
+        .filter(img => img.fileUrl !== null) // Filter out null fileUrl
+        .map(img => ({
+          ...img,
+          fileUrl: img.fileUrl as string // Type assertion since we filtered out nulls
+        }));
 
-    const businessUnitData: UpdateBusinessUnitData = {
-      id: businessUnitId,
-      ...formData,
-      description: formData.description || null,
-      shortDescription: formData.shortDescription || null,
-      state: formData.state || null,
-      address: formData.address || null,
-      phone: formData.phone || null,
-      email: formData.email || null,
-      website: formData.website || null,
-      primaryColor: formData.primaryColor || null,
-      secondaryColor: formData.secondaryColor || null,
-      logo: formData.logo || null,
-      // Include new images and removal instructions
-      propertyImages: newImages.length > 0 ? newImages : undefined,
-      removeImageIds: images.removeImageIds.length > 0 ? images.removeImageIds : undefined,
-    };
+      const businessUnitData: UpdateBusinessUnitData = {
+        id: businessUnitId,
+        ...formData,
+        description: formData.description || null,
+        shortDescription: formData.shortDescription || null,
+        state: formData.state || null,
+        address: formData.address || null,
+        phone: formData.phone || null,
+        email: formData.email || null,
+        website: formData.website || null,
+        primaryColor: formData.primaryColor || null,
+        secondaryColor: formData.secondaryColor || null,
+        logo: formData.logo || null,
+        // Include new images and removal instructions
+        propertyImages: newImages.length > 0 ? newImages : undefined,
+        removeImageIds: images.removeImageIds.length > 0 ? images.removeImageIds : undefined,
+      };
 
-    const result = await updateBusinessUnit(businessUnitData);
+      const result = await updateBusinessUnit(businessUnitData);
 
-    if (result.success) {
+      if (result.success) {
+        setSnackbar({
+          open: true,
+          message: 'Business unit updated successfully',
+          severity: 'success',
+        });
+        router.push(`/${currentBusinessUnitId}/admin/operations/properties`);
+      } else {
+        setSnackbar({
+          open: true,
+          message: result.message || 'Failed to update business unit',
+          severity: 'error',
+        });
+      }
+    } catch (error) {
       setSnackbar({
         open: true,
-        message: 'Business unit updated successfully',
-        severity: 'success',
-      });
-      router.push(`/${currentBusinessUnitId}/admin/operations/properties`);
-    } else {
-      setSnackbar({
-        open: true,
-        message: result.message || 'Failed to update business unit',
+        message: `An error occurred while updating business unit ${error}`,
         severity: 'error',
       });
+    } finally {
+      setSaving(false);
     }
-  } catch (error) {
-    setSnackbar({
-      open: true,
-      message: `An error occurred while updating business unit ${error}`,
-      severity: 'error',
-    });
-  } finally {
-    setSaving(false);
-  }
-};
+  };
 
   // Show loading if session is still loading
   if (status === 'loading' || loading) {
     return (
-      <Box sx={{ backgroundColor: darkTheme.background, minHeight: '100vh', color: darkTheme.text }}>
-        <Container maxWidth="xl" sx={{ py: 4 }}>
-          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
-            <Typography sx={{ color: darkTheme.text }}>Loading...</Typography>
-          </Box>
-        </Container>
+      <Box
+        sx={{
+          backgroundColor: darkTheme.background,
+          minHeight: '100vh',
+          color: darkTheme.text,
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}
+      >
+        <CircularProgress size={60} sx={{ color: darkTheme.text }} />
       </Box>
     );
   }
@@ -452,12 +458,15 @@ const handleSubmit = async (e: React.FormEvent) => {
           <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
             <IconButton
               onClick={() => router.push(`/${currentBusinessUnitId}/admin/operations/properties`)}
+              disabled={saving}
               sx={{
                 mr: 2,
                 color: darkTheme.textSecondary,
+                transition: 'all 0.2s ease-in-out',
                 '&:hover': {
                   backgroundColor: darkTheme.surfaceHover,
                   color: darkTheme.text,
+                  transform: 'scale(1.1)',
                 }
               }}
             >
@@ -530,7 +539,16 @@ const handleSubmit = async (e: React.FormEvent) => {
           <TabPanel value={tabValue} index={0}>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
               {/* Basic Information */}
-              <Card sx={{ backgroundColor: darkTheme.surface, borderRadius: '8px', border: `1px solid ${darkTheme.border}` }}>
+              <Card sx={{
+                backgroundColor: darkTheme.surface,
+                borderRadius: '8px',
+                border: `1px solid ${darkTheme.border}`,
+                transition: 'all 0.2s ease-in-out',
+                '&:hover': {
+                  borderColor: darkTheme.primary,
+                  transform: 'translateY(-4px)',
+                }
+              }}>
                 <CardContent sx={{ p: 4 }}>
                   <Typography
                     sx={{
@@ -552,6 +570,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                       onChange={(e) => handleInputChange('name', e.target.value)}
                       required
                       fullWidth
+                      disabled={saving}
                       sx={{
                         '& .MuiOutlinedInput-root': {
                           borderRadius: '8px',
@@ -560,6 +579,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                           '& fieldset': { borderColor: darkTheme.border },
                           '&:hover fieldset': { borderColor: darkTheme.primary },
                           '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                          transition: 'all 0.2s ease-in-out',
                         },
                         '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                       }}
@@ -572,6 +592,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                       required
                       fullWidth
                       helperText="Public-facing name for the property"
+                      disabled={saving}
                       sx={{
                         '& .MuiOutlinedInput-root': {
                           borderRadius: '8px',
@@ -580,6 +601,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                           '& fieldset': { borderColor: darkTheme.border },
                           '&:hover fieldset': { borderColor: darkTheme.primary },
                           '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                          transition: 'all 0.2s ease-in-out',
                         },
                         '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                         '& .MuiFormHelperText-root': { color: darkTheme.textSecondary }
@@ -593,6 +615,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                       required
                       fullWidth
                       helperText="URL-friendly version of the name"
+                      disabled={saving}
                       sx={{
                         '& .MuiOutlinedInput-root': {
                           borderRadius: '8px',
@@ -601,6 +624,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                           '& fieldset': { borderColor: darkTheme.border },
                           '&:hover fieldset': { borderColor: darkTheme.primary },
                           '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                          transition: 'all 0.2s ease-in-out',
                         },
                         '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                         '& .MuiFormHelperText-root': { color: darkTheme.textSecondary }
@@ -614,6 +638,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                       multiline
                       rows={4}
                       fullWidth
+                      disabled={saving}
                       sx={{
                         '& .MuiOutlinedInput-root': {
                           borderRadius: '8px',
@@ -622,6 +647,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                           '& fieldset': { borderColor: darkTheme.border },
                           '&:hover fieldset': { borderColor: darkTheme.primary },
                           '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                          transition: 'all 0.2s ease-in-out',
                         },
                         '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                       }}
@@ -635,6 +661,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                       rows={2}
                       fullWidth
                       helperText="Brief description for cards and previews"
+                      disabled={saving}
                       sx={{
                         '& .MuiOutlinedInput-root': {
                           borderRadius: '8px',
@@ -643,13 +670,14 @@ const handleSubmit = async (e: React.FormEvent) => {
                           '& fieldset': { borderColor: darkTheme.border },
                           '&:hover fieldset': { borderColor: darkTheme.primary },
                           '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                          transition: 'all 0.2s ease-in-out',
                         },
                         '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                         '& .MuiFormHelperText-root': { color: darkTheme.textSecondary }
                       }}
                     />
 
-                    <FormControl sx={{ minWidth: 200, flex: 1, '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}>
+                    <FormControl sx={{ minWidth: 200, flex: 1, '& .MuiOutlinedInput-root': { borderRadius: '8px' } }} disabled={saving}>
                       <InputLabel sx={{ color: darkTheme.textSecondary }}>Property Type</InputLabel>
                       <Select
                         value={formData.propertyType}
@@ -662,6 +690,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                           '& .MuiOutlinedInput-notchedOutline': { borderColor: darkTheme.border },
                           '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: darkTheme.primary },
                           '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: darkTheme.primary },
+                          transition: 'all 0.2s ease-in-out',
                         }}
                       >
                         {propertyTypes.map((type) => (
@@ -676,7 +705,16 @@ const handleSubmit = async (e: React.FormEvent) => {
               </Card>
 
               {/* Location Information */}
-              <Card sx={{ backgroundColor: darkTheme.surface, borderRadius: '8px', border: `1px solid ${darkTheme.border}` }}>
+              <Card sx={{
+                backgroundColor: darkTheme.surface,
+                borderRadius: '8px',
+                border: `1px solid ${darkTheme.border}`,
+                transition: 'all 0.2s ease-in-out',
+                '&:hover': {
+                  borderColor: darkTheme.primary,
+                  transform: 'translateY(-4px)',
+                }
+              }}>
                 <CardContent sx={{ p: 4 }}>
                   <Typography
                     sx={{
@@ -697,6 +735,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                       value={formData.address}
                       onChange={(e) => handleInputChange('address', e.target.value)}
                       fullWidth
+                      disabled={saving}
                       sx={{
                         '& .MuiOutlinedInput-root': {
                           borderRadius: '8px',
@@ -705,6 +744,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                           '& fieldset': { borderColor: darkTheme.border },
                           '&:hover fieldset': { borderColor: darkTheme.primary },
                           '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                          transition: 'all 0.2s ease-in-out',
                         },
                         '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                       }}
@@ -716,6 +756,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                         value={formData.city}
                         onChange={(e) => handleInputChange('city', e.target.value)}
                         required
+                        disabled={saving}
                         sx={{
                           flex: 1,
                           minWidth: 200,
@@ -726,6 +767,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                             '& fieldset': { borderColor: darkTheme.border },
                             '&:hover fieldset': { borderColor: darkTheme.primary },
                             '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                            transition: 'all 0.2s ease-in-out',
                           },
                           '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                         }}
@@ -734,6 +776,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                         label="State/Province"
                         value={formData.state}
                         onChange={(e) => handleInputChange('state', e.target.value)}
+                        disabled={saving}
                         sx={{
                           flex: 1,
                           minWidth: 200,
@@ -744,6 +787,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                             '& fieldset': { borderColor: darkTheme.border },
                             '&:hover fieldset': { borderColor: darkTheme.primary },
                             '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                            transition: 'all 0.2s ease-in-out',
                           },
                           '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                         }}
@@ -753,6 +797,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                         value={formData.country}
                         onChange={(e) => handleInputChange('country', e.target.value)}
                         required
+                        disabled={saving}
                         sx={{
                           flex: 1,
                           minWidth: 200,
@@ -763,6 +808,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                             '& fieldset': { borderColor: darkTheme.border },
                             '&:hover fieldset': { borderColor: darkTheme.primary },
                             '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                            transition: 'all 0.2s ease-in-out',
                           },
                           '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                         }}
@@ -776,6 +822,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                         value={formData.latitude || ''}
                         onChange={(e) => handleInputChange('latitude', e.target.value ? parseFloat(e.target.value) : "")}
                         inputProps={{ step: 'any' }}
+                        disabled={saving}
                         sx={{
                           flex: 1,
                           minWidth: 200,
@@ -786,6 +833,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                             '& fieldset': { borderColor: darkTheme.border },
                             '&:hover fieldset': { borderColor: darkTheme.primary },
                             '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                            transition: 'all 0.2s ease-in-out',
                           },
                           '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                         }}
@@ -796,6 +844,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                         value={formData.longitude || ''}
                         onChange={(e) => handleInputChange('longitude', e.target.value ? parseFloat(e.target.value) : "")}
                         inputProps={{ step: 'any' }}
+                        disabled={saving}
                         sx={{
                           flex: 1,
                           minWidth: 200,
@@ -806,6 +855,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                             '& fieldset': { borderColor: darkTheme.border },
                             '&:hover fieldset': { borderColor: darkTheme.primary },
                             '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                            transition: 'all 0.2s ease-in-out',
                           },
                           '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                         }}
@@ -816,7 +866,16 @@ const handleSubmit = async (e: React.FormEvent) => {
               </Card>
 
               {/* Contact Information */}
-              <Card sx={{ backgroundColor: darkTheme.surface, borderRadius: '8px', border: `1px solid ${darkTheme.border}` }}>
+              <Card sx={{
+                backgroundColor: darkTheme.surface,
+                borderRadius: '8px',
+                border: `1px solid ${darkTheme.border}`,
+                transition: 'all 0.2s ease-in-out',
+                '&:hover': {
+                  borderColor: darkTheme.primary,
+                  transform: 'translateY(-4px)',
+                }
+              }}>
                 <CardContent sx={{ p: 4 }}>
                   <Typography
                     sx={{
@@ -837,6 +896,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                         label="Phone"
                         value={formData.phone}
                         onChange={(e) => handleInputChange('phone', e.target.value)}
+                        disabled={saving}
                         sx={{
                           flex: 1,
                           minWidth: 200,
@@ -847,6 +907,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                             '& fieldset': { borderColor: darkTheme.border },
                             '&:hover fieldset': { borderColor: darkTheme.primary },
                             '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                            transition: 'all 0.2s ease-in-out',
                           },
                           '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                         }}
@@ -856,6 +917,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                         type="email"
                         value={formData.email}
                         onChange={(e) => handleInputChange('email', e.target.value)}
+                        disabled={saving}
                         sx={{
                           flex: 1,
                           minWidth: 200,
@@ -866,6 +928,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                             '& fieldset': { borderColor: darkTheme.border },
                             '&:hover fieldset': { borderColor: darkTheme.primary },
                             '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                            transition: 'all 0.2s ease-in-out',
                           },
                           '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                         }}
@@ -877,6 +940,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                       value={formData.website}
                       onChange={(e) => handleInputChange('website', e.target.value)}
                       fullWidth
+                      disabled={saving}
                       sx={{
                         '& .MuiOutlinedInput-root': {
                           borderRadius: '8px',
@@ -885,6 +949,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                           '& fieldset': { borderColor: darkTheme.border },
                           '&:hover fieldset': { borderColor: darkTheme.primary },
                           '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                          transition: 'all 0.2s ease-in-out',
                         },
                         '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                       }}
@@ -894,7 +959,16 @@ const handleSubmit = async (e: React.FormEvent) => {
               </Card>
 
               {/* Settings */}
-              <Card sx={{ backgroundColor: darkTheme.surface, borderRadius: '8px', border: `1px solid ${darkTheme.border}` }}>
+              <Card sx={{
+                backgroundColor: darkTheme.surface,
+                borderRadius: '8px',
+                border: `1px solid ${darkTheme.border}`,
+                transition: 'all 0.2s ease-in-out',
+                '&:hover': {
+                  borderColor: darkTheme.primary,
+                  transform: 'translateY(-4px)',
+                }
+              }}>
                 <CardContent sx={{ p: 4 }}>
                   <Typography
                     sx={{
@@ -915,6 +989,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                       type="number"
                       value={formData.sortOrder}
                       onChange={(e) => handleInputChange('sortOrder', parseInt(e.target.value) || 0)}
+                      disabled={saving}
                       sx={{
                         width: 200,
                         '& .MuiOutlinedInput-root': {
@@ -924,6 +999,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                           '& fieldset': { borderColor: darkTheme.border },
                           '&:hover fieldset': { borderColor: darkTheme.primary },
                           '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                          transition: 'all 0.2s ease-in-out',
                         },
                         '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                       }}
@@ -935,6 +1011,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                           <Switch
                             checked={formData.isActive}
                             onChange={(e) => handleInputChange('isActive', e.target.checked)}
+                            disabled={saving}
                             sx={{
                               '& .MuiSwitch-switchBase.Mui-checked': {
                                 color: darkTheme.success,
@@ -946,6 +1023,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                               '& .MuiSwitch-track': {
                                 backgroundColor: darkTheme.border,
                               },
+                              transition: 'all 0.2s ease-in-out',
                             }}
                           />
                         }
@@ -961,6 +1039,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                           <Switch
                             checked={formData.isPublished}
                             onChange={(e) => handleInputChange('isPublished', e.target.checked)}
+                            disabled={saving}
                             sx={{
                               '& .MuiSwitch-switchBase.Mui-checked': {
                                 color: darkTheme.primary,
@@ -972,6 +1051,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                               '& .MuiSwitch-track': {
                                 backgroundColor: darkTheme.border,
                               },
+                              transition: 'all 0.2s ease-in-out',
                             }}
                           />
                         }
@@ -987,6 +1067,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                           <Switch
                             checked={formData.isFeatured}
                             onChange={(e) => handleInputChange('isFeatured', e.target.checked)}
+                            disabled={saving}
                             sx={{
                               '& .MuiSwitch-switchBase.Mui-checked': {
                                 color: darkTheme.warning,
@@ -998,6 +1079,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                               '& .MuiSwitch-track': {
                                 backgroundColor: darkTheme.border,
                               },
+                              transition: 'all 0.2s ease-in-out',
                             }}
                           />
                         }
@@ -1018,7 +1100,16 @@ const handleSubmit = async (e: React.FormEvent) => {
           <TabPanel value={tabValue} index={1}>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
               {/* Logo Upload */}
-              <Card sx={{ backgroundColor: darkTheme.surface, borderRadius: '8px', border: `1px solid ${darkTheme.border}` }}>
+              <Card sx={{
+                backgroundColor: darkTheme.surface,
+                borderRadius: '8px',
+                border: `1px solid ${darkTheme.border}`,
+                transition: 'all 0.2s ease-in-out',
+                '&:hover': {
+                  borderColor: darkTheme.primary,
+                  transform: 'translateY(-4px)',
+                }
+              }}>
                 <CardContent sx={{ p: 4 }}>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
                     <PhotoIcon sx={{ fontSize: 20, color: darkTheme.primary }} />
@@ -1064,7 +1155,16 @@ const handleSubmit = async (e: React.FormEvent) => {
               </Card>
 
               {/* Property Images */}
-              <Card sx={{ backgroundColor: darkTheme.surface, borderRadius: '8px', border: `1px solid ${darkTheme.border}` }}>
+              <Card sx={{
+                backgroundColor: darkTheme.surface,
+                borderRadius: '8px',
+                border: `1px solid ${darkTheme.border}`,
+                transition: 'all 0.2s ease-in-out',
+                '&:hover': {
+                  borderColor: darkTheme.primary,
+                  transform: 'translateY(-4px)',
+                }
+              }}>
                 <CardContent sx={{ p: 4 }}>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
                     <AddPhotoIcon sx={{ fontSize: 20, color: darkTheme.primary }} />
@@ -1081,47 +1181,56 @@ const handleSubmit = async (e: React.FormEvent) => {
                     </Typography>
                   </Box>
 
-   {/* Existing Images */}
-    {images.images.length > 0 && (
-      <Box sx={{ mb: 3 }}>
-        <Typography sx={{ fontSize: '12px', color: darkTheme.textSecondary, mb: 2 }}>
-          Property Images ({images.images.length})
-        </Typography>
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          {images.images.map((image, index) => (
-            <UploadedFileDisplay
-              key={`${image.fileUrl}-${index}`}
-              fileName={image.fileName}
-              name={image.name}
-              fileUrl={image.fileUrl}
-              onRemove={() => handleImageRemove(index)}
-              disabled={saving}
-            />
-          ))}
-        </Box>
-      </Box>
-    )}
-  {/* Upload New Images - Updated for multiple files */}
-    <Box sx={{ mb: 3 }}>
-      <FileUpload
-        onUploadComplete={handleImageUpload}
-        onUploadError={handleUploadError}
-        disabled={saving}
-        maxSize={10}
-        accept=".jpg,.jpeg,.png,.gif,.webp"
-        multiple={true}
-        maxFiles={5}
-      />
-    </Box>
+                  {/* Existing Images */}
+                  {images.images.length > 0 && (
+                    <Box sx={{ mb: 3 }}>
+                      <Typography sx={{ fontSize: '12px', color: darkTheme.textSecondary, mb: 2 }}>
+                        Property Images ({images.images.length})
+                      </Typography>
+                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                        {images.images.map((image, index) => (
+                          <UploadedFileDisplay
+                            key={`${image.fileUrl}-${index}`}
+                            fileName={image.fileName}
+                            name={image.name}
+                            fileUrl={image.fileUrl}
+                            onRemove={() => handleImageRemove(index)}
+                            disabled={saving}
+                          />
+                        ))}
+                      </Box>
+                    </Box>
+                  )}
+                  {/* Upload New Images - Updated for multiple files */}
+                  <Box sx={{ mb: 3 }}>
+                    <FileUpload
+                      onUploadComplete={handleImageUpload}
+                      onUploadError={handleUploadError}
+                      disabled={saving}
+                      maxSize={10}
+                      accept=".jpg,.jpeg,.png,.gif,.webp"
+                      multiple={true}
+                      maxFiles={5}
+                    />
+                  </Box>
 
-              <Typography sx={{ fontSize: '12px', color: darkTheme.textSecondary }}>
-      Upload up to 5 images showcasing your property. Recommended size: 1200x800px or larger. Supports JPG, PNG, WEBP and GIF formats.
-    </Typography>
+                  <Typography sx={{ fontSize: '12px', color: darkTheme.textSecondary }}>
+                    Upload up to 5 images showcasing your property. Recommended size: 1200x800px or larger. Supports JPG, PNG, WEBP and GIF formats.
+                  </Typography>
                 </CardContent>
               </Card>
 
               {/* Branding */}
-              <Card sx={{ backgroundColor: darkTheme.surface, borderRadius: '8px', border: `1px solid ${darkTheme.border}` }}>
+              <Card sx={{
+                backgroundColor: darkTheme.surface,
+                borderRadius: '8px',
+                border: `1px solid ${darkTheme.border}`,
+                transition: 'all 0.2s ease-in-out',
+                '&:hover': {
+                  borderColor: darkTheme.primary,
+                  transform: 'translateY(-4px)',
+                }
+              }}>
                 <CardContent sx={{ p: 4 }}>
                   <Typography
                     sx={{
@@ -1143,6 +1252,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                         value={formData.primaryColor}
                         onChange={(e) => handleInputChange('primaryColor', e.target.value)}
                         placeholder="#111827"
+                        disabled={saving}
                         sx={{
                           flex: 1,
                           minWidth: 200,
@@ -1153,6 +1263,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                             '& fieldset': { borderColor: darkTheme.border },
                             '&:hover fieldset': { borderColor: darkTheme.primary },
                             '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                            transition: 'all 0.2s ease-in-out',
                           },
                           '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                         }}
@@ -1162,6 +1273,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                         value={formData.secondaryColor}
                         onChange={(e) => handleInputChange('secondaryColor', e.target.value)}
                         placeholder="#6b7280"
+                        disabled={saving}
                         sx={{
                           flex: 1,
                           minWidth: 200,
@@ -1172,6 +1284,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                             '& fieldset': { borderColor: darkTheme.border },
                             '&:hover fieldset': { borderColor: darkTheme.primary },
                             '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                            transition: 'all 0.2s ease-in-out',
                           },
                           '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                         }}
@@ -1191,6 +1304,7 @@ const handleSubmit = async (e: React.FormEvent) => {
             <Button
               type="button"
               onClick={() => router.push(`/${currentBusinessUnitId}/admin/operations/properties`)}
+              disabled={saving}
               sx={{
                 color: darkTheme.textSecondary,
                 borderColor: darkTheme.border,
@@ -1199,9 +1313,15 @@ const handleSubmit = async (e: React.FormEvent) => {
                 borderRadius: '8px',
                 textTransform: 'none',
                 fontWeight: 600,
+                transition: 'all 0.2s ease-in-out',
                 '&:hover': {
                   backgroundColor: darkTheme.surfaceHover,
                   borderColor: darkTheme.textSecondary,
+                  transform: 'translateY(-2px)',
+                },
+                '&:disabled': {
+                  color: darkTheme.textSecondary,
+                  opacity: 0.5,
                 },
               }}
               variant="outlined"
@@ -1211,7 +1331,7 @@ const handleSubmit = async (e: React.FormEvent) => {
             <Button
               type="submit"
               variant="contained"
-              startIcon={<SaveIcon />}
+              startIcon={saving ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />}
               disabled={saving}
               sx={{
                 backgroundColor: darkTheme.primary,
@@ -1222,11 +1342,14 @@ const handleSubmit = async (e: React.FormEvent) => {
                 fontWeight: 600,
                 textTransform: 'none',
                 borderRadius: '8px',
+                transition: 'all 0.2s ease-in-out',
                 '&:hover': {
                   backgroundColor: darkTheme.primaryHover,
+                  transform: 'translateY(-2px)',
                 },
                 '&:disabled': {
                   backgroundColor: darkTheme.textSecondary,
+                  color: darkTheme.surface,
                 },
               }}
             >
@@ -1240,6 +1363,7 @@ const handleSubmit = async (e: React.FormEvent) => {
           open={snackbar.open}
           autoHideDuration={6000}
           onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
         >
           <Alert
             onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}

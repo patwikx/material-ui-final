@@ -18,11 +18,11 @@ import {
   Alert,
   Snackbar,
   IconButton,
+  CircularProgress,
 } from '@mui/material';
 import {
   ArrowBack as ArrowBackIcon,
   Save as SaveIcon,
-  Photo as PhotoIcon,
   AddPhotoAlternate as AddPhotoIcon,
 } from '@mui/icons-material';
 import { useRouter, useParams } from 'next/navigation';
@@ -32,6 +32,7 @@ import { BusinessUnitData, getBusinessUnits } from '@/lib/actions/business-units
 import { getEventById, updateEvent, UpdateEventData } from '@/lib/cms-actions/events-management';
 
 import { FileUpload, UploadedFileDisplay } from '@/components/file-upload';
+import { useBusinessUnit } from '@/context/business-unit-context';
 // Enhanced dark theme matching BusinessUnitSwitcher aesthetic
 const darkTheme = {
   background: '#0a0e13',
@@ -79,9 +80,9 @@ interface EventFormData {
 }
 
 interface EventImages {
-  images: Array<{ 
-    fileName: string; 
-    name: string; 
+  images: Array<{
+    fileName: string;
+    name: string;
     fileUrl: string;
     imageId?: string;
   }>;
@@ -114,6 +115,7 @@ const EditEventPage: React.FC = () => {
   const router = useRouter();
   const params = useParams();
   const eventId = params.id as string;
+  const { businessUnitId } = useBusinessUnit();
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -212,7 +214,7 @@ const EditEventPage: React.FC = () => {
             message: 'Event not found',
             severity: 'error',
           });
-          router.push('/admin/cms/events');
+          router.push(`${businessUnitId}/admin/operations/events`);
         }
       } catch (error) {
         setSnackbar({
@@ -228,7 +230,7 @@ const EditEventPage: React.FC = () => {
     if (eventId) {
       loadData();
     }
-  }, [eventId, router]);
+  }, [eventId, router, businessUnitId]);
 
   const handleInputChange = (field: keyof EventFormData, value: string | number | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -276,7 +278,7 @@ const EditEventPage: React.FC = () => {
       const newImages = images.images
         .filter(img => {
           if (!event?.images) return true;
-          return !event.images.some(existingImg => 
+          return !event.images.some(existingImg =>
             existingImg.image.originalUrl === img.fileUrl
           );
         })
@@ -323,27 +325,28 @@ const EditEventPage: React.FC = () => {
 
   if (loading) {
     return (
-      <Container 
-        maxWidth="xl" 
-        sx={{ 
-          py: 4, 
-          backgroundColor: darkTheme.background, 
+      <Container
+        maxWidth="xl"
+        sx={{
+          py: 4,
+          backgroundColor: darkTheme.background,
           minHeight: '100vh',
           color: darkTheme.text,
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
         }}
       >
-        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
-          <Typography sx={{ color: darkTheme.text }}>Loading event...</Typography>
-        </Box>
+        <CircularProgress size={60} sx={{ color: darkTheme.text }} />
       </Container>
     );
   }
 
   if (!event) {
     return (
-      <Container 
-        maxWidth="xl" 
-        sx={{ 
+      <Container
+        maxWidth="xl"
+        sx={{
           py: 4,
           backgroundColor: darkTheme.background,
           minHeight: '100vh',
@@ -370,9 +373,9 @@ const EditEventPage: React.FC = () => {
   }
 
   return (
-    <Box 
-      sx={{ 
-        minHeight: '100vh', 
+    <Box
+      sx={{
+        minHeight: '100vh',
         backgroundColor: darkTheme.background,
         color: darkTheme.text,
       }}
@@ -382,14 +385,17 @@ const EditEventPage: React.FC = () => {
         <Box sx={{ mb: 6 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
             <IconButton
-              onClick={() => router.push('/admin/cms/events')}
-              sx={{ 
-                mr: 2, 
+              onClick={() => router.push(`${businessUnitId}/admin/operations/events'`)}
+              disabled={saving}
+              sx={{
+                mr: 2,
                 color: darkTheme.textSecondary,
+                transition: 'all 0.2s ease-in-out',
                 '&:hover': {
                   backgroundColor: darkTheme.surfaceHover,
                   color: darkTheme.text,
-                } 
+                  transform: 'scale(1.1)',
+                }
               }}
             >
               <ArrowBackIcon />
@@ -435,7 +441,16 @@ const EditEventPage: React.FC = () => {
         <form onSubmit={handleSubmit}>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
             {/* Basic Information */}
-            <Card sx={{ backgroundColor: darkTheme.surface, borderRadius: '8px', border: `1px solid ${darkTheme.border}` }}>
+            <Card sx={{
+              backgroundColor: darkTheme.surface,
+              borderRadius: '8px',
+              border: `1px solid ${darkTheme.border}`,
+              transition: 'all 0.2s ease-in-out',
+              '&:hover': {
+                borderColor: darkTheme.primary,
+                transform: 'translateY(-4px)',
+              }
+            }}>
               <CardContent sx={{ p: 4 }}>
                 <Typography
                   sx={{
@@ -457,6 +472,7 @@ const EditEventPage: React.FC = () => {
                     onChange={(e) => handleInputChange('title', e.target.value)}
                     required
                     fullWidth
+                    disabled={saving}
                     sx={{
                       '& .MuiOutlinedInput-root': {
                         borderRadius: '8px',
@@ -465,6 +481,7 @@ const EditEventPage: React.FC = () => {
                         '& fieldset': { borderColor: darkTheme.border },
                         '&:hover fieldset': { borderColor: darkTheme.primary },
                         '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                        transition: 'all 0.2s ease-in-out',
                       },
                       '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                     }}
@@ -477,6 +494,7 @@ const EditEventPage: React.FC = () => {
                     required
                     fullWidth
                     helperText="URL-friendly version of the title"
+                    disabled={saving}
                     sx={{
                       '& .MuiOutlinedInput-root': {
                         borderRadius: '8px',
@@ -485,6 +503,7 @@ const EditEventPage: React.FC = () => {
                         '& fieldset': { borderColor: darkTheme.border },
                         '&:hover fieldset': { borderColor: darkTheme.primary },
                         '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                        transition: 'all 0.2s ease-in-out',
                       },
                       '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                       '& .MuiFormHelperText-root': { color: darkTheme.textSecondary }
@@ -499,6 +518,7 @@ const EditEventPage: React.FC = () => {
                     multiline
                     rows={4}
                     fullWidth
+                    disabled={saving}
                     sx={{
                       '& .MuiOutlinedInput-root': {
                         borderRadius: '8px',
@@ -507,6 +527,7 @@ const EditEventPage: React.FC = () => {
                         '& fieldset': { borderColor: darkTheme.border },
                         '&:hover fieldset': { borderColor: darkTheme.primary },
                         '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                        transition: 'all 0.2s ease-in-out',
                       },
                       '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                     }}
@@ -520,6 +541,7 @@ const EditEventPage: React.FC = () => {
                     rows={2}
                     fullWidth
                     helperText="Brief description for cards and previews"
+                    disabled={saving}
                     sx={{
                       '& .MuiOutlinedInput-root': {
                         borderRadius: '8px',
@@ -528,6 +550,7 @@ const EditEventPage: React.FC = () => {
                         '& fieldset': { borderColor: darkTheme.border },
                         '&:hover fieldset': { borderColor: darkTheme.primary },
                         '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                        transition: 'all 0.2s ease-in-out',
                       },
                       '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                       '& .MuiFormHelperText-root': { color: darkTheme.textSecondary }
@@ -541,6 +564,7 @@ const EditEventPage: React.FC = () => {
                         value={formData.type}
                         onChange={(e) => handleInputChange('type', e.target.value as EventType)}
                         label="Event Type"
+                        disabled={saving}
                         sx={{
                           borderRadius: '8px',
                           backgroundColor: darkTheme.background,
@@ -548,6 +572,7 @@ const EditEventPage: React.FC = () => {
                           '& .MuiOutlinedInput-notchedOutline': { borderColor: darkTheme.border },
                           '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: darkTheme.primary },
                           '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: darkTheme.primary },
+                          transition: 'all 0.2s ease-in-out',
                         }}
                       >
                         {eventTypes.map((type) => (
@@ -564,6 +589,7 @@ const EditEventPage: React.FC = () => {
                         value={formData.status}
                         onChange={(e) => handleInputChange('status', e.target.value as EventStatus)}
                         label="Status"
+                        disabled={saving}
                         sx={{
                           borderRadius: '8px',
                           backgroundColor: darkTheme.background,
@@ -571,6 +597,7 @@ const EditEventPage: React.FC = () => {
                           '& .MuiOutlinedInput-notchedOutline': { borderColor: darkTheme.border },
                           '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: darkTheme.primary },
                           '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: darkTheme.primary },
+                          transition: 'all 0.2s ease-in-out',
                         }}
                       >
                         {eventStatuses.map((status) => (
@@ -587,6 +614,7 @@ const EditEventPage: React.FC = () => {
                         value={formData.businessUnitId}
                         onChange={(e) => handleInputChange('businessUnitId', e.target.value)}
                         label="Property"
+                        disabled={saving}
                         sx={{
                           borderRadius: '8px',
                           backgroundColor: darkTheme.background,
@@ -594,6 +622,7 @@ const EditEventPage: React.FC = () => {
                           '& .MuiOutlinedInput-notchedOutline': { borderColor: darkTheme.border },
                           '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: darkTheme.primary },
                           '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: darkTheme.primary },
+                          transition: 'all 0.2s ease-in-out',
                         }}
                       >
                         {businessUnits.map((unit) => (
@@ -609,7 +638,16 @@ const EditEventPage: React.FC = () => {
             </Card>
 
             {/* Date & Time */}
-            <Card sx={{ backgroundColor: darkTheme.surface, borderRadius: '8px', border: `1px solid ${darkTheme.border}` }}>
+            <Card sx={{
+              backgroundColor: darkTheme.surface,
+              borderRadius: '8px',
+              border: `1px solid ${darkTheme.border}`,
+              transition: 'all 0.2s ease-in-out',
+              '&:hover': {
+                borderColor: darkTheme.primary,
+                transform: 'translateY(-4px)',
+              }
+            }}>
               <CardContent sx={{ p: 4 }}>
                 <Typography
                   sx={{
@@ -633,6 +671,7 @@ const EditEventPage: React.FC = () => {
                       onChange={(e) => handleInputChange('startDate', e.target.value)}
                       required
                       InputLabelProps={{ shrink: true }}
+                      disabled={saving}
                       sx={{
                         flex: 1,
                         minWidth: 200,
@@ -643,6 +682,7 @@ const EditEventPage: React.FC = () => {
                           '& fieldset': { borderColor: darkTheme.border },
                           '&:hover fieldset': { borderColor: darkTheme.primary },
                           '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                          transition: 'all 0.2s ease-in-out',
                         },
                         '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                       }}
@@ -654,6 +694,7 @@ const EditEventPage: React.FC = () => {
                       onChange={(e) => handleInputChange('endDate', e.target.value)}
                       required
                       InputLabelProps={{ shrink: true }}
+                      disabled={saving}
                       sx={{
                         flex: 1,
                         minWidth: 200,
@@ -664,6 +705,7 @@ const EditEventPage: React.FC = () => {
                           '& fieldset': { borderColor: darkTheme.border },
                           '&:hover fieldset': { borderColor: darkTheme.primary },
                           '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                          transition: 'all 0.2s ease-in-out',
                         },
                         '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                       }}
@@ -677,6 +719,7 @@ const EditEventPage: React.FC = () => {
                       value={formData.startTime}
                       onChange={(e) => handleInputChange('startTime', e.target.value)}
                       InputLabelProps={{ shrink: true }}
+                      disabled={saving}
                       sx={{
                         flex: 1,
                         minWidth: 200,
@@ -687,6 +730,7 @@ const EditEventPage: React.FC = () => {
                           '& fieldset': { borderColor: darkTheme.border },
                           '&:hover fieldset': { borderColor: darkTheme.primary },
                           '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                          transition: 'all 0.2s ease-in-out',
                         },
                         '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                       }}
@@ -697,6 +741,7 @@ const EditEventPage: React.FC = () => {
                       value={formData.endTime}
                       onChange={(e) => handleInputChange('endTime', e.target.value)}
                       InputLabelProps={{ shrink: true }}
+                      disabled={saving}
                       sx={{
                         flex: 1,
                         minWidth: 200,
@@ -707,6 +752,7 @@ const EditEventPage: React.FC = () => {
                           '& fieldset': { borderColor: darkTheme.border },
                           '&:hover fieldset': { borderColor: darkTheme.primary },
                           '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                          transition: 'all 0.2s ease-in-out',
                         },
                         '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                       }}
@@ -717,7 +763,16 @@ const EditEventPage: React.FC = () => {
             </Card>
 
             {/* Venue Information */}
-            <Card sx={{ backgroundColor: darkTheme.surface, borderRadius: '8px', border: `1px solid ${darkTheme.border}` }}>
+            <Card sx={{
+              backgroundColor: darkTheme.surface,
+              borderRadius: '8px',
+              border: `1px solid ${darkTheme.border}`,
+              transition: 'all 0.2s ease-in-out',
+              '&:hover': {
+                borderColor: darkTheme.primary,
+                transform: 'translateY(-4px)',
+              }
+            }}>
               <CardContent sx={{ p: 4 }}>
                 <Typography
                   sx={{
@@ -739,6 +794,7 @@ const EditEventPage: React.FC = () => {
                     onChange={(e) => handleInputChange('venue', e.target.value)}
                     required
                     fullWidth
+                    disabled={saving}
                     sx={{
                       '& .MuiOutlinedInput-root': {
                         borderRadius: '8px',
@@ -747,6 +803,7 @@ const EditEventPage: React.FC = () => {
                         '& fieldset': { borderColor: darkTheme.border },
                         '&:hover fieldset': { borderColor: darkTheme.primary },
                         '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                        transition: 'all 0.2s ease-in-out',
                       },
                       '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                     }}
@@ -759,6 +816,7 @@ const EditEventPage: React.FC = () => {
                     multiline
                     rows={3}
                     fullWidth
+                    disabled={saving}
                     sx={{
                       '& .MuiOutlinedInput-root': {
                         borderRadius: '8px',
@@ -767,6 +825,7 @@ const EditEventPage: React.FC = () => {
                         '& fieldset': { borderColor: darkTheme.border },
                         '&:hover fieldset': { borderColor: darkTheme.primary },
                         '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                        transition: 'all 0.2s ease-in-out',
                       },
                       '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                     }}
@@ -778,6 +837,7 @@ const EditEventPage: React.FC = () => {
                       type="number"
                       value={formData.venueCapacity || ''}
                       onChange={(e) => handleInputChange('venueCapacity', e.target.value ? parseInt(e.target.value) : "")}
+                      disabled={saving}
                       sx={{
                         flex: 1,
                         minWidth: 200,
@@ -788,6 +848,7 @@ const EditEventPage: React.FC = () => {
                           '& fieldset': { borderColor: darkTheme.border },
                           '&:hover fieldset': { borderColor: darkTheme.primary },
                           '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                          transition: 'all 0.2s ease-in-out',
                         },
                         '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                       }}
@@ -797,6 +858,7 @@ const EditEventPage: React.FC = () => {
                       type="number"
                       value={formData.maxAttendees || ''}
                       onChange={(e) => handleInputChange('maxAttendees', e.target.value ? parseInt(e.target.value) : "")}
+                      disabled={saving}
                       sx={{
                         flex: 1,
                         minWidth: 200,
@@ -807,6 +869,7 @@ const EditEventPage: React.FC = () => {
                           '& fieldset': { borderColor: darkTheme.border },
                           '&:hover fieldset': { borderColor: darkTheme.primary },
                           '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                          transition: 'all 0.2s ease-in-out',
                         },
                         '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                       }}
@@ -817,7 +880,16 @@ const EditEventPage: React.FC = () => {
             </Card>
 
             {/* Pricing & Booking */}
-            <Card sx={{ backgroundColor: darkTheme.surface, borderRadius: '8px', border: `1px solid ${darkTheme.border}` }}>
+            <Card sx={{
+              backgroundColor: darkTheme.surface,
+              borderRadius: '8px',
+              border: `1px solid ${darkTheme.border}`,
+              transition: 'all 0.2s ease-in-out',
+              '&:hover': {
+                borderColor: darkTheme.primary,
+                transform: 'translateY(-4px)',
+              }
+            }}>
               <CardContent sx={{ p: 4 }}>
                 <Typography
                   sx={{
@@ -838,6 +910,7 @@ const EditEventPage: React.FC = () => {
                       <Switch
                         checked={formData.isFree}
                         onChange={(e) => handleInputChange('isFree', e.target.checked)}
+                        disabled={saving}
                         sx={{
                           '& .MuiSwitch-switchBase.Mui-checked': {
                             color: darkTheme.primary,
@@ -849,6 +922,7 @@ const EditEventPage: React.FC = () => {
                           '& .MuiSwitch-track': {
                             backgroundColor: darkTheme.border,
                           },
+                          transition: 'all 0.2s ease-in-out',
                         }}
                       />
                     }
@@ -862,6 +936,7 @@ const EditEventPage: React.FC = () => {
                         type="number"
                         value={formData.ticketPrice || ''}
                         onChange={(e) => handleInputChange('ticketPrice', e.target.value ? parseFloat(e.target.value) : "")}
+                        disabled={saving}
                         sx={{
                           flex: 1,
                           minWidth: 200,
@@ -872,6 +947,7 @@ const EditEventPage: React.FC = () => {
                             '& fieldset': { borderColor: darkTheme.border },
                             '&:hover fieldset': { borderColor: darkTheme.primary },
                             '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                            transition: 'all 0.2s ease-in-out',
                           },
                           '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                         }}
@@ -880,6 +956,7 @@ const EditEventPage: React.FC = () => {
                         label="Currency"
                         value={formData.currency}
                         onChange={(e) => handleInputChange('currency', e.target.value)}
+                        disabled={saving}
                         sx={{
                           width: 150,
                           '& .MuiOutlinedInput-root': {
@@ -889,6 +966,7 @@ const EditEventPage: React.FC = () => {
                             '& fieldset': { borderColor: darkTheme.border },
                             '&:hover fieldset': { borderColor: darkTheme.primary },
                             '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                            transition: 'all 0.2s ease-in-out',
                           },
                           '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                         }}
@@ -901,6 +979,7 @@ const EditEventPage: React.FC = () => {
                       <Switch
                         checked={formData.requiresBooking}
                         onChange={(e) => handleInputChange('requiresBooking', e.target.checked)}
+                        disabled={saving}
                         sx={{
                           '& .MuiSwitch-switchBase.Mui-checked': {
                             color: darkTheme.primary,
@@ -912,6 +991,7 @@ const EditEventPage: React.FC = () => {
                           '& .MuiSwitch-track': {
                             backgroundColor: darkTheme.border,
                           },
+                          transition: 'all 0.2s ease-in-out',
                         }}
                       />
                     }
@@ -922,7 +1002,16 @@ const EditEventPage: React.FC = () => {
             </Card>
 
             {/* Event Images */}
-            <Card sx={{ backgroundColor: darkTheme.surface, borderRadius: '8px', border: `1px solid ${darkTheme.border}` }}>
+            <Card sx={{
+              backgroundColor: darkTheme.surface,
+              borderRadius: '8px',
+              border: `1px solid ${darkTheme.border}`,
+              transition: 'all 0.2s ease-in-out',
+              '&:hover': {
+                borderColor: darkTheme.primary,
+                transform: 'translateY(-4px)',
+              }
+            }}>
               <CardContent sx={{ p: 4 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
                   <AddPhotoIcon sx={{ fontSize: 20, color: darkTheme.primary }} />
@@ -980,7 +1069,16 @@ const EditEventPage: React.FC = () => {
             </Card>
 
             {/* Settings */}
-            <Card sx={{ backgroundColor: darkTheme.surface, borderRadius: '8px', border: `1px solid ${darkTheme.border}` }}>
+            <Card sx={{
+              backgroundColor: darkTheme.surface,
+              borderRadius: '8px',
+              border: `1px solid ${darkTheme.border}`,
+              transition: 'all 0.2s ease-in-out',
+              '&:hover': {
+                borderColor: darkTheme.primary,
+                transform: 'translateY(-4px)',
+              }
+            }}>
               <CardContent sx={{ p: 4 }}>
                 <Typography
                   sx={{
@@ -1001,6 +1099,7 @@ const EditEventPage: React.FC = () => {
                     type="number"
                     value={formData.sortOrder}
                     onChange={(e) => handleInputChange('sortOrder', parseInt(e.target.value) || 0)}
+                    disabled={saving}
                     sx={{
                       width: 200,
                       '& .MuiOutlinedInput-root': {
@@ -1010,6 +1109,7 @@ const EditEventPage: React.FC = () => {
                         '& fieldset': { borderColor: darkTheme.border },
                         '&:hover fieldset': { borderColor: darkTheme.primary },
                         '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                        transition: 'all 0.2s ease-in-out',
                       },
                       '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                     }}
@@ -1021,6 +1121,7 @@ const EditEventPage: React.FC = () => {
                         <Switch
                           checked={formData.isPublished}
                           onChange={(e) => handleInputChange('isPublished', e.target.checked)}
+                          disabled={saving}
                           sx={{
                             '& .MuiSwitch-switchBase.Mui-checked': {
                               color: darkTheme.primary,
@@ -1032,6 +1133,7 @@ const EditEventPage: React.FC = () => {
                             '& .MuiSwitch-track': {
                               backgroundColor: darkTheme.border,
                             },
+                            transition: 'all 0.2s ease-in-out',
                           }}
                         />
                       }
@@ -1042,6 +1144,7 @@ const EditEventPage: React.FC = () => {
                         <Switch
                           checked={formData.isFeatured}
                           onChange={(e) => handleInputChange('isFeatured', e.target.checked)}
+                          disabled={saving}
                           sx={{
                             '& .MuiSwitch-switchBase.Mui-checked': {
                               color: darkTheme.warning,
@@ -1053,6 +1156,7 @@ const EditEventPage: React.FC = () => {
                             '& .MuiSwitch-track': {
                               backgroundColor: darkTheme.border,
                             },
+                            transition: 'all 0.2s ease-in-out',
                           }}
                         />
                       }
@@ -1063,6 +1167,7 @@ const EditEventPage: React.FC = () => {
                         <Switch
                           checked={formData.isPinned}
                           onChange={(e) => handleInputChange('isPinned', e.target.checked)}
+                          disabled={saving}
                           sx={{
                             '& .MuiSwitch-switchBase.Mui-checked': {
                               color: darkTheme.primary,
@@ -1074,6 +1179,7 @@ const EditEventPage: React.FC = () => {
                             '& .MuiSwitch-track': {
                               backgroundColor: darkTheme.border,
                             },
+                            transition: 'all 0.2s ease-in-out',
                           }}
                         />
                       }
@@ -1088,7 +1194,8 @@ const EditEventPage: React.FC = () => {
             <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end', pt: 2 }}>
               <Button
                 type="button"
-                onClick={() => router.push('/admin/cms/events')}
+                onClick={() => router.push(`${businessUnitId}/admin/operations/events`)}
+                disabled={saving}
                 sx={{
                   color: darkTheme.textSecondary,
                   borderColor: darkTheme.border,
@@ -1097,9 +1204,15 @@ const EditEventPage: React.FC = () => {
                   borderRadius: '8px',
                   textTransform: 'none',
                   fontWeight: 600,
+                  transition: 'all 0.2s ease-in-out',
                   '&:hover': {
                     backgroundColor: darkTheme.surfaceHover,
                     borderColor: darkTheme.textSecondary,
+                    transform: 'translateY(-2px)',
+                  },
+                  '&:disabled': {
+                    color: darkTheme.textSecondary,
+                    opacity: 0.5,
                   },
                 }}
                 variant="outlined"
@@ -1109,7 +1222,7 @@ const EditEventPage: React.FC = () => {
               <Button
                 type="submit"
                 variant="contained"
-                startIcon={<SaveIcon />}
+                startIcon={saving ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />}
                 disabled={saving}
                 sx={{
                   backgroundColor: darkTheme.primary,
@@ -1120,11 +1233,14 @@ const EditEventPage: React.FC = () => {
                   fontWeight: 600,
                   textTransform: 'none',
                   borderRadius: '8px',
+                  transition: 'all 0.2s ease-in-out',
                   '&:hover': {
                     backgroundColor: darkTheme.primaryHover,
+                    transform: 'translateY(-2px)',
                   },
                   '&:disabled': {
                     backgroundColor: darkTheme.textSecondary,
+                    color: darkTheme.surface,
                   },
                 }}
               >
@@ -1139,6 +1255,7 @@ const EditEventPage: React.FC = () => {
           open={snackbar.open}
           autoHideDuration={6000}
           onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
         >
           <Alert
             onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}

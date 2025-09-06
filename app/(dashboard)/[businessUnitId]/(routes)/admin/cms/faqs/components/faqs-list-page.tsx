@@ -8,7 +8,6 @@ import {
   Button,
   Card,
   CardContent,
-  CardActions,
   Stack,
   Chip,
   IconButton,
@@ -21,6 +20,7 @@ import {
   Switch,
   FormControlLabel,
   Tooltip,
+  CircularProgress,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -34,7 +34,6 @@ import { useRouter } from 'next/navigation';
 import { FAQData } from '@/lib/actions/faqs';
 import { deleteFAQ, toggleFAQStatus } from '@/lib/actions/faq-management';
 import { useBusinessUnit } from '@/context/business-unit-context';
-
 
 // Enhanced dark theme matching BusinessUnitSwitcher aesthetic
 const darkTheme = {
@@ -94,6 +93,7 @@ const FAQListPage: React.FC<FAQListPageProps> = ({ initialFAQs }) => {
           severity: 'error',
         });
       }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       setSnackbar({
         open: true,
@@ -124,6 +124,7 @@ const FAQListPage: React.FC<FAQListPageProps> = ({ initialFAQs }) => {
           severity: 'error',
         });
       }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       setSnackbar({
         open: true,
@@ -234,8 +235,10 @@ const FAQListPage: React.FC<FAQListPageProps> = ({ initialFAQs }) => {
                 textTransform: 'none',
                 borderRadius: '8px',
                 minWidth: 'auto',
+                transition: 'all 0.2s ease-in-out',
                 '&:hover': {
                   backgroundColor: darkTheme.primaryHover,
+                  transform: 'translateY(-2px)',
                 },
               }}
             >
@@ -303,7 +306,8 @@ const FAQListPage: React.FC<FAQListPageProps> = ({ initialFAQs }) => {
                 fontWeight: 600,
                 textTransform: 'none',
                 borderRadius: '8px',
-                '&:hover': { backgroundColor: darkTheme.primaryHover },
+                transition: 'all 0.2s ease-in-out',
+                '&:hover': { backgroundColor: darkTheme.primaryHover, transform: 'translateY(-2px)' },
               }}
             >
               Create FAQ
@@ -319,10 +323,11 @@ const FAQListPage: React.FC<FAQListPageProps> = ({ initialFAQs }) => {
                   borderRadius: '8px',
                   border: `1px solid ${darkTheme.border}`,
                   overflow: 'hidden',
-                  transition: 'all 0.2s ease',
+                  transition: 'all 0.2s ease-in-out',
                   '&:hover': {
                     backgroundColor: darkTheme.surfaceHover,
                     borderColor: darkTheme.primary,
+                    transform: 'translateY(-4px)',
                   },
                 }}
               >
@@ -340,6 +345,8 @@ const FAQListPage: React.FC<FAQListPageProps> = ({ initialFAQs }) => {
                           backgroundColor: darkTheme[getCategoryBackground(faq.category)],
                           color: darkTheme[getCategoryColor(faq.category)],
                           fontWeight: 600,
+                          transition: 'all 0.2s ease-in-out',
+                          '&:hover': { transform: 'scale(1.05)' },
                         }}
                       />
                       <Chip
@@ -353,9 +360,12 @@ const FAQListPage: React.FC<FAQListPageProps> = ({ initialFAQs }) => {
                           backgroundColor: faq.isActive ? darkTheme.successBg : darkTheme.errorBg,
                           color: faq.isActive ? darkTheme.success : darkTheme.error,
                           fontWeight: 600,
+                          transition: 'all 0.2s ease-in-out',
                           '& .MuiChip-icon': {
-                            color: faq.isActive ? darkTheme.success : darkTheme.error
+                            color: faq.isActive ? darkTheme.success : darkTheme.error,
+                            transition: 'color 0.2s ease-in-out',
                           },
+                          '&:hover': { transform: 'scale(1.05)' },
                         }}
                       />
                     </Box>
@@ -421,23 +431,29 @@ const FAQListPage: React.FC<FAQListPageProps> = ({ initialFAQs }) => {
                               '& .MuiSwitch-track': {
                                 backgroundColor: darkTheme.border,
                               },
+                              '& .Mui-disabled': {
+                                opacity: 0.5,
+                              },
+                              transition: 'all 0.2s ease-in-out',
                             }}
                           />
                         }
-                        label=""
-                        sx={{ mr: 0 }}
+                        label={loadingId === faq.id ? <CircularProgress size={16} sx={{ color: darkTheme.primary }} /> : ""}
+                        sx={{ mr: 0, minWidth: 40 }}
                       />
                       <Tooltip title="Edit FAQ">
                         <IconButton
                           onClick={() => router.push(`/${businessUnitId}/admin/cms/faqs/${faq.id}`)}
                           sx={{
                             color: darkTheme.textSecondary,
+                            width: 32,
+                            height: 32,
+                            transition: 'all 0.2s ease-in-out',
                             '&:hover': {
                               backgroundColor: darkTheme.selectedBg,
                               color: darkTheme.primary,
+                              transform: 'scale(1.1)',
                             },
-                            width: 32,
-                            height: 32,
                           }}
                         >
                           <EditIcon sx={{ fontSize: 16 }} />
@@ -448,12 +464,14 @@ const FAQListPage: React.FC<FAQListPageProps> = ({ initialFAQs }) => {
                           onClick={() => setDeleteDialog({ open: true, faq })}
                           sx={{
                             color: darkTheme.textSecondary,
+                            width: 32,
+                            height: 32,
+                            transition: 'all 0.2s ease-in-out',
                             '&:hover': {
                               backgroundColor: darkTheme.errorBg,
                               color: darkTheme.error,
+                              transform: 'scale(1.1)',
                             },
-                            width: 32,
-                            height: 32,
                           }}
                         >
                           <DeleteIcon sx={{ fontSize: 16 }} />
@@ -518,6 +536,7 @@ const FAQListPage: React.FC<FAQListPageProps> = ({ initialFAQs }) => {
                 fontSize: '12px',
                 fontWeight: 600,
                 textTransform: 'none',
+                transition: 'all 0.2s ease-in-out',
                 '&:hover': {
                   backgroundColor: darkTheme.surfaceHover,
                 },
@@ -536,6 +555,7 @@ const FAQListPage: React.FC<FAQListPageProps> = ({ initialFAQs }) => {
                 fontSize: '12px',
                 fontWeight: 600,
                 textTransform: 'none',
+                transition: 'all 0.2s ease-in-out',
                 '&:hover': {
                   backgroundColor: '#dc2626',
                 },
@@ -544,7 +564,7 @@ const FAQListPage: React.FC<FAQListPageProps> = ({ initialFAQs }) => {
                 },
               }}
             >
-              {loadingId === 'delete' ? 'Deleting...' : 'Delete'}
+              {loadingId === 'delete' ? <CircularProgress size={16} color="inherit" /> : 'Delete'}
             </Button>
           </DialogActions>
         </Dialog>

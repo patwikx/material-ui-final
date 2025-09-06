@@ -18,6 +18,7 @@ import {
   Alert,
   Snackbar,
   IconButton,
+  CircularProgress,
 } from '@mui/material';
 import {
   ArrowBack as ArrowBackIcon,
@@ -25,15 +26,14 @@ import {
   Visibility as VisibilityIcon,
   Star as StarIcon,
   PushPin as PushPinIcon,
-  Photo as PhotoIcon,
   AddPhotoAlternate as AddPhotoIcon,
 } from '@mui/icons-material';
 import { useRouter, useParams } from 'next/navigation';
 import { OfferType, OfferStatus } from '@prisma/client';
-import { 
-  getSpecialOfferById, 
-  updateSpecialOffer, 
-  UpdateSpecialOfferData 
+import {
+  getSpecialOfferById,
+  updateSpecialOffer,
+  UpdateSpecialOfferData
 } from '@/lib/cms-actions/special-offer';
 import { getBusinessUnits, BusinessUnitData } from '@/lib/actions/business-units';
 import { SpecialOfferData } from '@/lib/actions/special-offers';
@@ -83,9 +83,9 @@ interface SpecialOfferFormData {
 }
 
 interface OfferImages {
-  images: Array<{ 
-    fileName: string; 
-    name: string; 
+  images: Array<{
+    fileName: string;
+    name: string;
     fileUrl: string;
     imageId?: string;
   }>;
@@ -285,7 +285,7 @@ const EditSpecialOfferPage: React.FC = () => {
       const newImages = images.images
         .filter(img => {
           if (!offer?.images) return true;
-          return !offer.images.some(existingImg => 
+          return !offer.images.some(existingImg =>
             existingImg.image.originalUrl === img.fileUrl
           );
         })
@@ -333,27 +333,28 @@ const EditSpecialOfferPage: React.FC = () => {
 
   if (loading) {
     return (
-      <Container 
-        maxWidth="xl" 
-        sx={{ 
-          py: 4, 
-          backgroundColor: darkTheme.background, 
+      <Container
+        maxWidth="xl"
+        sx={{
+          py: 4,
+          backgroundColor: darkTheme.background,
           minHeight: '100vh',
           color: darkTheme.text,
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
         }}
       >
-        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
-          <Typography sx={{ color: darkTheme.text }}>Loading special offer...</Typography>
-        </Box>
+        <CircularProgress size={60} sx={{ color: darkTheme.text }} />
       </Container>
     );
   }
 
   if (!offer) {
     return (
-      <Container 
-        maxWidth="xl" 
-        sx={{ 
+      <Container
+        maxWidth="xl"
+        sx={{
           py: 4,
           backgroundColor: darkTheme.background,
           minHeight: '100vh',
@@ -380,9 +381,9 @@ const EditSpecialOfferPage: React.FC = () => {
   }
 
   return (
-    <Box 
-      sx={{ 
-        minHeight: '100vh', 
+    <Box
+      sx={{
+        minHeight: '100vh',
         backgroundColor: darkTheme.background,
         color: darkTheme.text,
       }}
@@ -393,13 +394,16 @@ const EditSpecialOfferPage: React.FC = () => {
           <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
             <IconButton
               onClick={() => router.push(`/${businessUnitId}/admin/cms/special-offers`)}
-              sx={{ 
-                mr: 2, 
+              disabled={saving}
+              sx={{
+                mr: 2,
                 color: darkTheme.textSecondary,
+                transition: 'all 0.2s ease-in-out',
                 '&:hover': {
                   backgroundColor: darkTheme.surfaceHover,
                   color: darkTheme.text,
-                } 
+                  transform: 'scale(1.1)',
+                }
               }}
             >
               <ArrowBackIcon />
@@ -445,7 +449,18 @@ const EditSpecialOfferPage: React.FC = () => {
         <form onSubmit={handleSubmit}>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
             {/* Basic Information */}
-            <Card sx={{ backgroundColor: darkTheme.surface, borderRadius: '8px', border: `1px solid ${darkTheme.border}` }}>
+            <Card
+              sx={{
+                backgroundColor: darkTheme.surface,
+                borderRadius: '8px',
+                border: `1px solid ${darkTheme.border}`,
+                transition: 'all 0.2s ease-in-out',
+                '&:hover': {
+                  borderColor: darkTheme.primary,
+                  transform: 'translateY(-4px)',
+                }
+              }}
+            >
               <CardContent sx={{ p: 4 }}>
                 <Typography
                   sx={{
@@ -467,6 +482,7 @@ const EditSpecialOfferPage: React.FC = () => {
                     onChange={(e) => handleInputChange('title', e.target.value)}
                     required
                     fullWidth
+                    disabled={saving}
                     sx={{
                       '& .MuiOutlinedInput-root': {
                         borderRadius: '8px',
@@ -475,6 +491,7 @@ const EditSpecialOfferPage: React.FC = () => {
                         '& fieldset': { borderColor: darkTheme.border },
                         '&:hover fieldset': { borderColor: darkTheme.primary },
                         '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                        transition: 'all 0.2s ease-in-out',
                       },
                       '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                     }}
@@ -487,6 +504,7 @@ const EditSpecialOfferPage: React.FC = () => {
                     required
                     fullWidth
                     helperText="URL-friendly version of the title"
+                    disabled={saving}
                     sx={{
                       '& .MuiOutlinedInput-root': {
                         borderRadius: '8px',
@@ -495,6 +513,7 @@ const EditSpecialOfferPage: React.FC = () => {
                         '& fieldset': { borderColor: darkTheme.border },
                         '&:hover fieldset': { borderColor: darkTheme.primary },
                         '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                        transition: 'all 0.2s ease-in-out',
                       },
                       '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                       '& .MuiFormHelperText-root': { color: darkTheme.textSecondary }
@@ -506,6 +525,7 @@ const EditSpecialOfferPage: React.FC = () => {
                     value={formData.subtitle}
                     onChange={(e) => handleInputChange('subtitle', e.target.value)}
                     fullWidth
+                    disabled={saving}
                     sx={{
                       '& .MuiOutlinedInput-root': {
                         borderRadius: '8px',
@@ -514,6 +534,7 @@ const EditSpecialOfferPage: React.FC = () => {
                         '& fieldset': { borderColor: darkTheme.border },
                         '&:hover fieldset': { borderColor: darkTheme.primary },
                         '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                        transition: 'all 0.2s ease-in-out',
                       },
                       '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                     }}
@@ -527,6 +548,7 @@ const EditSpecialOfferPage: React.FC = () => {
                     multiline
                     rows={4}
                     fullWidth
+                    disabled={saving}
                     sx={{
                       '& .MuiOutlinedInput-root': {
                         borderRadius: '8px',
@@ -535,6 +557,7 @@ const EditSpecialOfferPage: React.FC = () => {
                         '& fieldset': { borderColor: darkTheme.border },
                         '&:hover fieldset': { borderColor: darkTheme.primary },
                         '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                        transition: 'all 0.2s ease-in-out',
                       },
                       '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                     }}
@@ -548,6 +571,7 @@ const EditSpecialOfferPage: React.FC = () => {
                     rows={2}
                     fullWidth
                     helperText="Brief description for cards and previews"
+                    disabled={saving}
                     sx={{
                       '& .MuiOutlinedInput-root': {
                         borderRadius: '8px',
@@ -556,6 +580,7 @@ const EditSpecialOfferPage: React.FC = () => {
                         '& fieldset': { borderColor: darkTheme.border },
                         '&:hover fieldset': { borderColor: darkTheme.primary },
                         '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                        transition: 'all 0.2s ease-in-out',
                       },
                       '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                       '& .MuiFormHelperText-root': { color: darkTheme.textSecondary }
@@ -563,7 +588,7 @@ const EditSpecialOfferPage: React.FC = () => {
                   />
 
                   <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-                    <FormControl sx={{ minWidth: 200, flex: 1 }}>
+                    <FormControl fullWidth disabled={saving} sx={{ minWidth: 200, flex: 1 }}>
                       <InputLabel sx={{ color: darkTheme.textSecondary }}>Offer Type</InputLabel>
                       <Select
                         value={formData.type}
@@ -576,6 +601,7 @@ const EditSpecialOfferPage: React.FC = () => {
                           '& .MuiOutlinedInput-notchedOutline': { borderColor: darkTheme.border },
                           '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: darkTheme.primary },
                           '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: darkTheme.primary },
+                          transition: 'all 0.2s ease-in-out',
                         }}
                       >
                         {offerTypes.map((type) => (
@@ -586,7 +612,7 @@ const EditSpecialOfferPage: React.FC = () => {
                       </Select>
                     </FormControl>
 
-                    <FormControl sx={{ minWidth: 200, flex: 1 }}>
+                    <FormControl fullWidth disabled={saving} sx={{ minWidth: 200, flex: 1 }}>
                       <InputLabel sx={{ color: darkTheme.textSecondary }}>Status</InputLabel>
                       <Select
                         value={formData.status}
@@ -599,6 +625,7 @@ const EditSpecialOfferPage: React.FC = () => {
                           '& .MuiOutlinedInput-notchedOutline': { borderColor: darkTheme.border },
                           '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: darkTheme.primary },
                           '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: darkTheme.primary },
+                          transition: 'all 0.2s ease-in-out',
                         }}
                       >
                         {offerStatuses.map((status) => (
@@ -609,7 +636,7 @@ const EditSpecialOfferPage: React.FC = () => {
                       </Select>
                     </FormControl>
 
-                    <FormControl sx={{ minWidth: 200, flex: 1 }}>
+                    <FormControl fullWidth disabled={saving} sx={{ minWidth: 200, flex: 1 }}>
                       <InputLabel sx={{ color: darkTheme.textSecondary }}>Property</InputLabel>
                       <Select
                         value={formData.businessUnitId || ''}
@@ -622,6 +649,7 @@ const EditSpecialOfferPage: React.FC = () => {
                           '& .MuiOutlinedInput-notchedOutline': { borderColor: darkTheme.border },
                           '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: darkTheme.primary },
                           '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: darkTheme.primary },
+                          transition: 'all 0.2s ease-in-out',
                         }}
                       >
                         <MenuItem value="">All Properties</MenuItem>
@@ -638,7 +666,18 @@ const EditSpecialOfferPage: React.FC = () => {
             </Card>
 
             {/* Pricing Information */}
-            <Card sx={{ backgroundColor: darkTheme.surface, borderRadius: '8px', border: `1px solid ${darkTheme.border}` }}>
+            <Card
+              sx={{
+                backgroundColor: darkTheme.surface,
+                borderRadius: '8px',
+                border: `1px solid ${darkTheme.border}`,
+                transition: 'all 0.2s ease-in-out',
+                '&:hover': {
+                  borderColor: darkTheme.primary,
+                  transform: 'translateY(-4px)',
+                }
+              }}
+            >
               <CardContent sx={{ p: 4 }}>
                 <Typography
                   sx={{
@@ -661,6 +700,7 @@ const EditSpecialOfferPage: React.FC = () => {
                       value={formData.offerPrice}
                       onChange={(e) => handleInputChange('offerPrice', parseFloat(e.target.value) || 0)}
                       required
+                      disabled={saving}
                       sx={{
                         flex: 1,
                         minWidth: 200,
@@ -671,6 +711,7 @@ const EditSpecialOfferPage: React.FC = () => {
                           '& fieldset': { borderColor: darkTheme.border },
                           '&:hover fieldset': { borderColor: darkTheme.primary },
                           '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                          transition: 'all 0.2s ease-in-out',
                         },
                         '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                       }}
@@ -680,6 +721,7 @@ const EditSpecialOfferPage: React.FC = () => {
                       type="number"
                       value={formData.originalPrice || ''}
                       onChange={(e) => handleInputChange('originalPrice', e.target.value ? parseFloat(e.target.value) : "")}
+                      disabled={saving}
                       sx={{
                         flex: 1,
                         minWidth: 200,
@@ -690,6 +732,7 @@ const EditSpecialOfferPage: React.FC = () => {
                           '& fieldset': { borderColor: darkTheme.border },
                           '&:hover fieldset': { borderColor: darkTheme.primary },
                           '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                          transition: 'all 0.2s ease-in-out',
                         },
                         '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                       }}
@@ -698,6 +741,7 @@ const EditSpecialOfferPage: React.FC = () => {
                       label="Currency"
                       value={formData.currency}
                       onChange={(e) => handleInputChange('currency', e.target.value)}
+                      disabled={saving}
                       sx={{
                         width: 150,
                         '& .MuiOutlinedInput-root': {
@@ -707,6 +751,7 @@ const EditSpecialOfferPage: React.FC = () => {
                           '& fieldset': { borderColor: darkTheme.border },
                           '&:hover fieldset': { borderColor: darkTheme.primary },
                           '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                          transition: 'all 0.2s ease-in-out',
                         },
                         '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                       }}
@@ -715,21 +760,21 @@ const EditSpecialOfferPage: React.FC = () => {
 
                   {/* Savings Display */}
                   {formData.savingsAmount !== null && formData.savingsPercent !== null && (
-                    <Box sx={{ 
-                      p: 2, 
-                      backgroundColor: darkTheme.selectedBg, 
+                    <Box sx={{
+                      p: 2,
+                      backgroundColor: darkTheme.selectedBg,
                       border: `1px solid ${darkTheme.selected}`,
                       borderRadius: '8px',
                       display: 'flex',
                       gap: 2,
-                      alignItems: 'center'
+                      alignItems: 'center',
+                      transition: 'all 0.2s ease-in-out',
                     }}>
                       <Typography sx={{ color: darkTheme.primary, fontWeight: 600, fontSize: '12px' }}>
                         Savings: {formData.currency} {formData.savingsAmount.toLocaleString()} ({formData.savingsPercent}% OFF)
                       </Typography>
                     </Box>
                   )}
-
                   <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
                     <TextField
                       label="Savings Amount"
@@ -737,6 +782,7 @@ const EditSpecialOfferPage: React.FC = () => {
                       value={formData.savingsAmount || ''}
                       onChange={(e) => handleInputChange('savingsAmount', e.target.value ? parseFloat(e.target.value) : "")}
                       helperText="Auto-calculated or manual override"
+                      disabled={saving}
                       sx={{
                         flex: 1,
                         minWidth: 200,
@@ -747,6 +793,7 @@ const EditSpecialOfferPage: React.FC = () => {
                           '& fieldset': { borderColor: darkTheme.border },
                           '&:hover fieldset': { borderColor: darkTheme.primary },
                           '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                          transition: 'all 0.2s ease-in-out',
                         },
                         '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                         '& .MuiFormHelperText-root': { color: darkTheme.textSecondary }
@@ -758,6 +805,7 @@ const EditSpecialOfferPage: React.FC = () => {
                       value={formData.savingsPercent || ''}
                       onChange={(e) => handleInputChange('savingsPercent', e.target.value ? parseInt(e.target.value) : "")}
                       helperText="Auto-calculated or manual override"
+                      disabled={saving}
                       sx={{
                         flex: 1,
                         minWidth: 200,
@@ -768,6 +816,7 @@ const EditSpecialOfferPage: React.FC = () => {
                           '& fieldset': { borderColor: darkTheme.border },
                           '&:hover fieldset': { borderColor: darkTheme.primary },
                           '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                          transition: 'all 0.2s ease-in-out',
                         },
                         '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                         '& .MuiFormHelperText-root': { color: darkTheme.textSecondary }
@@ -779,7 +828,18 @@ const EditSpecialOfferPage: React.FC = () => {
             </Card>
 
             {/* Validity Period */}
-            <Card sx={{ backgroundColor: darkTheme.surface, borderRadius: '8px', border: `1px solid ${darkTheme.border}` }}>
+            <Card
+              sx={{
+                backgroundColor: darkTheme.surface,
+                borderRadius: '8px',
+                border: `1px solid ${darkTheme.border}`,
+                transition: 'all 0.2s ease-in-out',
+                '&:hover': {
+                  borderColor: darkTheme.primary,
+                  transform: 'translateY(-4px)',
+                }
+              }}
+            >
               <CardContent sx={{ p: 4 }}>
                 <Typography
                   sx={{
@@ -802,6 +862,7 @@ const EditSpecialOfferPage: React.FC = () => {
                     onChange={(e) => handleInputChange('validFrom', e.target.value)}
                     required
                     InputLabelProps={{ shrink: true }}
+                    disabled={saving}
                     sx={{
                       flex: 1,
                       minWidth: 200,
@@ -812,6 +873,7 @@ const EditSpecialOfferPage: React.FC = () => {
                         '& fieldset': { borderColor: darkTheme.border },
                         '&:hover fieldset': { borderColor: darkTheme.primary },
                         '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                        transition: 'all 0.2s ease-in-out',
                       },
                       '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                     }}
@@ -823,6 +885,7 @@ const EditSpecialOfferPage: React.FC = () => {
                     onChange={(e) => handleInputChange('validTo', e.target.value)}
                     required
                     InputLabelProps={{ shrink: true }}
+                    disabled={saving}
                     sx={{
                       flex: 1,
                       minWidth: 200,
@@ -833,6 +896,7 @@ const EditSpecialOfferPage: React.FC = () => {
                         '& fieldset': { borderColor: darkTheme.border },
                         '&:hover fieldset': { borderColor: darkTheme.primary },
                         '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                        transition: 'all 0.2s ease-in-out',
                       },
                       '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                     }}
@@ -842,7 +906,18 @@ const EditSpecialOfferPage: React.FC = () => {
             </Card>
 
             {/* Offer Images */}
-            <Card sx={{ backgroundColor: darkTheme.surface, borderRadius: '8px', border: `1px solid ${darkTheme.border}` }}>
+            <Card
+              sx={{
+                backgroundColor: darkTheme.surface,
+                borderRadius: '8px',
+                border: `1px solid ${darkTheme.border}`,
+                transition: 'all 0.2s ease-in-out',
+                '&:hover': {
+                  borderColor: darkTheme.primary,
+                  transform: 'translateY(-4px)',
+                }
+              }}
+            >
               <CardContent sx={{ p: 4 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
                   <AddPhotoIcon sx={{ fontSize: 20, color: darkTheme.primary }} />
@@ -900,7 +975,18 @@ const EditSpecialOfferPage: React.FC = () => {
             </Card>
 
             {/* Settings */}
-            <Card sx={{ backgroundColor: darkTheme.surface, borderRadius: '8px', border: `1px solid ${darkTheme.border}` }}>
+            <Card
+              sx={{
+                backgroundColor: darkTheme.surface,
+                borderRadius: '8px',
+                border: `1px solid ${darkTheme.border}`,
+                transition: 'all 0.2s ease-in-out',
+                '&:hover': {
+                  borderColor: darkTheme.primary,
+                  transform: 'translateY(-4px)',
+                }
+              }}
+            >
               <CardContent sx={{ p: 4 }}>
                 <Typography
                   sx={{
@@ -921,6 +1007,7 @@ const EditSpecialOfferPage: React.FC = () => {
                     type="number"
                     value={formData.sortOrder}
                     onChange={(e) => handleInputChange('sortOrder', parseInt(e.target.value) || 0)}
+                    disabled={saving}
                     sx={{
                       width: 200,
                       '& .MuiOutlinedInput-root': {
@@ -930,6 +1017,7 @@ const EditSpecialOfferPage: React.FC = () => {
                         '& fieldset': { borderColor: darkTheme.border },
                         '&:hover fieldset': { borderColor: darkTheme.primary },
                         '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                        transition: 'all 0.2s ease-in-out',
                       },
                       '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                     }}
@@ -941,6 +1029,7 @@ const EditSpecialOfferPage: React.FC = () => {
                         <Switch
                           checked={formData.isPublished}
                           onChange={(e) => handleInputChange('isPublished', e.target.checked)}
+                          disabled={saving}
                           sx={{
                             '& .MuiSwitch-switchBase.Mui-checked': {
                               color: darkTheme.success,
@@ -952,6 +1041,7 @@ const EditSpecialOfferPage: React.FC = () => {
                             '& .MuiSwitch-track': {
                               backgroundColor: darkTheme.border,
                             },
+                            transition: 'all 0.2s ease-in-out',
                           }}
                         />
                       }
@@ -967,6 +1057,7 @@ const EditSpecialOfferPage: React.FC = () => {
                         <Switch
                           checked={formData.isFeatured}
                           onChange={(e) => handleInputChange('isFeatured', e.target.checked)}
+                          disabled={saving}
                           sx={{
                             '& .MuiSwitch-switchBase.Mui-checked': {
                               color: darkTheme.warning,
@@ -978,6 +1069,7 @@ const EditSpecialOfferPage: React.FC = () => {
                             '& .MuiSwitch-track': {
                               backgroundColor: darkTheme.border,
                             },
+                            transition: 'all 0.2s ease-in-out',
                           }}
                         />
                       }
@@ -993,6 +1085,7 @@ const EditSpecialOfferPage: React.FC = () => {
                         <Switch
                           checked={formData.isPinned}
                           onChange={(e) => handleInputChange('isPinned', e.target.checked)}
+                          disabled={saving}
                           sx={{
                             '& .MuiSwitch-switchBase.Mui-checked': {
                               color: darkTheme.primary,
@@ -1004,6 +1097,7 @@ const EditSpecialOfferPage: React.FC = () => {
                             '& .MuiSwitch-track': {
                               backgroundColor: darkTheme.border,
                             },
+                            transition: 'all 0.2s ease-in-out',
                           }}
                         />
                       }
@@ -1024,6 +1118,7 @@ const EditSpecialOfferPage: React.FC = () => {
               <Button
                 type="button"
                 onClick={() => router.push(`/${businessUnitId}/admin/cms/special-offers`)}
+                disabled={saving}
                 sx={{
                   color: darkTheme.textSecondary,
                   borderColor: darkTheme.border,
@@ -1032,9 +1127,15 @@ const EditSpecialOfferPage: React.FC = () => {
                   borderRadius: '8px',
                   textTransform: 'none',
                   fontWeight: 600,
+                  transition: 'all 0.2s ease-in-out',
                   '&:hover': {
                     backgroundColor: darkTheme.surfaceHover,
                     borderColor: darkTheme.textSecondary,
+                    transform: 'translateY(-2px)',
+                  },
+                  '&:disabled': {
+                    color: darkTheme.textSecondary,
+                    opacity: 0.5,
                   },
                 }}
                 variant="outlined"
@@ -1044,7 +1145,7 @@ const EditSpecialOfferPage: React.FC = () => {
               <Button
                 type="submit"
                 variant="contained"
-                startIcon={<SaveIcon />}
+                startIcon={saving ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />}
                 disabled={saving}
                 sx={{
                   backgroundColor: darkTheme.primary,
@@ -1055,11 +1156,14 @@ const EditSpecialOfferPage: React.FC = () => {
                   fontWeight: 600,
                   textTransform: 'none',
                   borderRadius: '8px',
+                  transition: 'all 0.2s ease-in-out',
                   '&:hover': {
                     backgroundColor: darkTheme.primaryHover,
+                    transform: 'translateY(-2px)',
                   },
                   '&:disabled': {
                     backgroundColor: darkTheme.textSecondary,
+                    color: darkTheme.surface,
                   },
                 }}
               >
@@ -1074,6 +1178,7 @@ const EditSpecialOfferPage: React.FC = () => {
           open={snackbar.open}
           autoHideDuration={6000}
           onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
         >
           <Alert
             onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}

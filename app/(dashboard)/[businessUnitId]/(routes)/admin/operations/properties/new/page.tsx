@@ -18,6 +18,7 @@ import {
   Alert,
   Snackbar,
   IconButton,
+  CircularProgress,
 } from '@mui/material';
 import {
   ArrowBack as ArrowBackIcon,
@@ -176,6 +177,7 @@ const NewBusinessUnitPage: React.FC = () => {
           severity: 'error',
         });
       }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       setSnackbar({
         open: true,
@@ -201,12 +203,15 @@ const NewBusinessUnitPage: React.FC = () => {
           <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
             <IconButton
               onClick={() => router.push(`/${businessUnitId}/admin/operations/properties`)}
+              disabled={loading}
               sx={{
                 mr: 2,
                 color: darkTheme.textSecondary,
+                transition: 'all 0.2s ease-in-out',
                 '&:hover': {
                   backgroundColor: darkTheme.surfaceHover,
                   color: darkTheme.text,
+                  transform: 'scale(1.1)',
                 }
               }}
             >
@@ -253,7 +258,16 @@ const NewBusinessUnitPage: React.FC = () => {
         <form onSubmit={handleSubmit}>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
             {/* Basic Information */}
-            <Card sx={{ backgroundColor: darkTheme.surface, borderRadius: '8px', border: `1px solid ${darkTheme.border}` }}>
+            <Card sx={{
+              backgroundColor: darkTheme.surface,
+              borderRadius: '8px',
+              border: `1px solid ${darkTheme.border}`,
+              transition: 'all 0.2s ease-in-out',
+              '&:hover': {
+                borderColor: darkTheme.primary,
+                transform: 'translateY(-4px)',
+              }
+            }}>
               <CardContent sx={{ p: 4 }}>
                 <Typography
                   sx={{
@@ -275,6 +289,7 @@ const NewBusinessUnitPage: React.FC = () => {
                     onChange={(e) => handleInputChange('name', e.target.value)}
                     required
                     fullWidth
+                    disabled={loading}
                     sx={{
                       '& .MuiOutlinedInput-root': {
                         borderRadius: '8px',
@@ -283,6 +298,7 @@ const NewBusinessUnitPage: React.FC = () => {
                         '& fieldset': { borderColor: darkTheme.border },
                         '&:hover fieldset': { borderColor: darkTheme.primary },
                         '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                        transition: 'all 0.2s ease-in-out',
                       },
                       '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                     }}
@@ -295,6 +311,7 @@ const NewBusinessUnitPage: React.FC = () => {
                     required
                     fullWidth
                     helperText="Public-facing name for the property"
+                    disabled={loading}
                     sx={{
                       '& .MuiOutlinedInput-root': {
                         borderRadius: '8px',
@@ -303,6 +320,7 @@ const NewBusinessUnitPage: React.FC = () => {
                         '& fieldset': { borderColor: darkTheme.border },
                         '&:hover fieldset': { borderColor: darkTheme.primary },
                         '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                        transition: 'all 0.2s ease-in-out',
                       },
                       '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                       '& .MuiFormHelperText-root': { color: darkTheme.textSecondary }
@@ -316,6 +334,7 @@ const NewBusinessUnitPage: React.FC = () => {
                     required
                     fullWidth
                     helperText="URL-friendly version of the name"
+                    disabled={loading}
                     sx={{
                       '& .MuiOutlinedInput-root': {
                         borderRadius: '8px',
@@ -324,6 +343,7 @@ const NewBusinessUnitPage: React.FC = () => {
                         '& fieldset': { borderColor: darkTheme.border },
                         '&:hover fieldset': { borderColor: darkTheme.primary },
                         '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                        transition: 'all 0.2s ease-in-out',
                       },
                       '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                       '& .MuiFormHelperText-root': { color: darkTheme.textSecondary }
@@ -337,6 +357,7 @@ const NewBusinessUnitPage: React.FC = () => {
                     multiline
                     rows={4}
                     fullWidth
+                    disabled={loading}
                     sx={{
                       '& .MuiOutlinedInput-root': {
                         borderRadius: '8px',
@@ -345,6 +366,7 @@ const NewBusinessUnitPage: React.FC = () => {
                         '& fieldset': { borderColor: darkTheme.border },
                         '&:hover fieldset': { borderColor: darkTheme.primary },
                         '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                        transition: 'all 0.2s ease-in-out',
                       },
                       '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                     }}
@@ -358,6 +380,7 @@ const NewBusinessUnitPage: React.FC = () => {
                     rows={2}
                     fullWidth
                     helperText="Brief description for cards and previews"
+                    disabled={loading}
                     sx={{
                       '& .MuiOutlinedInput-root': {
                         borderRadius: '8px',
@@ -366,13 +389,14 @@ const NewBusinessUnitPage: React.FC = () => {
                         '& fieldset': { borderColor: darkTheme.border },
                         '&:hover fieldset': { borderColor: darkTheme.primary },
                         '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                        transition: 'all 0.2s ease-in-out',
                       },
                       '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                       '& .MuiFormHelperText-root': { color: darkTheme.textSecondary }
                     }}
                   />
 
-                  <FormControl sx={{ minWidth: 200 }}>
+                  <FormControl fullWidth disabled={loading}>
                     <InputLabel sx={{ color: darkTheme.textSecondary }}>Property Type</InputLabel>
                     <Select
                       value={formData.propertyType}
@@ -385,6 +409,7 @@ const NewBusinessUnitPage: React.FC = () => {
                         '& .MuiOutlinedInput-notchedOutline': { borderColor: darkTheme.border },
                         '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: darkTheme.primary },
                         '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: darkTheme.primary },
+                        transition: 'all 0.2s ease-in-out',
                       }}
                     >
                       {propertyTypes.map((type) => (
@@ -399,7 +424,16 @@ const NewBusinessUnitPage: React.FC = () => {
             </Card>
 
             {/* Location Information */}
-            <Card sx={{ backgroundColor: darkTheme.surface, borderRadius: '8px', border: `1px solid ${darkTheme.border}` }}>
+            <Card sx={{
+              backgroundColor: darkTheme.surface,
+              borderRadius: '8px',
+              border: `1px solid ${darkTheme.border}`,
+              transition: 'all 0.2s ease-in-out',
+              '&:hover': {
+                borderColor: darkTheme.primary,
+                transform: 'translateY(-4px)',
+              }
+            }}>
               <CardContent sx={{ p: 4 }}>
                 <Typography
                   sx={{
@@ -420,6 +454,7 @@ const NewBusinessUnitPage: React.FC = () => {
                     value={formData.address}
                     onChange={(e) => handleInputChange('address', e.target.value)}
                     fullWidth
+                    disabled={loading}
                     sx={{
                       '& .MuiOutlinedInput-root': {
                         borderRadius: '8px',
@@ -428,6 +463,7 @@ const NewBusinessUnitPage: React.FC = () => {
                         '& fieldset': { borderColor: darkTheme.border },
                         '&:hover fieldset': { borderColor: darkTheme.primary },
                         '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                        transition: 'all 0.2s ease-in-out',
                       },
                       '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                     }}
@@ -439,6 +475,7 @@ const NewBusinessUnitPage: React.FC = () => {
                       value={formData.city}
                       onChange={(e) => handleInputChange('city', e.target.value)}
                       required
+                      disabled={loading}
                       sx={{
                         flex: 1,
                         minWidth: 200,
@@ -449,6 +486,7 @@ const NewBusinessUnitPage: React.FC = () => {
                           '& fieldset': { borderColor: darkTheme.border },
                           '&:hover fieldset': { borderColor: darkTheme.primary },
                           '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                          transition: 'all 0.2s ease-in-out',
                         },
                         '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                       }}
@@ -457,6 +495,7 @@ const NewBusinessUnitPage: React.FC = () => {
                       label="State/Province"
                       value={formData.state}
                       onChange={(e) => handleInputChange('state', e.target.value)}
+                      disabled={loading}
                       sx={{
                         flex: 1,
                         minWidth: 200,
@@ -467,6 +506,7 @@ const NewBusinessUnitPage: React.FC = () => {
                           '& fieldset': { borderColor: darkTheme.border },
                           '&:hover fieldset': { borderColor: darkTheme.primary },
                           '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                          transition: 'all 0.2s ease-in-out',
                         },
                         '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                       }}
@@ -476,6 +516,7 @@ const NewBusinessUnitPage: React.FC = () => {
                       value={formData.country}
                       onChange={(e) => handleInputChange('country', e.target.value)}
                       required
+                      disabled={loading}
                       sx={{
                         flex: 1,
                         minWidth: 200,
@@ -486,6 +527,7 @@ const NewBusinessUnitPage: React.FC = () => {
                           '& fieldset': { borderColor: darkTheme.border },
                           '&:hover fieldset': { borderColor: darkTheme.primary },
                           '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                          transition: 'all 0.2s ease-in-out',
                         },
                         '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                       }}
@@ -499,6 +541,7 @@ const NewBusinessUnitPage: React.FC = () => {
                       value={formData.latitude || ''}
                       onChange={(e) => handleInputChange('latitude', e.target.value ? parseFloat(e.target.value) : "")}
                       inputProps={{ step: 'any' }}
+                      disabled={loading}
                       sx={{
                         flex: 1,
                         minWidth: 200,
@@ -509,6 +552,7 @@ const NewBusinessUnitPage: React.FC = () => {
                           '& fieldset': { borderColor: darkTheme.border },
                           '&:hover fieldset': { borderColor: darkTheme.primary },
                           '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                          transition: 'all 0.2s ease-in-out',
                         },
                         '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                       }}
@@ -519,6 +563,7 @@ const NewBusinessUnitPage: React.FC = () => {
                       value={formData.longitude || ''}
                       onChange={(e) => handleInputChange('longitude', e.target.value ? parseFloat(e.target.value) : "")}
                       inputProps={{ step: 'any' }}
+                      disabled={loading}
                       sx={{
                         flex: 1,
                         minWidth: 200,
@@ -529,6 +574,7 @@ const NewBusinessUnitPage: React.FC = () => {
                           '& fieldset': { borderColor: darkTheme.border },
                           '&:hover fieldset': { borderColor: darkTheme.primary },
                           '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                          transition: 'all 0.2s ease-in-out',
                         },
                         '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                       }}
@@ -539,7 +585,16 @@ const NewBusinessUnitPage: React.FC = () => {
             </Card>
 
             {/* Contact Information */}
-            <Card sx={{ backgroundColor: darkTheme.surface, borderRadius: '8px', border: `1px solid ${darkTheme.border}` }}>
+            <Card sx={{
+              backgroundColor: darkTheme.surface,
+              borderRadius: '8px',
+              border: `1px solid ${darkTheme.border}`,
+              transition: 'all 0.2s ease-in-out',
+              '&:hover': {
+                borderColor: darkTheme.primary,
+                transform: 'translateY(-4px)',
+              }
+            }}>
               <CardContent sx={{ p: 4 }}>
                 <Typography
                   sx={{
@@ -560,6 +615,7 @@ const NewBusinessUnitPage: React.FC = () => {
                       label="Phone"
                       value={formData.phone}
                       onChange={(e) => handleInputChange('phone', e.target.value)}
+                      disabled={loading}
                       sx={{
                         flex: 1,
                         minWidth: 200,
@@ -570,6 +626,7 @@ const NewBusinessUnitPage: React.FC = () => {
                           '& fieldset': { borderColor: darkTheme.border },
                           '&:hover fieldset': { borderColor: darkTheme.primary },
                           '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                          transition: 'all 0.2s ease-in-out',
                         },
                         '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                       }}
@@ -579,6 +636,7 @@ const NewBusinessUnitPage: React.FC = () => {
                       type="email"
                       value={formData.email}
                       onChange={(e) => handleInputChange('email', e.target.value)}
+                      disabled={loading}
                       sx={{
                         flex: 1,
                         minWidth: 200,
@@ -589,6 +647,7 @@ const NewBusinessUnitPage: React.FC = () => {
                           '& fieldset': { borderColor: darkTheme.border },
                           '&:hover fieldset': { borderColor: darkTheme.primary },
                           '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                          transition: 'all 0.2s ease-in-out',
                         },
                         '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                       }}
@@ -600,6 +659,7 @@ const NewBusinessUnitPage: React.FC = () => {
                     value={formData.website}
                     onChange={(e) => handleInputChange('website', e.target.value)}
                     fullWidth
+                    disabled={loading}
                     sx={{
                       '& .MuiOutlinedInput-root': {
                         borderRadius: '8px',
@@ -608,6 +668,7 @@ const NewBusinessUnitPage: React.FC = () => {
                         '& fieldset': { borderColor: darkTheme.border },
                         '&:hover fieldset': { borderColor: darkTheme.primary },
                         '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                        transition: 'all 0.2s ease-in-out',
                       },
                       '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                     }}
@@ -617,7 +678,16 @@ const NewBusinessUnitPage: React.FC = () => {
             </Card>
 
             {/* Branding */}
-            <Card sx={{ backgroundColor: darkTheme.surface, borderRadius: '8px', border: `1px solid ${darkTheme.border}` }}>
+            <Card sx={{
+              backgroundColor: darkTheme.surface,
+              borderRadius: '8px',
+              border: `1px solid ${darkTheme.border}`,
+              transition: 'all 0.2s ease-in-out',
+              '&:hover': {
+                borderColor: darkTheme.primary,
+                transform: 'translateY(-4px)',
+              }
+            }}>
               <CardContent sx={{ p: 4 }}>
                 <Typography
                   sx={{
@@ -638,6 +708,7 @@ const NewBusinessUnitPage: React.FC = () => {
                     value={formData.logo}
                     onChange={(e) => handleInputChange('logo', e.target.value)}
                     fullWidth
+                    disabled={loading}
                     sx={{
                       '& .MuiOutlinedInput-root': {
                         borderRadius: '8px',
@@ -646,6 +717,7 @@ const NewBusinessUnitPage: React.FC = () => {
                         '& fieldset': { borderColor: darkTheme.border },
                         '&:hover fieldset': { borderColor: darkTheme.primary },
                         '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                        transition: 'all 0.2s ease-in-out',
                       },
                       '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                     }}
@@ -657,6 +729,7 @@ const NewBusinessUnitPage: React.FC = () => {
                       value={formData.primaryColor}
                       onChange={(e) => handleInputChange('primaryColor', e.target.value)}
                       placeholder="#111827"
+                      disabled={loading}
                       sx={{
                         flex: 1,
                         minWidth: 200,
@@ -667,6 +740,7 @@ const NewBusinessUnitPage: React.FC = () => {
                           '& fieldset': { borderColor: darkTheme.border },
                           '&:hover fieldset': { borderColor: darkTheme.primary },
                           '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                          transition: 'all 0.2s ease-in-out',
                         },
                         '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                       }}
@@ -676,6 +750,7 @@ const NewBusinessUnitPage: React.FC = () => {
                       value={formData.secondaryColor}
                       onChange={(e) => handleInputChange('secondaryColor', e.target.value)}
                       placeholder="#6b7280"
+                      disabled={loading}
                       sx={{
                         flex: 1,
                         minWidth: 200,
@@ -686,6 +761,7 @@ const NewBusinessUnitPage: React.FC = () => {
                           '& fieldset': { borderColor: darkTheme.border },
                           '&:hover fieldset': { borderColor: darkTheme.primary },
                           '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                          transition: 'all 0.2s ease-in-out',
                         },
                         '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                       }}
@@ -696,7 +772,16 @@ const NewBusinessUnitPage: React.FC = () => {
             </Card>
 
             {/* Settings */}
-            <Card sx={{ backgroundColor: darkTheme.surface, borderRadius: '8px', border: `1px solid ${darkTheme.border}` }}>
+            <Card sx={{
+              backgroundColor: darkTheme.surface,
+              borderRadius: '8px',
+              border: `1px solid ${darkTheme.border}`,
+              transition: 'all 0.2s ease-in-out',
+              '&:hover': {
+                borderColor: darkTheme.primary,
+                transform: 'translateY(-4px)',
+              }
+            }}>
               <CardContent sx={{ p: 4 }}>
                 <Typography
                   sx={{
@@ -717,6 +802,7 @@ const NewBusinessUnitPage: React.FC = () => {
                     type="number"
                     value={formData.sortOrder}
                     onChange={(e) => handleInputChange('sortOrder', parseInt(e.target.value) || 0)}
+                    disabled={loading}
                     sx={{
                       width: 200,
                       '& .MuiOutlinedInput-root': {
@@ -726,6 +812,7 @@ const NewBusinessUnitPage: React.FC = () => {
                         '& fieldset': { borderColor: darkTheme.border },
                         '&:hover fieldset': { borderColor: darkTheme.primary },
                         '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                        transition: 'all 0.2s ease-in-out',
                       },
                       '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                     }}
@@ -737,6 +824,7 @@ const NewBusinessUnitPage: React.FC = () => {
                         <Switch
                           checked={formData.isActive}
                           onChange={(e) => handleInputChange('isActive', e.target.checked)}
+                          disabled={loading}
                           sx={{
                             '& .MuiSwitch-switchBase.Mui-checked': {
                               color: darkTheme.success,
@@ -748,6 +836,7 @@ const NewBusinessUnitPage: React.FC = () => {
                             '& .MuiSwitch-track': {
                               backgroundColor: darkTheme.border,
                             },
+                            transition: 'all 0.2s ease-in-out',
                           }}
                         />
                       }
@@ -763,6 +852,7 @@ const NewBusinessUnitPage: React.FC = () => {
                         <Switch
                           checked={formData.isPublished}
                           onChange={(e) => handleInputChange('isPublished', e.target.checked)}
+                          disabled={loading}
                           sx={{
                             '& .MuiSwitch-switchBase.Mui-checked': {
                               color: darkTheme.primary,
@@ -774,6 +864,7 @@ const NewBusinessUnitPage: React.FC = () => {
                             '& .MuiSwitch-track': {
                               backgroundColor: darkTheme.border,
                             },
+                            transition: 'all 0.2s ease-in-out',
                           }}
                         />
                       }
@@ -789,6 +880,7 @@ const NewBusinessUnitPage: React.FC = () => {
                         <Switch
                           checked={formData.isFeatured}
                           onChange={(e) => handleInputChange('isFeatured', e.target.checked)}
+                          disabled={loading}
                           sx={{
                             '& .MuiSwitch-switchBase.Mui-checked': {
                               color: darkTheme.warning,
@@ -800,6 +892,7 @@ const NewBusinessUnitPage: React.FC = () => {
                             '& .MuiSwitch-track': {
                               backgroundColor: darkTheme.border,
                             },
+                            transition: 'all 0.2s ease-in-out',
                           }}
                         />
                       }
@@ -814,62 +907,73 @@ const NewBusinessUnitPage: React.FC = () => {
                 </Box>
               </CardContent>
             </Card>
-
-            {/* Action Buttons */}
-            <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end', pt: 2 }}>
-              <Button
-                type="button"
-                onClick={() => router.push(`/${businessUnitId}/admin/operations/properties`)}
-                sx={{
-                  color: darkTheme.textSecondary,
-                  borderColor: darkTheme.border,
-                  px: 4,
-                  py: 1.5,
-                  borderRadius: '8px',
-                  textTransform: 'none',
-                  fontWeight: 600,
-                  '&:hover': {
-                    backgroundColor: darkTheme.surfaceHover,
-                    borderColor: darkTheme.textSecondary,
-                  },
-                }}
-                variant="outlined"
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                variant="contained"
-                startIcon={<SaveIcon />}
-                disabled={loading}
-                sx={{
-                  backgroundColor: darkTheme.primary,
-                  color: 'white',
-                  px: 4,
-                  py: 1.5,
-                  fontSize: '14px',
-                  fontWeight: 600,
-                  textTransform: 'none',
-                  borderRadius: '8px',
-                  '&:hover': {
-                    backgroundColor: darkTheme.primaryHover,
-                  },
-                  '&:disabled': {
-                    backgroundColor: darkTheme.textSecondary,
-                  },
-                }}
-              >
-                {loading ? 'Creating...' : 'Create Property'}
-              </Button>
-            </Box>
           </Box>
         </form>
+
+        {/* Action Buttons */}
+        <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end', pt: 4, mt: 4 }}>
+          <Button
+            type="button"
+            onClick={() => router.push(`/${businessUnitId}/admin/operations/properties`)}
+            disabled={loading}
+            sx={{
+              color: darkTheme.textSecondary,
+              borderColor: darkTheme.border,
+              px: 4,
+              py: 1.5,
+              borderRadius: '8px',
+              textTransform: 'none',
+              fontWeight: 600,
+              transition: 'all 0.2s ease-in-out',
+              '&:hover': {
+                backgroundColor: darkTheme.surfaceHover,
+                borderColor: darkTheme.textSecondary,
+                transform: 'translateY(-2px)',
+              },
+              '&:disabled': {
+                color: darkTheme.textSecondary,
+                opacity: 0.5,
+              },
+            }}
+            variant="outlined"
+          >
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            variant="contained"
+            startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />}
+            disabled={loading}
+            sx={{
+              backgroundColor: darkTheme.primary,
+              color: 'white',
+              px: 4,
+              py: 1.5,
+              fontSize: '14px',
+              fontWeight: 600,
+              textTransform: 'none',
+              borderRadius: '8px',
+              transition: 'all 0.2s ease-in-out',
+              '&:hover': {
+                backgroundColor: darkTheme.primaryHover,
+                transform: 'translateY(-2px)',
+              },
+              '&:disabled': {
+                backgroundColor: darkTheme.textSecondary,
+                color: darkTheme.surface,
+              },
+            }}
+          >
+            {loading ? 'Creating...' : 'Create Property'}
+          </Button>
+        </Box>
 
         {/* Snackbar */}
         <Snackbar
           open={snackbar.open}
           autoHideDuration={6000}
           onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
         >
           <Alert
             onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}

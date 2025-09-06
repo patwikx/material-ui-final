@@ -290,7 +290,7 @@ const EventListPage: React.FC<EventListPageProps> = ({ initialEvents }) => {
             </Typography>
             <Button
               startIcon={<AddIcon />}
-              onClick={() => router.push(`/${businessUnitId}/admin/cms/events/new`)}
+              onClick={() => router.push(`/${businessUnitId}/admin/operations/events/new`)}
               sx={{
                 backgroundColor: darkTheme.primary,
                 color: 'white',
@@ -516,7 +516,7 @@ const EventListPage: React.FC<EventListPageProps> = ({ initialEvents }) => {
 
                     <CardActions sx={{ p: 0, pt: 2, justifyContent: 'flex-end', gap: 1 }}>
                       <IconButton
-                        onClick={() => router.push(`/${businessUnitId}/admin/cms/events/${event.id}`)}
+                        onClick={() => router.push(`/${businessUnitId}/admin/operations/events/${event.id}`)}
                         sx={{ 
                           color: darkTheme.textSecondary,
                           backgroundColor: 'transparent',

@@ -15,6 +15,7 @@ import {
   Snackbar,
   IconButton,
   Rating,
+  CircularProgress,
 } from '@mui/material';
 import {
   ArrowBack as ArrowBackIcon,
@@ -157,9 +158,11 @@ const NewTestimonialPage: React.FC = () => {
               sx={{ 
                 mr: 2, 
                 color: darkTheme.textSecondary,
+                transition: 'all 0.2s ease-in-out',
                 '&:hover': {
                   backgroundColor: darkTheme.surfaceHover,
                   color: darkTheme.text,
+                  transform: 'scale(1.1)',
                 } 
               }}
             >
@@ -206,7 +209,16 @@ const NewTestimonialPage: React.FC = () => {
         <form onSubmit={handleSubmit}>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
             {/* Guest Information */}
-            <Card sx={{ backgroundColor: darkTheme.surface, borderRadius: '8px', border: `1px solid ${darkTheme.border}` }}>
+            <Card sx={{ 
+              backgroundColor: darkTheme.surface, 
+              borderRadius: '8px', 
+              border: `1px solid ${darkTheme.border}`,
+              transition: 'all 0.2s ease-in-out',
+              '&:hover': {
+                borderColor: darkTheme.primary,
+                transform: 'translateY(-4px)',
+              }
+            }}>
               <CardContent sx={{ p: 4 }}>
                 <Typography
                   sx={{
@@ -236,6 +248,7 @@ const NewTestimonialPage: React.FC = () => {
                         '& fieldset': { borderColor: darkTheme.border },
                         '&:hover fieldset': { borderColor: darkTheme.primary },
                         '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                        transition: 'all 0.2s ease-in-out',
                       },
                       '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                     }}
@@ -257,6 +270,7 @@ const NewTestimonialPage: React.FC = () => {
                           '& fieldset': { borderColor: darkTheme.border },
                           '&:hover fieldset': { borderColor: darkTheme.primary },
                           '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                          transition: 'all 0.2s ease-in-out',
                         },
                         '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                       }}
@@ -275,6 +289,7 @@ const NewTestimonialPage: React.FC = () => {
                           '& fieldset': { borderColor: darkTheme.border },
                           '&:hover fieldset': { borderColor: darkTheme.primary },
                           '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                          transition: 'all 0.2s ease-in-out',
                         },
                         '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                       }}
@@ -294,6 +309,7 @@ const NewTestimonialPage: React.FC = () => {
                         '& fieldset': { borderColor: darkTheme.border },
                         '&:hover fieldset': { borderColor: darkTheme.primary },
                         '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                        transition: 'all 0.2s ease-in-out',
                       },
                       '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                     }}
@@ -303,7 +319,16 @@ const NewTestimonialPage: React.FC = () => {
             </Card>
 
             {/* Testimonial Content */}
-            <Card sx={{ backgroundColor: darkTheme.surface, borderRadius: '8px', border: `1px solid ${darkTheme.border}` }}>
+            <Card sx={{ 
+              backgroundColor: darkTheme.surface, 
+              borderRadius: '8px', 
+              border: `1px solid ${darkTheme.border}`,
+              transition: 'all 0.2s ease-in-out',
+              '&:hover': {
+                borderColor: darkTheme.primary,
+                transform: 'translateY(-4px)',
+              }
+            }}>
               <CardContent sx={{ p: 4 }}>
                 <Typography
                   sx={{
@@ -335,6 +360,7 @@ const NewTestimonialPage: React.FC = () => {
                         '& fieldset': { borderColor: darkTheme.border },
                         '&:hover fieldset': { borderColor: darkTheme.primary },
                         '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                        transition: 'all 0.2s ease-in-out',
                       },
                       '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                     }}
@@ -360,7 +386,16 @@ const NewTestimonialPage: React.FC = () => {
             </Card>
 
             {/* Source & Dates */}
-            <Card sx={{ backgroundColor: darkTheme.surface, borderRadius: '8px', border: `1px solid ${darkTheme.border}` }}>
+            <Card sx={{ 
+              backgroundColor: darkTheme.surface, 
+              borderRadius: '8px', 
+              border: `1px solid ${darkTheme.border}`,
+              transition: 'all 0.2s ease-in-out',
+              '&:hover': {
+                borderColor: darkTheme.primary,
+                transform: 'translateY(-4px)',
+              }
+            }}>
               <CardContent sx={{ p: 4 }}>
                 <Typography
                   sx={{
@@ -392,6 +427,7 @@ const NewTestimonialPage: React.FC = () => {
                           '& fieldset': { borderColor: darkTheme.border },
                           '&:hover fieldset': { borderColor: darkTheme.primary },
                           '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                          transition: 'all 0.2s ease-in-out',
                         },
                         '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                       }}
@@ -410,6 +446,7 @@ const NewTestimonialPage: React.FC = () => {
                           '& fieldset': { borderColor: darkTheme.border },
                           '&:hover fieldset': { borderColor: darkTheme.primary },
                           '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                          transition: 'all 0.2s ease-in-out',
                         },
                         '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                       }}
@@ -433,6 +470,7 @@ const NewTestimonialPage: React.FC = () => {
                           '& fieldset': { borderColor: darkTheme.border },
                           '&:hover fieldset': { borderColor: darkTheme.primary },
                           '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                          transition: 'all 0.2s ease-in-out',
                         },
                         '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                       }}
@@ -453,36 +491,27 @@ const NewTestimonialPage: React.FC = () => {
                           '& fieldset': { borderColor: darkTheme.border },
                           '&:hover fieldset': { borderColor: darkTheme.primary },
                           '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                          transition: 'all 0.2s ease-in-out',
                         },
                         '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                       }}
                     />
                   </Box>
-
-                  <TextField
-                    label="Sort Order"
-                    type="number"
-                    value={formData.sortOrder}
-                    onChange={(e) => handleInputChange('sortOrder', parseInt(e.target.value) || 0)}
-                    sx={{
-                      width: 200,
-                      '& .MuiOutlinedInput-root': {
-                        borderRadius: '8px',
-                        backgroundColor: darkTheme.background,
-                        color: darkTheme.text,
-                        '& fieldset': { borderColor: darkTheme.border },
-                        '&:hover fieldset': { borderColor: darkTheme.primary },
-                        '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
-                      },
-                      '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
-                    }}
-                  />
                 </Box>
               </CardContent>
             </Card>
 
             {/* Settings */}
-            <Card sx={{ backgroundColor: darkTheme.surface, borderRadius: '8px', border: `1px solid ${darkTheme.border}` }}>
+            <Card sx={{ 
+              backgroundColor: darkTheme.surface, 
+              borderRadius: '8px', 
+              border: `1px solid ${darkTheme.border}`,
+              transition: 'all 0.2s ease-in-out',
+              '&:hover': {
+                borderColor: darkTheme.primary,
+                transform: 'translateY(-4px)',
+              }
+            }}>
               <CardContent sx={{ p: 4 }}>
                 <Typography
                   sx={{
@@ -497,59 +526,83 @@ const NewTestimonialPage: React.FC = () => {
                   Settings
                 </Typography>
 
-                <Box sx={{ display: 'flex', gap: 4 }}>
-                  <FormControlLabel
-                    control={
-                      <Switch
-                        checked={formData.isActive}
-                        onChange={(e) => handleInputChange('isActive', e.target.checked)}
-                        sx={{
-                          '& .MuiSwitch-switchBase.Mui-checked': {
-                            color: darkTheme.success,
-                            '&:hover': { backgroundColor: 'rgba(16, 185, 129, 0.04)' },
-                          },
-                          '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-                            backgroundColor: darkTheme.success,
-                          },
-                          '& .MuiSwitch-track': {
-                            backgroundColor: darkTheme.border,
-                          },
-                        }}
-                      />
-                    }
-                    label={
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <VisibilityIcon sx={{ fontSize: 16, color: darkTheme.success }} />
-                        <Typography sx={{ color: darkTheme.textSecondary }}>Active</Typography>
-                      </Box>
-                    }
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                  <TextField
+                    label="Sort Order"
+                    type="number"
+                    value={formData.sortOrder}
+                    onChange={(e) => handleInputChange('sortOrder', parseInt(e.target.value) || 0)}
+                    sx={{
+                      width: 200,
+                      '& .MuiOutlinedInput-root': {
+                        borderRadius: '8px',
+                        backgroundColor: darkTheme.background,
+                        color: darkTheme.text,
+                        '& fieldset': { borderColor: darkTheme.border },
+                        '&:hover fieldset': { borderColor: darkTheme.primary },
+                        '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                        transition: 'all 0.2s ease-in-out',
+                      },
+                      '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
+                    }}
                   />
-                  <FormControlLabel
-                    control={
-                      <Switch
-                        checked={formData.isFeatured}
-                        onChange={(e) => handleInputChange('isFeatured', e.target.checked)}
-                        sx={{
-                          '& .MuiSwitch-switchBase.Mui-checked': {
-                            color: darkTheme.warning,
-                            '&:hover': { backgroundColor: 'rgba(245, 158, 11, 0.04)' },
-                          },
-                          '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-                            backgroundColor: darkTheme.warning,
-                          },
-                          '& .MuiSwitch-track': {
-                            backgroundColor: darkTheme.border,
-                          },
-                        }}
-                      />
-                    }
-                    label={
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <StarIcon sx={{ fontSize: 16, color: darkTheme.warning }} />
-                        <Typography sx={{ color: darkTheme.textSecondary }}>Featured</Typography>
-                      </Box>
-                    }
-                  />
+
+                  <Box sx={{ display: 'flex', gap: 4 }}>
+                    <FormControlLabel
+                      control={
+                        <Switch
+                          checked={formData.isActive}
+                          onChange={(e) => handleInputChange('isActive', e.target.checked)}
+                          sx={{
+                            '& .MuiSwitch-switchBase.Mui-checked': {
+                              color: darkTheme.success,
+                              '&:hover': { backgroundColor: 'rgba(16, 185, 129, 0.04)' },
+                            },
+                            '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                              backgroundColor: darkTheme.success,
+                            },
+                            '& .MuiSwitch-track': {
+                              backgroundColor: darkTheme.border,
+                            },
+                            transition: 'all 0.2s ease-in-out',
+                          }}
+                        />
+                      }
+                      label={
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <VisibilityIcon sx={{ fontSize: 16, color: darkTheme.success }} />
+                          <Typography sx={{ color: darkTheme.textSecondary }}>Active</Typography>
+                        </Box>
+                      }
+                    />
+                    <FormControlLabel
+                      control={
+                        <Switch
+                          checked={formData.isFeatured}
+                          onChange={(e) => handleInputChange('isFeatured', e.target.checked)}
+                          sx={{
+                            '& .MuiSwitch-switchBase.Mui-checked': {
+                              color: darkTheme.warning,
+                              '&:hover': { backgroundColor: 'rgba(245, 158, 11, 0.04)' },
+                            },
+                            '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                              backgroundColor: darkTheme.warning,
+                            },
+                            '& .MuiSwitch-track': {
+                              backgroundColor: darkTheme.border,
+                            },
+                            transition: 'all 0.2s ease-in-out',
+                          }}
+                        />
+                      }
+                      label={
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <StarIcon sx={{ fontSize: 16, color: darkTheme.warning }} />
+                          <Typography sx={{ color: darkTheme.textSecondary }}>Featured</Typography>
+                        </Box>
+                      }
+                    />
+                  </Box>
                 </Box>
               </CardContent>
             </Card>
@@ -559,6 +612,7 @@ const NewTestimonialPage: React.FC = () => {
               <Button
                 type="button"
                 onClick={() => router.push(`/${businessUnitId}/admin/cms/testimonials`)}
+                disabled={loading}
                 sx={{
                   color: darkTheme.textSecondary,
                   borderColor: darkTheme.border,
@@ -567,9 +621,15 @@ const NewTestimonialPage: React.FC = () => {
                   borderRadius: '8px',
                   textTransform: 'none',
                   fontWeight: 600,
+                  transition: 'all 0.2s ease-in-out',
                   '&:hover': {
                     backgroundColor: darkTheme.surfaceHover,
                     borderColor: darkTheme.textSecondary,
+                    transform: 'translateY(-2px)',
+                  },
+                  '&:disabled': {
+                    color: darkTheme.textSecondary,
+                    opacity: 0.5,
                   },
                 }}
                 variant="outlined"
@@ -579,7 +639,7 @@ const NewTestimonialPage: React.FC = () => {
               <Button
                 type="submit"
                 variant="contained"
-                startIcon={<SaveIcon />}
+                startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />}
                 disabled={loading}
                 sx={{
                   backgroundColor: darkTheme.primary,
@@ -590,11 +650,14 @@ const NewTestimonialPage: React.FC = () => {
                   fontWeight: 600,
                   textTransform: 'none',
                   borderRadius: '8px',
+                  transition: 'all 0.2s ease-in-out',
                   '&:hover': {
                     backgroundColor: darkTheme.primaryHover,
+                    transform: 'translateY(-2px)',
                   },
                   '&:disabled': {
                     backgroundColor: darkTheme.textSecondary,
+                    color: darkTheme.surface,
                   },
                 }}
               >
@@ -609,6 +672,7 @@ const NewTestimonialPage: React.FC = () => {
           open={snackbar.open}
           autoHideDuration={6000}
           onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
         >
           <Alert
             onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}

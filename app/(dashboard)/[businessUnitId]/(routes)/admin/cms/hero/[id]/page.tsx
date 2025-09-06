@@ -248,7 +248,7 @@ const EditHeroPage: React.FC = () => {
     if (heroId) {
       loadHero();
     }
-  }, [heroId, router]);
+  }, [heroId, router, businessUnitId]);
 
   const handleInputChange = (field: keyof HeroFormData, value: string | number | boolean | string[]) => {
     setFormData(prev => ({

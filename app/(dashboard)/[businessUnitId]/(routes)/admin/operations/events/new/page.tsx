@@ -18,6 +18,7 @@ import {
   IconButton,
   Alert,
   Snackbar,
+  CircularProgress,
 } from '@mui/material';
 import {
   ArrowBack as ArrowBackIcon,
@@ -82,9 +83,9 @@ interface EventFormData {
 }
 
 interface EventImages {
-  images: Array<{ 
-    fileName: string; 
-    name: string; 
+  images: Array<{
+    fileName: string;
+    name: string;
     fileUrl: string;
   }>;
   removeImageIds: string[];
@@ -180,12 +181,12 @@ const NewEventPage: React.FC = () => {
   const handleInputChange = (field: keyof EventFormData, value: string | number | boolean) => {
     setFormData(prev => {
       const updated = { ...prev, [field]: value };
-      
+
       // Auto-generate slug when title changes
       if (field === 'title' && typeof value === 'string') {
         updated.slug = generateSlug(value);
       }
-      
+
       return updated;
     });
   };
@@ -252,9 +253,9 @@ const NewEventPage: React.FC = () => {
   };
 
   return (
-    <Box 
-      sx={{ 
-        minHeight: '100vh', 
+    <Box
+      sx={{
+        minHeight: '100vh',
         backgroundColor: darkTheme.background,
         color: darkTheme.text,
       }}
@@ -265,13 +266,16 @@ const NewEventPage: React.FC = () => {
           <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
             <IconButton
               onClick={() => router.push(`/${businessUnitId}/admin/cms/events`)}
-              sx={{ 
-                mr: 2, 
+              disabled={loading}
+              sx={{
+                mr: 2,
                 color: darkTheme.textSecondary,
+                transition: 'all 0.2s ease-in-out',
                 '&:hover': {
                   backgroundColor: darkTheme.surfaceHover,
                   color: darkTheme.text,
-                } 
+                  transform: 'scale(1.1)',
+                }
               }}
             >
               <ArrowBackIcon />
@@ -317,7 +321,16 @@ const NewEventPage: React.FC = () => {
         <form onSubmit={handleSubmit}>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
             {/* Basic Information */}
-            <Card sx={{ backgroundColor: darkTheme.surface, borderRadius: '8px', border: `1px solid ${darkTheme.border}` }}>
+            <Card sx={{
+              backgroundColor: darkTheme.surface,
+              borderRadius: '8px',
+              border: `1px solid ${darkTheme.border}`,
+              transition: 'all 0.2s ease-in-out',
+              '&:hover': {
+                borderColor: darkTheme.primary,
+                transform: 'translateY(-4px)',
+              }
+            }}>
               <CardContent sx={{ p: 4 }}>
                 <Typography
                   sx={{
@@ -339,6 +352,7 @@ const NewEventPage: React.FC = () => {
                     onChange={(e) => handleInputChange('title', e.target.value)}
                     required
                     fullWidth
+                    disabled={loading}
                     sx={{
                       '& .MuiOutlinedInput-root': {
                         borderRadius: '8px',
@@ -347,6 +361,7 @@ const NewEventPage: React.FC = () => {
                         '& fieldset': { borderColor: darkTheme.border },
                         '&:hover fieldset': { borderColor: darkTheme.primary },
                         '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                        transition: 'all 0.2s ease-in-out',
                       },
                       '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                     }}
@@ -359,6 +374,7 @@ const NewEventPage: React.FC = () => {
                     required
                     fullWidth
                     helperText="URL-friendly version of the title"
+                    disabled={loading}
                     sx={{
                       '& .MuiOutlinedInput-root': {
                         borderRadius: '8px',
@@ -367,6 +383,7 @@ const NewEventPage: React.FC = () => {
                         '& fieldset': { borderColor: darkTheme.border },
                         '&:hover fieldset': { borderColor: darkTheme.primary },
                         '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                        transition: 'all 0.2s ease-in-out',
                       },
                       '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                       '& .MuiFormHelperText-root': { color: darkTheme.textSecondary }
@@ -381,6 +398,7 @@ const NewEventPage: React.FC = () => {
                     multiline
                     rows={4}
                     fullWidth
+                    disabled={loading}
                     sx={{
                       '& .MuiOutlinedInput-root': {
                         borderRadius: '8px',
@@ -389,6 +407,7 @@ const NewEventPage: React.FC = () => {
                         '& fieldset': { borderColor: darkTheme.border },
                         '&:hover fieldset': { borderColor: darkTheme.primary },
                         '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                        transition: 'all 0.2s ease-in-out',
                       },
                       '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                     }}
@@ -402,6 +421,7 @@ const NewEventPage: React.FC = () => {
                     rows={2}
                     fullWidth
                     helperText="Brief description for cards and previews"
+                    disabled={loading}
                     sx={{
                       '& .MuiOutlinedInput-root': {
                         borderRadius: '8px',
@@ -410,6 +430,7 @@ const NewEventPage: React.FC = () => {
                         '& fieldset': { borderColor: darkTheme.border },
                         '&:hover fieldset': { borderColor: darkTheme.primary },
                         '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                        transition: 'all 0.2s ease-in-out',
                       },
                       '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                       '& .MuiFormHelperText-root': { color: darkTheme.textSecondary }
@@ -423,6 +444,7 @@ const NewEventPage: React.FC = () => {
                         value={formData.type}
                         onChange={(e) => handleInputChange('type', e.target.value as EventType)}
                         label="Event Type"
+                        disabled={loading}
                         sx={{
                           borderRadius: '8px',
                           backgroundColor: darkTheme.background,
@@ -430,6 +452,7 @@ const NewEventPage: React.FC = () => {
                           '& .MuiOutlinedInput-notchedOutline': { borderColor: darkTheme.border },
                           '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: darkTheme.primary },
                           '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: darkTheme.primary },
+                          transition: 'all 0.2s ease-in-out',
                         }}
                       >
                         {eventTypes.map((type) => (
@@ -446,6 +469,7 @@ const NewEventPage: React.FC = () => {
                         value={formData.status}
                         onChange={(e) => handleInputChange('status', e.target.value as EventStatus)}
                         label="Status"
+                        disabled={loading}
                         sx={{
                           borderRadius: '8px',
                           backgroundColor: darkTheme.background,
@@ -453,6 +477,7 @@ const NewEventPage: React.FC = () => {
                           '& .MuiOutlinedInput-notchedOutline': { borderColor: darkTheme.border },
                           '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: darkTheme.primary },
                           '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: darkTheme.primary },
+                          transition: 'all 0.2s ease-in-out',
                         }}
                       >
                         {eventStatuses.map((status) => (
@@ -469,6 +494,7 @@ const NewEventPage: React.FC = () => {
                         value={formData.businessUnitId}
                         onChange={(e) => handleInputChange('businessUnitId', e.target.value)}
                         label="Property"
+                        disabled={loading}
                         sx={{
                           borderRadius: '8px',
                           backgroundColor: darkTheme.background,
@@ -476,6 +502,7 @@ const NewEventPage: React.FC = () => {
                           '& .MuiOutlinedInput-notchedOutline': { borderColor: darkTheme.border },
                           '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: darkTheme.primary },
                           '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: darkTheme.primary },
+                          transition: 'all 0.2s ease-in-out',
                         }}
                       >
                         {businessUnits.map((unit) => (
@@ -491,7 +518,16 @@ const NewEventPage: React.FC = () => {
             </Card>
 
             {/* Date & Time */}
-            <Card sx={{ backgroundColor: darkTheme.surface, borderRadius: '8px', border: `1px solid ${darkTheme.border}` }}>
+            <Card sx={{
+              backgroundColor: darkTheme.surface,
+              borderRadius: '8px',
+              border: `1px solid ${darkTheme.border}`,
+              transition: 'all 0.2s ease-in-out',
+              '&:hover': {
+                borderColor: darkTheme.primary,
+                transform: 'translateY(-4px)',
+              }
+            }}>
               <CardContent sx={{ p: 4 }}>
                 <Typography
                   sx={{
@@ -515,6 +551,7 @@ const NewEventPage: React.FC = () => {
                       onChange={(e) => handleInputChange('startDate', e.target.value)}
                       required
                       InputLabelProps={{ shrink: true }}
+                      disabled={loading}
                       sx={{
                         flex: 1,
                         minWidth: 200,
@@ -525,6 +562,7 @@ const NewEventPage: React.FC = () => {
                           '& fieldset': { borderColor: darkTheme.border },
                           '&:hover fieldset': { borderColor: darkTheme.primary },
                           '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                          transition: 'all 0.2s ease-in-out',
                         },
                         '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                       }}
@@ -536,6 +574,7 @@ const NewEventPage: React.FC = () => {
                       onChange={(e) => handleInputChange('endDate', e.target.value)}
                       required
                       InputLabelProps={{ shrink: true }}
+                      disabled={loading}
                       sx={{
                         flex: 1,
                         minWidth: 200,
@@ -546,6 +585,7 @@ const NewEventPage: React.FC = () => {
                           '& fieldset': { borderColor: darkTheme.border },
                           '&:hover fieldset': { borderColor: darkTheme.primary },
                           '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                          transition: 'all 0.2s ease-in-out',
                         },
                         '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                       }}
@@ -559,6 +599,7 @@ const NewEventPage: React.FC = () => {
                       value={formData.startTime}
                       onChange={(e) => handleInputChange('startTime', e.target.value)}
                       InputLabelProps={{ shrink: true }}
+                      disabled={loading}
                       sx={{
                         flex: 1,
                         minWidth: 200,
@@ -569,6 +610,7 @@ const NewEventPage: React.FC = () => {
                           '& fieldset': { borderColor: darkTheme.border },
                           '&:hover fieldset': { borderColor: darkTheme.primary },
                           '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                          transition: 'all 0.2s ease-in-out',
                         },
                         '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                       }}
@@ -579,6 +621,7 @@ const NewEventPage: React.FC = () => {
                       value={formData.endTime}
                       onChange={(e) => handleInputChange('endTime', e.target.value)}
                       InputLabelProps={{ shrink: true }}
+                      disabled={loading}
                       sx={{
                         flex: 1,
                         minWidth: 200,
@@ -589,6 +632,7 @@ const NewEventPage: React.FC = () => {
                           '& fieldset': { borderColor: darkTheme.border },
                           '&:hover fieldset': { borderColor: darkTheme.primary },
                           '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                          transition: 'all 0.2s ease-in-out',
                         },
                         '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                       }}
@@ -599,7 +643,16 @@ const NewEventPage: React.FC = () => {
             </Card>
 
             {/* Venue Information */}
-            <Card sx={{ backgroundColor: darkTheme.surface, borderRadius: '8px', border: `1px solid ${darkTheme.border}` }}>
+            <Card sx={{
+              backgroundColor: darkTheme.surface,
+              borderRadius: '8px',
+              border: `1px solid ${darkTheme.border}`,
+              transition: 'all 0.2s ease-in-out',
+              '&:hover': {
+                borderColor: darkTheme.primary,
+                transform: 'translateY(-4px)',
+              }
+            }}>
               <CardContent sx={{ p: 4 }}>
                 <Typography
                   sx={{
@@ -621,6 +674,7 @@ const NewEventPage: React.FC = () => {
                     onChange={(e) => handleInputChange('venue', e.target.value)}
                     required
                     fullWidth
+                    disabled={loading}
                     sx={{
                       '& .MuiOutlinedInput-root': {
                         borderRadius: '8px',
@@ -629,6 +683,7 @@ const NewEventPage: React.FC = () => {
                         '& fieldset': { borderColor: darkTheme.border },
                         '&:hover fieldset': { borderColor: darkTheme.primary },
                         '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                        transition: 'all 0.2s ease-in-out',
                       },
                       '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                     }}
@@ -641,6 +696,7 @@ const NewEventPage: React.FC = () => {
                     multiline
                     rows={3}
                     fullWidth
+                    disabled={loading}
                     sx={{
                       '& .MuiOutlinedInput-root': {
                         borderRadius: '8px',
@@ -649,6 +705,7 @@ const NewEventPage: React.FC = () => {
                         '& fieldset': { borderColor: darkTheme.border },
                         '&:hover fieldset': { borderColor: darkTheme.primary },
                         '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                        transition: 'all 0.2s ease-in-out',
                       },
                       '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                     }}
@@ -660,6 +717,7 @@ const NewEventPage: React.FC = () => {
                       type="number"
                       value={formData.venueCapacity || ''}
                       onChange={(e) => handleInputChange('venueCapacity', e.target.value ? parseInt(e.target.value) : "")}
+                      disabled={loading}
                       sx={{
                         flex: 1,
                         minWidth: 200,
@@ -670,6 +728,7 @@ const NewEventPage: React.FC = () => {
                           '& fieldset': { borderColor: darkTheme.border },
                           '&:hover fieldset': { borderColor: darkTheme.primary },
                           '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                          transition: 'all 0.2s ease-in-out',
                         },
                         '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                       }}
@@ -679,6 +738,7 @@ const NewEventPage: React.FC = () => {
                       type="number"
                       value={formData.maxAttendees || ''}
                       onChange={(e) => handleInputChange('maxAttendees', e.target.value ? parseInt(e.target.value) : "")}
+                      disabled={loading}
                       sx={{
                         flex: 1,
                         minWidth: 200,
@@ -689,6 +749,7 @@ const NewEventPage: React.FC = () => {
                           '& fieldset': { borderColor: darkTheme.border },
                           '&:hover fieldset': { borderColor: darkTheme.primary },
                           '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                          transition: 'all 0.2s ease-in-out',
                         },
                         '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                       }}
@@ -699,7 +760,16 @@ const NewEventPage: React.FC = () => {
             </Card>
 
             {/* Pricing & Booking */}
-            <Card sx={{ backgroundColor: darkTheme.surface, borderRadius: '8px', border: `1px solid ${darkTheme.border}` }}>
+            <Card sx={{
+              backgroundColor: darkTheme.surface,
+              borderRadius: '8px',
+              border: `1px solid ${darkTheme.border}`,
+              transition: 'all 0.2s ease-in-out',
+              '&:hover': {
+                borderColor: darkTheme.primary,
+                transform: 'translateY(-4px)',
+              }
+            }}>
               <CardContent sx={{ p: 4 }}>
                 <Typography
                   sx={{
@@ -720,6 +790,7 @@ const NewEventPage: React.FC = () => {
                       <Switch
                         checked={formData.isFree}
                         onChange={(e) => handleInputChange('isFree', e.target.checked)}
+                        disabled={loading}
                         sx={{
                           '& .MuiSwitch-switchBase.Mui-checked': {
                             color: darkTheme.primary,
@@ -731,6 +802,7 @@ const NewEventPage: React.FC = () => {
                           '& .MuiSwitch-track': {
                             backgroundColor: darkTheme.border,
                           },
+                          transition: 'all 0.2s ease-in-out',
                         }}
                       />
                     }
@@ -744,6 +816,7 @@ const NewEventPage: React.FC = () => {
                         type="number"
                         value={formData.ticketPrice || ''}
                         onChange={(e) => handleInputChange('ticketPrice', e.target.value ? parseFloat(e.target.value) : "")}
+                        disabled={loading}
                         sx={{
                           flex: 1,
                           minWidth: 200,
@@ -754,6 +827,7 @@ const NewEventPage: React.FC = () => {
                             '& fieldset': { borderColor: darkTheme.border },
                             '&:hover fieldset': { borderColor: darkTheme.primary },
                             '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                            transition: 'all 0.2s ease-in-out',
                           },
                           '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                         }}
@@ -762,6 +836,7 @@ const NewEventPage: React.FC = () => {
                         label="Currency"
                         value={formData.currency}
                         onChange={(e) => handleInputChange('currency', e.target.value)}
+                        disabled={loading}
                         sx={{
                           width: 150,
                           '& .MuiOutlinedInput-root': {
@@ -771,6 +846,7 @@ const NewEventPage: React.FC = () => {
                             '& fieldset': { borderColor: darkTheme.border },
                             '&:hover fieldset': { borderColor: darkTheme.primary },
                             '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                            transition: 'all 0.2s ease-in-out',
                           },
                           '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                         }}
@@ -783,6 +859,7 @@ const NewEventPage: React.FC = () => {
                       <Switch
                         checked={formData.requiresBooking}
                         onChange={(e) => handleInputChange('requiresBooking', e.target.checked)}
+                        disabled={loading}
                         sx={{
                           '& .MuiSwitch-switchBase.Mui-checked': {
                             color: darkTheme.primary,
@@ -794,6 +871,7 @@ const NewEventPage: React.FC = () => {
                           '& .MuiSwitch-track': {
                             backgroundColor: darkTheme.border,
                           },
+                          transition: 'all 0.2s ease-in-out',
                         }}
                       />
                     }
@@ -804,7 +882,16 @@ const NewEventPage: React.FC = () => {
             </Card>
 
             {/* Event Images */}
-            <Card sx={{ backgroundColor: darkTheme.surface, borderRadius: '8px', border: `1px solid ${darkTheme.border}` }}>
+            <Card sx={{
+              backgroundColor: darkTheme.surface,
+              borderRadius: '8px',
+              border: `1px solid ${darkTheme.border}`,
+              transition: 'all 0.2s ease-in-out',
+              '&:hover': {
+                borderColor: darkTheme.primary,
+                transform: 'translateY(-4px)',
+              }
+            }}>
               <CardContent sx={{ p: 4 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
                   <AddPhotoIcon sx={{ fontSize: 20, color: darkTheme.primary }} />
@@ -862,7 +949,16 @@ const NewEventPage: React.FC = () => {
             </Card>
 
             {/* Settings */}
-            <Card sx={{ backgroundColor: darkTheme.surface, borderRadius: '8px', border: `1px solid ${darkTheme.border}` }}>
+            <Card sx={{
+              backgroundColor: darkTheme.surface,
+              borderRadius: '8px',
+              border: `1px solid ${darkTheme.border}`,
+              transition: 'all 0.2s ease-in-out',
+              '&:hover': {
+                borderColor: darkTheme.primary,
+                transform: 'translateY(-4px)',
+              }
+            }}>
               <CardContent sx={{ p: 4 }}>
                 <Typography
                   sx={{
@@ -883,6 +979,7 @@ const NewEventPage: React.FC = () => {
                     type="number"
                     value={formData.sortOrder}
                     onChange={(e) => handleInputChange('sortOrder', parseInt(e.target.value) || 0)}
+                    disabled={loading}
                     sx={{
                       width: 200,
                       '& .MuiOutlinedInput-root': {
@@ -892,6 +989,7 @@ const NewEventPage: React.FC = () => {
                         '& fieldset': { borderColor: darkTheme.border },
                         '&:hover fieldset': { borderColor: darkTheme.primary },
                         '&.Mui-focused fieldset': { borderColor: darkTheme.primary },
+                        transition: 'all 0.2s ease-in-out',
                       },
                       '& .MuiInputLabel-root': { color: darkTheme.textSecondary },
                     }}
@@ -903,6 +1001,7 @@ const NewEventPage: React.FC = () => {
                         <Switch
                           checked={formData.isPublished}
                           onChange={(e) => handleInputChange('isPublished', e.target.checked)}
+                          disabled={loading}
                           sx={{
                             '& .MuiSwitch-switchBase.Mui-checked': {
                               color: darkTheme.success,
@@ -914,6 +1013,7 @@ const NewEventPage: React.FC = () => {
                             '& .MuiSwitch-track': {
                               backgroundColor: darkTheme.border,
                             },
+                            transition: 'all 0.2s ease-in-out',
                           }}
                         />
                       }
@@ -929,6 +1029,7 @@ const NewEventPage: React.FC = () => {
                         <Switch
                           checked={formData.isFeatured}
                           onChange={(e) => handleInputChange('isFeatured', e.target.checked)}
+                          disabled={loading}
                           sx={{
                             '& .MuiSwitch-switchBase.Mui-checked': {
                               color: darkTheme.warning,
@@ -940,6 +1041,7 @@ const NewEventPage: React.FC = () => {
                             '& .MuiSwitch-track': {
                               backgroundColor: darkTheme.border,
                             },
+                            transition: 'all 0.2s ease-in-out',
                           }}
                         />
                       }
@@ -955,6 +1057,7 @@ const NewEventPage: React.FC = () => {
                         <Switch
                           checked={formData.isPinned}
                           onChange={(e) => handleInputChange('isPinned', e.target.checked)}
+                          disabled={loading}
                           sx={{
                             '& .MuiSwitch-switchBase.Mui-checked': {
                               color: darkTheme.primary,
@@ -966,6 +1069,7 @@ const NewEventPage: React.FC = () => {
                             '& .MuiSwitch-track': {
                               backgroundColor: darkTheme.border,
                             },
+                            transition: 'all 0.2s ease-in-out',
                           }}
                         />
                       }
@@ -986,6 +1090,7 @@ const NewEventPage: React.FC = () => {
               <Button
                 type="button"
                 onClick={() => router.push(`/${businessUnitId}/admin/cms/events`)}
+                disabled={loading}
                 sx={{
                   color: darkTheme.textSecondary,
                   borderColor: darkTheme.border,
@@ -994,9 +1099,15 @@ const NewEventPage: React.FC = () => {
                   borderRadius: '8px',
                   textTransform: 'none',
                   fontWeight: 600,
+                  transition: 'all 0.2s ease-in-out',
                   '&:hover': {
                     backgroundColor: darkTheme.surfaceHover,
                     borderColor: darkTheme.textSecondary,
+                    transform: 'translateY(-2px)',
+                  },
+                  '&:disabled': {
+                    color: darkTheme.textSecondary,
+                    opacity: 0.5,
                   },
                 }}
                 variant="outlined"
@@ -1006,7 +1117,7 @@ const NewEventPage: React.FC = () => {
               <Button
                 type="submit"
                 variant="contained"
-                startIcon={<SaveIcon />}
+                startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />}
                 disabled={loading}
                 sx={{
                   backgroundColor: darkTheme.primary,
@@ -1017,11 +1128,14 @@ const NewEventPage: React.FC = () => {
                   fontWeight: 600,
                   textTransform: 'none',
                   borderRadius: '8px',
+                  transition: 'all 0.2s ease-in-out',
                   '&:hover': {
                     backgroundColor: darkTheme.primaryHover,
+                    transform: 'translateY(-2px)',
                   },
                   '&:disabled': {
                     backgroundColor: darkTheme.textSecondary,
+                    color: darkTheme.surface,
                   },
                 }}
               >
@@ -1036,6 +1150,7 @@ const NewEventPage: React.FC = () => {
           open={snackbar.open}
           autoHideDuration={6000}
           onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
         >
           <Alert
             onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
