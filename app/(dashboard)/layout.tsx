@@ -6,7 +6,6 @@ import { prisma } from '@/lib/prisma';
 import "../globals.css";
 import { Sidebar } from '@/components/new-sidebar';
 import { Toaster } from 'sonner';
-import SessionWrapper from '@/components/session-provider';
 import { BusinessUnitProvider } from '@/context/business-unit-context';
 
 export const metadata = {
@@ -79,7 +78,6 @@ export default async function DashboardLayout({
 
   return (
     <>
-    <SessionWrapper>
       <div className="flex h-screen">
         <div className="hidden md:flex md:w-64 md:flex-col md:flex-shrink-0 md:border-r">
           <Sidebar businessUnitId={businessUnitId} businessUnits={businessUnits} />
@@ -94,7 +92,6 @@ export default async function DashboardLayout({
           </main>
         </div>
       </div>
-      </SessionWrapper>
     </>
   )
 }
