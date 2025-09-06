@@ -25,7 +25,6 @@ import {
   Visibility as VisibilityIcon,
   Star as StarIcon,
   PushPin as PushPinIcon,
-  Photo as PhotoIcon,
   AddPhotoAlternate as AddPhotoIcon,
 } from '@mui/icons-material';
 import { useRouter } from 'next/navigation';
@@ -161,19 +160,6 @@ const NewSpecialOfferPage: React.FC = () => {
       .replace(/\s+/g, '-')
       .replace(/-+/g, '-')
       .trim();
-  };
-
-  const calculateSavings = (originalPrice: number | null, offerPrice: number) => {
-    if (!originalPrice || originalPrice <= offerPrice) return;
-    
-    const savingsAmount = originalPrice - offerPrice;
-    const savingsPercent = Math.round((savingsAmount / originalPrice) * 100);
-    
-    setFormData(prev => ({
-      ...prev,
-      savingsAmount,
-      savingsPercent,
-    }));
   };
 
   const handleInputChange = (field: keyof SpecialOfferFormData, value: string | number | boolean) => {
