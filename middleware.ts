@@ -17,9 +17,14 @@ export default auth((req) => {
     return;
   }
 
-  // Protect all other matched routes
+  // Protect all routes - always redirect to sign-in if not logged in
   if (!isLoggedIn) {
     return NextResponse.redirect(new URL("/auth/sign-in", nextUrl));
+  }
+
+  // Handle root route - redirect authenticated users to setup
+  if (nextUrl.pathname === "/") {
+    return NextResponse.redirect(new URL("/setup", nextUrl));
   }
   
   // --- This is the crucial part for our workaround ---
